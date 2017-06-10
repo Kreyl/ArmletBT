@@ -136,7 +136,7 @@ class CharacterCSVable(CSVable):
         self.processNames()
         self.rID = None
         try:
-            self.dogan = self.DOGAN[self.dogan.strip()]
+            self.dogan = self.DOGAN[self.dogan.strip()] # pylint: disable=E1101
         except KeyError:
             assert False, "%s: unknown dogan setting: %r" % (self.shortName, self.dogan)
         self.isManni = int(bool((self.isManni or '').strip()))
@@ -226,9 +226,13 @@ class CharacterCSVable(CSVable):
         print "Processing characters..."
         cls.loadCharactersCSV()
         cls.updateFromJoinRPG()
+        return cls.CHARACTERS
+
+def updateCharacters():
+    return CharacterCSVable.update()
 
 def main():
-    CharacterCSVable.update()
+    updateCharacters()
 
 if __name__ == '__main__':
     main()
