@@ -15,9 +15,9 @@ from re import compile as reCompile
 from traceback import format_exc
 
 from CSVable import CSVable, CSVObjectReader, CSVObjectWriter
-from joinrpg import getAllCharactersAsObjects, getFileName
+from joinrpg import getAllCharactersAsObjects
 
-from Settings import currentTime, CHARACTER_ID_START, CHARACTER_ID_END, CHARACTER_IDS
+from Settings import currentTime, getFileName, CHARACTER_ID_START, CHARACTER_ID_END, CHARACTER_IDS
 
 ENCODING = 'windows-1251'
 
@@ -116,7 +116,7 @@ class CharacterCSVable(CSVable):
             assert self.shortName in self.CHARACTERS[kaTetName].getKaTet(), "%s is in %s's ka-tet, but %s is not in %s's one" % (kaTetName, self.shortName, self.shortName, kaTetName)
 
     def integrate(self):
-        """Add the character to the list of characters and make sure rID, shortName and longName and not duplicates."""
+        """Add the character to the list of characters."""
         assert CHARACTER_ID_START <= self.rID <= CHARACTER_ID_END, "Bad character ID value: %d" % self.rID
         self.CHARACTERS[self.shortName] = self
 
@@ -174,7 +174,7 @@ class CharacterCSVable(CSVable):
         print "Loaded characters: %d" % len(cls.CHARACTERS)
 
     @classmethod
-    def saveCharactersCSV(cls, characters, fileName = getFileName(CHARACTERS_CSV), header = CHARACTERS_CSV_HEADER):
+    def saveCharactersCSV(cls, characters, fileName = getFileName(CHARACTERS_CSV), header = CHARACTERS_CSV_HEADER): # ToDo: Use CSVdumpable instead
         """Save characters to a Characters.csv file."""
         with open(fileName, 'wb') as f:
             CSVObjectWriter(f, cls, True, ENCODING, header % currentTime()).writerows(characters.itervalues())

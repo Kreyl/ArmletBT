@@ -3,12 +3,14 @@
 #
 # CSVable.py
 #
+# A collection of classes to read and write objects from and to CSV files.
+#
 from collections import OrderedDict
 from csv import DictReader, DictWriter
 
-COMMENT = '#'
-
 class CSVable(object):
+    """Interface of an object that can be read from or written to a CSV file row."""
+
     CSV_FIELDS = None # or iterable of ASCII field names or {csvField: asciiObjectField,} dictionary
     READ_REST_KEY = 'REST'
     READ_REST_VAL = None
@@ -41,9 +43,74 @@ class CSVable(object):
     def __eq__(self, other):
         return self.__class__ is other.__class__ and tuple(self._getFieldsValues()) == tuple(other._getFieldsValues()) # pylint: disable=W0212
 
+class CSVfileable(CSVable):
+    """Interface of a class whose instances can be bunch-read from or written to a CSV file."""
+
+    INSTANCES = None
+    FILE_NAME = None
+    NEEDS_HEADER = None
+    ENCODING = None
+    HEADER_COMMENT = None
+
+    @classmethod
+    def getInstances(cls):
+        return cls.INSTANCES
+
+    @classmethod
+    def getFileName(cls):
+        return cls.FILE_NAME
+
+    @classmethod
+    def getNeedsHeader(cls):
+        return cls.NEEDS_HEADER
+
+    @classmethod
+    def getEncoding(cls):
+        return cls.ENCODING
+
+    @classmethod
+    def getHeaderComment(cls):
+        return cls.HEADER_COMMENT
+
+    @classmethod
+    def loadCSV(cls, instances = None, fileName = None, useHeader = None, encoding = None, handleComments = None, *args, **kwargs):
+        """Loads instances of this class from a CSV file."""
+        if instances is None:
+            instances = cls.getInstances()
+        if fileName is None:
+            fileName = cls.getFileName()
+        if useHeader is None:
+            useHeader = cls.getNeedsHeader()
+        if encoding is None:
+            encoding = cls.getEncoding()
+        if handleComments is None:
+            handleComments = cls.getHeaderComment() is not None
+        with open(fileName, 'rb') as f:
+            return CSVObjectReader(f, cls, useHeader, encoding, handleComments, *args, **kwargs)
+
+    @classmethod
+    def dumpCSV(cls, instances = None, fileName = None, writeHeader = None, encoding = None, headerComment = None, *args, **kwargs):
+        """Dumps instances of this class to a CSV file."""
+        if instances is None:
+            instances = cls.getInstances()
+        if fileName is None:
+            fileName = cls.getFileName()
+        if writeHeader is None:
+            writeHeader = cls.getNeedsHeader()
+        if encoding is None:
+            encoding = cls.getEncoding()
+        if headerComment is None:
+            headerComment = cls.getHeaderComment()
+        with open(fileName, 'wb') as f:
+            CSVObjectWriter(f, cls, writeHeader, encoding, headerComment, *args, **kwargs).writerows(instances)
+
 class CSVableParser(object):
-    def __init__(self, csvAbleClass = CSVable, encoding = 'utf-8'):
-        self.encoding = encoding
+    """Intermediate class that is used to recognize and setup structure of a CSV file."""
+
+    COMMENT = '#'
+
+    def __init__(self, csvAbleClass = CSVable, encoding = None):
+        self.encoding = encoding or 'ascii'
         self.csvAbleClass = csvAbleClass
         if csvAbleClass.CSV_FIELDS is None: # Use class fields to determine CSV content
             self.initFromObject(csvAbleClass)
@@ -59,7 +126,7 @@ class CSVableParser(object):
             self.fieldsDict = {}
             self._fieldNames = []
             for (csvField, objectField) in iterFields:
-                csvField = csvField.encode(encoding)
+                csvField = csvField.encode(self.encoding)
                 self.fieldsDict[csvField] = objectField
                 self._fieldNames.append(csvField)
             self._fieldNames = tuple(self._fieldNames) # pylint: disable=E0012,R0204
@@ -90,10 +157,12 @@ class CSVableParser(object):
             fieldSet.add(objectField)
 
 class CSVObjectReader(CSVableParser, DictReader):
-    def __init__(self, csvFile, csvAbleClass = CSVable, useHeader = False, encoding = 'utf-8', handleComments = False, *args, **kwargs):
+    """CSV reader that reads rows from a CSV file and returns them as CSVable objects."""
+
+    def __init__(self, csvFile, csvAbleClass = CSVable, useHeader = False, encoding = None, handleComments = False, *args, **kwargs):
         CSVableParser.__init__(self, csvAbleClass, encoding)
         if handleComments:
-            csvFile = (line for line in csvFile if not line.strip().startswith(COMMENT))
+            csvFile = (line for line in csvFile if not line.strip().startswith(self.COMMENT))
         DictReader.__init__(self, csvFile, None if useHeader else self._fieldNames or (), csvAbleClass.READ_REST_KEY, csvAbleClass.READ_REST_VAL, *args, **kwargs)
         if useHeader and self.fieldnames and self._fieldNames is None:
             self.validateObjectFields(self.fieldnames)
@@ -122,11 +191,13 @@ class CSVObjectReader(CSVableParser, DictReader):
         return ret
 
 class CSVObjectWriter(CSVableParser, DictWriter):
-    def __init__(self, csvFile, csvAbleClass = CSVable, writeHeader = False, encoding = 'utf-8', headerComment = None, *args, **kwargs):
+    """CSV writer that can write CSVable objects to a CSV file."""
+
+    def __init__(self, csvFile, csvAbleClass = CSVable, writeHeader = False, encoding = None, headerComment = None, *args, **kwargs):
         CSVableParser.__init__(self, csvAbleClass, encoding)
         if headerComment:
-            lines = (line.strip().encode(encoding) for line in (headerComment.splitlines() if isinstance(headerComment, str) else headerComment)) # pylint: disable=C0325
-            csvFile.write(''.join('%s\r\n' % (line if line.startswith(COMMENT) else '%s %s' % (COMMENT, line) if line else COMMENT) for line in lines))
+            lines = (line.strip().encode(encoding) for line in (headerComment.splitlines() if isinstance(headerComment, str) else headerComment or ())) # pylint: disable=C0325
+            csvFile.write(''.join('%s\r\n' % (line if line.startswith(self.COMMENT) else '%s %s' % (self.COMMENT, line) if line else self.COMMENT) for line in lines))
         DictWriter.__init__(self, csvFile, self._fieldNames, csvAbleClass.WRITE_REST_VAL, csvAbleClass.WRITE_EXTRAS_ACTION, *args, **kwargs)
         self.hasFieldNames = self.fieldnames is not None
         self.needHeader = writeHeader
@@ -193,7 +264,7 @@ def testCSVableParser():
     assert p.fieldsDict == {'aaa': 'aaa', 'ccc': 'ccc'}, p.fieldsDict
     assert p._fieldNames == ('aaa', 'ccc'), p._fieldNames # pylint: disable=W0212
     TestCSVable.CSV_FIELDS = {u'яяя': 'bbb', 'ccc': 'ddd'}
-    p = CSVableParser(TestCSVable)
+    p = CSVableParser(TestCSVable, encoding = 'utf-8')
     assert p.fieldsDict == {u'яяя'.encode('utf-8'): 'bbb', 'ccc': 'ddd'}, p.fieldsDict
     assert p._fieldNames == ('ccc', u'яяя'.encode('utf-8')), p._fieldNames # pylint: disable=W0212
     try:
@@ -407,6 +478,7 @@ def testCSVObjectWriter():
     assert result == 'ccc,aaa\r\nzzz,xxx\r\n', repr(result)
 
 def main():
+    """Runs build-in tests."""
     testCSVableParser()
     testCSVObjectReader()
     testCSVObjectWriter()
