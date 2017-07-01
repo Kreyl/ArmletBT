@@ -48,9 +48,9 @@ class CharacterCSVable(CSVable):
         ( 'rID', 'rID'),
         (u'1344 Имя на браслете', 'shortName'),
         (u'Персонаж', 'longName'),
+        (u'1346 Мэнни', 'isManni'),
         (u'Нью-Йорк?', 'isNY'),
         (u'1200 Внутренний Доган', 'dogan'),
-        (u'1346 Мэнни', 'isManni'),
         (u'1203 Связи ка-тета', 'kaTet'),
         (u'1399 Стартовое число очков действия', 'nAction'),
         (u'1622 Музыка прислана?', 'hasMusic')
@@ -98,8 +98,9 @@ class CharacterCSVable(CSVable):
 
     def validate(self):
         """Validate fields other than shortName and longName."""
-        assert self.dogan in self.DOGAN.itervalues(), "Bad dogan value: %s, expected %s" % (self.dogan, '/'.join(str(v) for v in self.DOGAN.itervalues()))
         assert self.isManni in (0, 1), "Bas isManni value: %d" % self.isManni
+        assert self.isNY in (0, 1), "Bas isNY value: %d" % self.isNY
+        assert self.dogan in self.DOGAN.itervalues(), "Bad dogan value: %s, expected %s" % (self.dogan, '/'.join(str(v) for v in self.DOGAN.itervalues()))
         assert not self.kaTet or all(name.isalpha() for name in self.getKaTet()), "Bad ka-tet value: %s" % self.kaTet
         assert self.nAction >= 0, "Bad nAction value: %d" % self.nAction
         assert self.hasMusic in self.HAS_MUSIC.itervalues(), "Bad hasMusic value: %s, expected %s" % (self.dogan, '/'.join(str(v) for v in self.HAS_MUSIC.itervalues()))
@@ -125,9 +126,9 @@ class CharacterCSVable(CSVable):
         """Process the objects after it was loaded from CSV file."""
         self.processNames()
         self.rID = int(self.rID)
+        self.isManni = int(self.isManni)
         self.isNY = int(self.isNY)
         self.dogan = int(self.dogan)
-        self.isManni = int(self.isManni)
         self.nAction = int(self.nAction)
         self.hasMusic = int(self.hasMusic)
         self.validate()
@@ -137,12 +138,12 @@ class CharacterCSVable(CSVable):
         """Process the objects after it was loaded from JoinRPG database."""
         self.processNames()
         self.rID = None
+        self.isManni = int(bool((self.isManni or '').strip()))
         self.isNY = int(u'Нью-Йорк' in self.REST[0].split(' | ')) # pylint: disable=E1101
         try:
             self.dogan = self.DOGAN[self.dogan.strip()] # pylint: disable=E1101
         except KeyError:
             assert False, "%s: unknown dogan setting: %r" % (self.shortName, self.dogan)
-        self.isManni = int(bool((self.isManni or '').strip()))
         self.kaTet = ':'.join(name for name in (name.strip() for name in self.SEPARATORS.split(self.kaTet)) if name)
         self.nAction = int(self.nAction.strip() or '0') # pylint: disable=E1101
         try:
