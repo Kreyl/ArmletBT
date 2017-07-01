@@ -12,7 +12,7 @@
 from collections import OrderedDict
 from os.path import isfile
 from re import compile as reCompile
-from traceback import format_exc
+#from traceback import format_exc
 
 from CSVable import CSVable, CSVObjectReader, CSVObjectWriter
 from joinrpg import getAllCharactersAsObjects
@@ -219,8 +219,8 @@ class CharacterCSVable(CSVable):
             else:
                 print "No changes detected"
         except Exception, e:
-            print format_exc()
-            print "ERROR fetching data, using current version: %s" % e
+            #print format_exc()
+            print "ERROR fetching data: %s, using cached version" % e
             return ()
 
     @classmethod

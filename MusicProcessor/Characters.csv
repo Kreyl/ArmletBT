@@ -1,0 +1,20 @@
+#
+# Characters.csv for "Dark Tower: All Hail" LARP.
+#
+# Characters table for ArmLet initialization.
+#
+# Generated, updated from JoinRPG and used by CharacterProcessor.py
+# to track persistent unique character Reason IDs.
+#
+# !!! DO NOT EDIT !!!
+#
+# Generated at 2017-07-01 06:27:20
+#
+rID,1344 Имя на браслете,Персонаж,Нью-Йорк?,1200 Внутренний Доган,1346 Мэнни,1203 Связи ка-тета,1399 Стартовое число очков действия,1622 Музыка прислана?
+201,RDias,Равен Диас,0,-1,0,,4,0
+202,AFlores,Элли Флорес (Пчелка),0,0,0,,3,0
+203,CRandall,Клайд Рэндалл,0,-2,0,,5,0
+204,DRice,Дороти Птица Райс,0,-1,0,,4,0
+205,RRobin,Роуз Робин,1,2,0,,0,0
+206,ASExupery,Антуан де Сент-Экзюпери,1,1,0,,0,0
+207,PSayre,Патрик Ричард Сейр,1,-2,0,,0,0
