@@ -46,13 +46,14 @@ class CharacterError(Exception):
 class CharacterCSVable(CSVable):
     CSV_FIELDS = OrderedDict((
         ( 'rID', 'rID'),
-        (u'Имя на браслете', 'shortName'),
+        (u'1344 Имя на браслете', 'shortName'),
         (u'Персонаж', 'longName'),
-        (u'Внутренний Доган', 'dogan'),
-        (u'Мэнни', 'isManni'),
-        (u'Связи ка-тета', 'kaTet'),
-        (u'Стартовое число очков действия', 'nAction'),
-        (u'Музыка прислана?', 'hasMusic')
+        (u'Нью-Йорк?', 'isNY'),
+        (u'1200 Внутренний Доган', 'dogan'),
+        (u'1346 Мэнни', 'isManni'),
+        (u'1203 Связи ка-тета', 'kaTet'),
+        (u'1399 Стартовое число очков действия', 'nAction'),
+        (u'1622 Музыка прислана?', 'hasMusic')
     ))
 
     DOGAN = OrderedDict(((u'Служба Алому Королю', -2), (u'Алое Колебание', -1), (u'Нейтралитет', 0), (u'Белое Колебание', 1), (u'Путь Белизны', 2)))
@@ -124,6 +125,7 @@ class CharacterCSVable(CSVable):
         """Process the objects after it was loaded from CSV file."""
         self.processNames()
         self.rID = int(self.rID)
+        self.isNY = int(self.isNY)
         self.dogan = int(self.dogan)
         self.isManni = int(self.isManni)
         self.nAction = int(self.nAction)
@@ -135,6 +137,7 @@ class CharacterCSVable(CSVable):
         """Process the objects after it was loaded from JoinRPG database."""
         self.processNames()
         self.rID = None
+        self.isNY = int(u'Нью-Йорк' in self.REST[0].split(' | ')) # pylint: disable=E1101
         try:
             self.dogan = self.DOGAN[self.dogan.strip()] # pylint: disable=E1101
         except KeyError:

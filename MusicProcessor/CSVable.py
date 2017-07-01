@@ -73,6 +73,17 @@ class CSVfileable(CSVable):
         return cls.HEADER_COMMENT
 
     @classmethod
+    def sort(cls):
+        if isinstance(cls.INSTANCES , dict):
+            cls.INSTANCES = OrderedDict((key, value) for (key, value) in sorted(cls.INSTANCES.iteritems(), key = lambda (key, value): value.sortKey()))
+        else:
+            cls.INSTANCES.sort(key = lambda self: self.sortKey()) # pylint: disable=E1101
+        return cls.INSTANCES
+
+    def sortKey(self):
+        return tuple(self._getFieldsValues())
+
+    @classmethod
     def loadCSV(cls, instances = None, fileName = None, useHeader = None, encoding = None, handleComments = None, *args, **kwargs):
         """Loads instances of this class from a CSV file."""
         if instances is None:
@@ -170,14 +181,14 @@ class CSVObjectReader(CSVableParser, DictReader):
     def next(self):
         ret = self.csvAbleClass()
         for (csvField, value) in DictReader.next(self).iteritems():
+            if isinstance(value, str):
+                value = value.decode(self.encoding)
+                try:
+                    value = value.encode('ascii')
+                except UnicodeError:
+                    pass
             field = self.fieldsDict.get(csvField) if self.fieldsDict and csvField != self.csvAbleClass.READ_REST_KEY else csvField
             if field:
-                if isinstance(value, str):
-                    value = value.decode(self.encoding)
-                    try:
-                        value = value.encode('ascii')
-                    except UnicodeError:
-                        pass
                 setattr(ret, field, value)
             elif value is not None:
                 rest = getattr(ret, self.csvAbleClass.READ_REST_KEY, None)
@@ -196,7 +207,7 @@ class CSVObjectWriter(CSVableParser, DictWriter):
     def __init__(self, csvFile, csvAbleClass = CSVable, writeHeader = False, encoding = None, headerComment = None, *args, **kwargs):
         CSVableParser.__init__(self, csvAbleClass, encoding)
         if headerComment:
-            lines = (line.strip().encode(encoding) for line in (headerComment.splitlines() if isinstance(headerComment, str) else headerComment or ())) # pylint: disable=C0325
+            lines = (line.strip().encode(self.encoding) for line in (headerComment.splitlines() if isinstance(headerComment, str) else headerComment or ())) # pylint: disable=C0325
             csvFile.write(''.join('%s\r\n' % (line if line.startswith(self.COMMENT) else '%s %s' % (self.COMMENT, line) if line else self.COMMENT) for line in lines))
         DictWriter.__init__(self, csvFile, self._fieldNames, csvAbleClass.WRITE_REST_VAL, csvAbleClass.WRITE_EXTRAS_ACTION, *args, **kwargs)
         self.hasFieldNames = self.fieldnames is not None

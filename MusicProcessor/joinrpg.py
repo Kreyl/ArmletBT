@@ -17,8 +17,8 @@ ENCODING = 'utf-8'
 ALL_ROLES_URL = 'http://joinrpg.ru/%d/characters/activetoken?Token=%s'
 
 TOKEN_FILE_NAME = 'joinrpg.key'
-DUMP_FILE_NAME = 'joinrpg.csv'
-DUMP_FILE_NAME_1251 = 'joinrpg1251.csv'
+DUMP_FILE_NAME = 'joinrpg-%d.csv'
+DUMP_FILE_NAME_1251 = 'joinrpg-%d-1251.csv'
 
 def getFileName(name):
     return join(dirname(realpath(argv[0])), name)
@@ -28,10 +28,10 @@ def _getData(gameID, token = None, tokenFileName = None, dumpCSV = False, dumpCS
     url = ALL_ROLES_URL % (gameID, token)
     data = urlopen(url).read() # open(getFileName(DUMP_FILE_NAME), 'rb').read()
     if dumpCSV:
-        with open(dumpCSV if dumpCSV is not True else getFileName(DUMP_FILE_NAME), 'wb') as f:
+        with open(dumpCSV if dumpCSV is not True else getFileName(DUMP_FILE_NAME % gameID), 'wb') as f:
             f.write(data)
     if dumpCSV1251:
-        with open(dumpCSV1251 if dumpCSV1251 is not True else getFileName(DUMP_FILE_NAME_1251), 'wb') as f:
+        with open(dumpCSV1251 if dumpCSV1251 is not True else getFileName(DUMP_FILE_NAME_1251 % gameID), 'wb') as f:
             f.write(data.decode(ENCODING).encode('windows-1251'))
     return data.splitlines()
 
