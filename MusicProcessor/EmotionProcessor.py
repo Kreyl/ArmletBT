@@ -13,12 +13,12 @@ from os.path import join
 from platform import system
 from re import compile as reCompile
 from subprocess import Popen, PIPE, STDOUT
-from traceback import format_exc
+#from traceback import format_exc
 from urllib2 import urlopen
 
 from CSVable import CSVable, CSVObjectReader
 from CharacterProcessor import updateCharacters
-from Settings import getFileName
+from Settings import getFileName, CHARACTER_ID_START
 from Structures import Source, Reason, Emotion
 
 isWindows = system().lower().startswith('win')
@@ -38,10 +38,11 @@ H_TARGET = join(C_PATH, 'emotions.h')
 
 TEST_COMMAND = 'gcc -I "%s" -o test "%s" test.c && ./test && rm test' % (C_PATH, C_TARGET)
 
-class GoogleTable(CSVable):
+class GoogleTableEntry(CSVable):
     CSV_FIELDS = ('rName', 'rPriority', 'nSources', 'eName', 'ePriority')
 
-    NAME_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*')
+    REASON_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*|[A-Z][a-zA-Z]*')
+    EMOTION_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*')
 
     def processFromGoogleCSV(self):
         """Process the objects after it was loaded from CSV exported from Google Docs spreadsheet."""
@@ -54,7 +55,7 @@ class GoogleTable(CSVable):
         except UnicodeError:
             assert False, "Reason name is not ASCII: %r" % self.rName
         if self.rName != '-':
-            assert self.NAME_PATTERN.match(self.rName), "Reason name is not in PROPER_FORMAT_WITH_DIGITS: %s" % self.rName
+            assert self.REASON_PATTERN.match(self.rName), "Reason name is not in PROPER_FORMAT_WITH_DIGITS: %s" % self.rName
         assert self.rName not in Reason.INSTANCES, "Duplicate reason name: %s" % self.rName
         # rPriority
         self.rPriority = self.rPriority.strip() # pylint: disable=E1101
@@ -65,7 +66,7 @@ class GoogleTable(CSVable):
             assert False, "Priority is not a number for reason %s: %r" % (self.rName, self.rPriority)
         # nSources
         try:
-            self.nSources = int(self.nSources or 0)
+            self.nSources = int(self.nSources or 1)
         except ValueError:
             assert False, "Number of sources is not a number for reason %s: %r" % (self.rName, self.nSources)
         assert 0 <= self.nSources <= 30, "Bad number of sources for reason %s: %r" % (self.rName, self.nSources)
@@ -74,7 +75,7 @@ class GoogleTable(CSVable):
             self.eName = self.eName.strip().encode('ascii')
         except UnicodeError:
             assert False, "Emotion name is not ASCII for reason %s: %r" % (self.rName, self.eName)
-        assert self.NAME_PATTERN.match(self.eName), "Emotion name is not in PROPER_FORMAT_WITH_DIGITS for reason %s: %s" % (self.rName, self.eName)
+        assert self.EMOTION_PATTERN.match(self.eName), "Emotion name is not in PROPER_FORMAT_WITH_DIGITS for reason %s: %s" % (self.rName, self.eName)
         # ePriority
         try:
             self.ePriority = int(self.ePriority) if self.ePriority else None
@@ -90,9 +91,9 @@ class GoogleTable(CSVable):
                 assert emotion.ePriority == self.ePriority, "Non-consistent priority for emotion %s: %d and %d" % (self.eName, emotion.ePriority, self.ePriority)
         else:
         # Fill in the tables
-            Emotion.INSTANCES[self.eName] = emotion = Emotion(self.eName, self.ePriority)
+            emotion = Emotion.addEmotion(Emotion(self.eName, self.ePriority))
         if self.rName != '-':
-            Reason.INSTANCES[self.rName] = Reason(self.rName, self.rPriority, self.nSources, self.eName)
+            Reason.addReason(Reason(self.rName, self.rPriority, self.nSources, self.eName))
 
     @classmethod
     def loadFromGoogleDocs(cls, dumpCSV = False, dumpCSV1251 = False):
@@ -113,7 +114,7 @@ class GoogleTable(CSVable):
                 break
             except Exception, e:
                 if attempt == 1:
-                    print format_exc()
+                    #print format_exc()
                     print "ERROR fetching data: %s, using cached version" % e
                 else:
                     raise
@@ -127,11 +128,19 @@ class GoogleTable(CSVable):
 
     @classmethod
     def processEmotions(cls):
+        Reason.addCharacters(cls.CHARACTERS.itervalues())
+        Reason.addPlaceholders(CHARACTER_ID_START)
+        Reason.sort()
+        rID = 0
+        for reason in Reason.INSTANCES.itervalues():
+            if reason.rID is None:
+                reason.rID = rID
+                rID += 1
+        Reason.sortByIDs()
         nSources = 0
         Source.INSTANCES[:] = []
-        for (rID, reason) in enumerate(Reason.sort().itervalues()):
-            reason.rID = rID
-            newNSources = nSources + (reason.nSources or 1)
+        for reason in Reason.INSTANCES.itervalues():
+            newNSources = nSources + reason.nSources
             for sID in xrange(nSources, newNSources):
                 Source.INSTANCES.append(Source(sID, reason.rName))
             nSources = newNSources
@@ -151,8 +160,8 @@ class GoogleTable(CSVable):
     def update(cls):
         """Update characters, reasons and emotions."""
         cls.CHARACTERS = updateCharacters()
-        print "Processing emotions..."
         cls.loadFromGoogleDocs(True, True)
+        print "Processing emotions..."
         cls.processEmotions()
         #cls.writeC()
         #cls.writeH()
@@ -166,7 +175,7 @@ class GoogleTable(CSVable):
         return Reason.INSTANCES
 
 def updateEmotions():
-    return GoogleTable.update()
+    return GoogleTableEntry.update()
 
 def main():
     updateEmotions()

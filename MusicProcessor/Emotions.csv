@@ -7,7 +7,7 @@
 #
 # !!! DO NOT EDIT !!!
 #
-# Generated at 2017-07-01 07:49:46
+# Generated at 2017-07-03 15:42:29
 #
 eID,eName,ePriority
 0,BEAM,0
@@ -53,4 +53,5 @@ eID,eName,ePriority
 40,TOWNHOUSE,0
 41,WHITE,0
 42,WHITE_FEELING,0
-43,WHITISH,0
+43,WHITE_GLORY,0
+44,WHITISH,0

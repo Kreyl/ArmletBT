@@ -73,12 +73,16 @@ class CSVfileable(CSVable):
         return cls.HEADER_COMMENT
 
     @classmethod
-    def sort(cls):
+    def _sort(cls, keyFunction):
         if isinstance(cls.INSTANCES , dict):
-            cls.INSTANCES = OrderedDict((key, value) for (key, value) in sorted(cls.INSTANCES.iteritems(), key = lambda (key, value): value.sortKey()))
+            cls.INSTANCES = OrderedDict((key, value) for (key, value) in sorted(cls.INSTANCES.iteritems(), key = lambda (_key, value): keyFunction(value)))
         else:
-            cls.INSTANCES.sort(key = lambda self: self.sortKey()) # pylint: disable=E1101
+            cls.INSTANCES.sort(key = keyFunction) # pylint: disable=E1101
         return cls.INSTANCES
+
+    @classmethod
+    def sort(cls):
+        return cls._sort(cls.sortKey)
 
     def sortKey(self):
         return tuple(self._getFieldsValues())

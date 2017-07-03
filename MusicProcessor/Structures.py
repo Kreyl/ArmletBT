@@ -63,6 +63,19 @@ class Source(CSVdumpable):
     def sortKey(self):
         return self.sID
 
+    # @classmethod
+    # def addReason(cls, reason):
+    #     cls.INSTANCES[reason.rName] = reason
+    #     return reason
+
+    # @classmethod
+    # def addPlaceholders(cls, number):
+    #     for sID in xrange(len(cls.INSTANCES), number):
+    #         source = Source(sID, Reason.PLACEHOLDER_NAME % rID)
+    #         reason.rID = rID
+    #         assert reason.rID == len(cls.INSTANCES)
+    #         cls.addReason(reason)
+
 class Reason(CSVdumpable):
     CSV_FIELDS = ('rID', 'rName', 'rPriority', 'eName')
 
@@ -76,7 +89,11 @@ class Reason(CSVdumpable):
     TITLE = 'Reasons'
     HEADER_TITLE = 'Used to build Reasons (rID<->rName) global map and Reasons to Emotions (rID->eID) global map.'
 
-    CHARACTER_PRIORITY = 10
+    CHARACTER_PRIORITY = 20
+
+    TOP_PRIORITY = 100
+
+    PLACEHOLDER_NAME = 'PLACEHOLDER_%02d'
 
     def __init__(self, rName, rPriority, nSources, eName):
         CSVdumpable.__init__(self)
@@ -87,7 +104,33 @@ class Reason(CSVdumpable):
         self.eName = eName
 
     def sortKey(self):
-        return None if self.rPriority >= 100 else (int(self.rPriority == self.CHARACTER_PRIORITY), self.rName)
+        return None if self.rPriority >= self.TOP_PRIORITY else (int(self.rPriority == self.CHARACTER_PRIORITY), self.rName)
+
+    @classmethod
+    def sortByIDs(cls):
+        return cls._sort(lambda value: value.rID)
+
+    @classmethod
+    def addReason(cls, reason):
+        cls.INSTANCES[reason.rName] = reason
+        return reason
+
+    @classmethod
+    def addPlaceholders(cls, number):
+        for rID in xrange(sum(1 for reason in cls.INSTANCES.itervalues() if reason.rID is None), number):
+            reason = Reason(cls.PLACEHOLDER_NAME % rID, 0, 0, None)
+            reason.rID = rID
+            cls.addReason(reason)
+
+    @classmethod
+    def addCharacters(cls, characters):
+        for character in characters:
+            if character.shortName in cls.INSTANCES:
+                cls.INSTANCES[character.shortName].rID = character.rID
+            else:
+                reason = Reason(character.shortName, cls.CHARACTER_PRIORITY, 1, None)
+                reason.rID = character.rID
+                cls.addReason(reason)
 
 class Emotion(CSVdumpable):
     CSV_FIELDS = ('eID', 'eName', 'ePriority')
@@ -101,8 +144,14 @@ class Emotion(CSVdumpable):
 
     def __init__(self, eName, ePriority):
         CSVdumpable.__init__(self)
+        self.eID = None
         self.eName = eName
         self.ePriority = ePriority or 0
 
     def sortKey(self):
         return self.eName
+
+    @classmethod
+    def addEmotion(cls, emotion):
+        cls.INSTANCES[emotion.eName] = emotion
+        return emotion
