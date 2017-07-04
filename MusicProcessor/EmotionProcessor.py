@@ -18,7 +18,7 @@ from urllib2 import urlopen
 
 from CSVable import CSVable, CSVObjectReader
 from CharacterProcessor import updateCharacters
-from Settings import getFileName, CHARACTER_ID_START
+from Settings import getFileName, SOURCE_ID_START
 from Structures import Source, Reason, Emotion
 
 isWindows = system().lower().startswith('win')
@@ -66,7 +66,7 @@ class GoogleTableEntry(CSVable):
             assert False, "Priority is not a number for reason %s: %r" % (self.rName, self.rPriority)
         # nSources
         try:
-            self.nSources = int(self.nSources or 1)
+            self.nSources = int(self.nSources)
         except ValueError:
             assert False, "Number of sources is not a number for reason %s: %r" % (self.rName, self.nSources)
         assert 0 <= self.nSources <= 30, "Bad number of sources for reason %s: %r" % (self.rName, self.nSources)
@@ -129,7 +129,7 @@ class GoogleTableEntry(CSVable):
     @classmethod
     def processEmotions(cls):
         Reason.addCharacters(cls.CHARACTERS.itervalues())
-        Reason.addPlaceholders(CHARACTER_ID_START)
+        Reason.addPlaceholders()
         Reason.sort()
         rID = 0
         for reason in Reason.INSTANCES.itervalues():
@@ -137,18 +137,18 @@ class GoogleTableEntry(CSVable):
                 reason.rID = rID
                 rID += 1
         Reason.sortByIDs()
-        nSources = 0
+        assert tuple(reason.rID for reason in Reason.INSTANCES.itervalues()) == tuple(xrange(len(Reason.INSTANCES))), "Damaged rIDs table: %s" % Reason.INSTANCES
+        nSources = SOURCE_ID_START
         Source.INSTANCES[:] = []
         for reason in Reason.INSTANCES.itervalues():
             newNSources = nSources + reason.nSources
             for sID in xrange(nSources, newNSources):
                 Source.INSTANCES.append(Source(sID, reason.rName))
             nSources = newNSources
-        # ToDo: Make sure rIDs do not intersect with Characters
         for (eID, emotion) in enumerate(Emotion.sort().itervalues()):
             emotion.eID = eID
-        assert len(Source.INSTANCES) == nSources, "Reason table length mismatch: %d, expected %d" % (len(Source.INSTANCES), nSources)
-        assert tuple(source.sID for source in Source.INSTANCES) == tuple(xrange(nSources)), "Damaged sIDs table: %s" % Source.INSTANCES
+        assert len(Source.INSTANCES) == nSources - SOURCE_ID_START, "Reason table length mismatch: %d, expected %d" % (len(Source.INSTANCES), nSources)
+        assert tuple(source.sID for source in Source.INSTANCES) == tuple(xrange(SOURCE_ID_START, nSources)), "Damaged sIDs table: %s" % Source.INSTANCES
         Source.dumpCSV()
         print "Sources dumped: %d" % len(Source.INSTANCES)
         Reason.dumpCSV()

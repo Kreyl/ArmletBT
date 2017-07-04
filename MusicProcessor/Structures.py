@@ -5,7 +5,7 @@
 from collections import OrderedDict
 
 from CSVable import CSVfileable
-from Settings import currentTime, getFileName
+from Settings import currentTime, getFileName, CHARACTER_ID_START, CHARACTER_IDS
 
 class CSVdumpable(CSVfileable):
     NEEDS_HEADER = True
@@ -63,19 +63,6 @@ class Source(CSVdumpable):
     def sortKey(self):
         return self.sID
 
-    # @classmethod
-    # def addReason(cls, reason):
-    #     cls.INSTANCES[reason.rName] = reason
-    #     return reason
-
-    # @classmethod
-    # def addPlaceholders(cls, number):
-    #     for sID in xrange(len(cls.INSTANCES), number):
-    #         source = Source(sID, Reason.PLACEHOLDER_NAME % rID)
-    #         reason.rID = rID
-    #         assert reason.rID == len(cls.INSTANCES)
-    #         cls.addReason(reason)
-
 class Reason(CSVdumpable):
     CSV_FIELDS = ('rID', 'rName', 'rPriority', 'eName')
 
@@ -89,7 +76,7 @@ class Reason(CSVdumpable):
     TITLE = 'Reasons'
     HEADER_TITLE = 'Used to build Reasons (rID<->rName) global map and Reasons to Emotions (rID->eID) global map.'
 
-    CHARACTER_PRIORITY = 20
+    CHARACTER_PRIORITY = 80
 
     TOP_PRIORITY = 100
 
@@ -104,7 +91,7 @@ class Reason(CSVdumpable):
         self.eName = eName
 
     def sortKey(self):
-        return None if self.rPriority >= self.TOP_PRIORITY else (int(self.rPriority == self.CHARACTER_PRIORITY), self.rName)
+        return None if self.rPriority >= self.TOP_PRIORITY else (int(self.rPriority in CHARACTER_IDS), self.rName)
 
     @classmethod
     def sortByIDs(cls):
@@ -116,8 +103,10 @@ class Reason(CSVdumpable):
         return reason
 
     @classmethod
-    def addPlaceholders(cls, number):
-        for rID in xrange(sum(1 for reason in cls.INSTANCES.itervalues() if reason.rID is None), number):
+    def addPlaceholders(cls):
+        start = sum(1 for reason in cls.INSTANCES.itervalues() if reason.rID is None)
+        assert start <= CHARACTER_ID_START
+        for rID in xrange(start, CHARACTER_ID_START):
             reason = Reason(cls.PLACEHOLDER_NAME % rID, 0, 0, None)
             reason.rID = rID
             cls.addReason(reason)
@@ -128,7 +117,7 @@ class Reason(CSVdumpable):
             if character.shortName in cls.INSTANCES:
                 cls.INSTANCES[character.shortName].rID = character.rID
             else:
-                reason = Reason(character.shortName, cls.CHARACTER_PRIORITY, 1, None)
+                reason = Reason(character.shortName, cls.CHARACTER_PRIORITY, 0, None)
                 reason.rID = character.rID
                 cls.addReason(reason)
 
