@@ -1,3 +1,4 @@
+*.json
 *.pyc
 joinrpg.key
 joinrpg*.csv
