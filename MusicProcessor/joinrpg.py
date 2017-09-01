@@ -13,7 +13,7 @@ from sys import argv, stdout
 try:
     import requests
 except ImportError as ex:
-    print("%s: %s\nERROR: This software requires Requests library.\nPlease install Requests: https://pypi.python.org/pypi/requests" % (ex.__class__.__name__, ex))
+    print "%s: %s\nERROR: This software requires Requests library.\nPlease install Requests: https://pypi.python.org/pypi/requests" % (ex.__class__.__name__, ex)
     exit(-1)
 
 from JSONable import JSONable
@@ -158,15 +158,25 @@ class JoinRPG(JSONable):
 
     def getMetadata(self):
         print "Getting metadata..."
-        metadata = self.getData('%s/x-game-api/%d/metadata/fields' % (self.joinRPG, self.projectId))
-        print "Project name is: %s" % metadata['ProjectName']
-        if metadata == self.metadata:
-            print "Metadata unchanged, updating cache"
-        else:
-            if self.metadata is not None:
-                print "Metadata has changed, discarding cache"
-            self.metadata = metadata
-            self.updatedAt = self.characterData = self.characters = None
+        metadata = None
+        try:
+            metadata = self.getData('%s/x-game-api/%d/metadata/fields' % (self.joinRPG, self.projectId))
+        except Exception, e:
+            print "ERROR: %s" % e
+            if self.metadata:
+                print "Using cached metadata"
+            else:
+                print "Aborting"
+                raise
+        print "Project name is: %s" % (metadata or self.metadata)['ProjectName']
+        if metadata:
+            if metadata == self.metadata:
+                print "Metadata unchanged, updating cache"
+            else:
+                if self.metadata is not None:
+                    print "Metadata has changed, discarding cache"
+                self.metadata = metadata
+                self.updatedAt = self.characterData = self.characters = None
         self._parseFields(**self.metadata)
         self.fieldNames = OrderedDict((field.projectFieldId, field.fieldName) for field in self.fields if field.isActive) # pylint: disable=E1101
 
@@ -179,8 +189,17 @@ class JoinRPG(JSONable):
         print "Getting character data%s..." % ((' modified since %s' % modifiedSinceStr) if modifiedSinceStr else '')
         if self.characterData is None:
             self.characterData = []
-        newCharacters = self.getData('%s/x-game-api/%d/characters/%s' % (self.joinRPG, self.projectId,
-                                    ('?modifiedSince=%s' % modifiedSinceStr) if modifiedSinceStr else ''))
+        newCharacters = None
+        try:
+            newCharacters = self.getData('%s/x-game-api/%d/characters/%s' % (self.joinRPG, self.projectId,
+                                        ('?modifiedSince=%s' % modifiedSinceStr) if modifiedSinceStr else ''))
+        except Exception, e:
+            print "ERROR: %s" % e
+            if self.metadata:
+                print "Using cached character data"
+            else:
+                print "Aborting"
+                raise
         if newCharacters:
             print "Getting details for %d characters... " % len(newCharacters),
             for newCharacter in newCharacters:
@@ -195,7 +214,7 @@ class JoinRPG(JSONable):
                 stdout.write('.')
                 stdout.flush()
             print
-        else:
+        elif newCharacters is not None:
             print "No updates found"
         self.characters = OrderedDict(sorted((character.characterId, character) for character in Character.fromIterable(self.characterData, self)))
         self.saveCache()
@@ -205,6 +224,8 @@ class JoinRPG(JSONable):
 
 def getAllCharacters(*args, **kwargs):
     """Returns all characters for a project with the specified ID as iterator of dictionaries."""
+    if not args:
+        raise ValueError("Project ID is not specified")
     return JoinRPG(*args, **kwargs).getCharacters()
 
 def main():

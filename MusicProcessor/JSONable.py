@@ -22,7 +22,7 @@ class JSONable(object):
             except UnicodeError:
                 pass
         elif isinstance(value, list):
-            value = tuple(JSONable._parseValue(element) for element in value)
+            value = tuple(JSONable._parseValue(element) for element in value) # pylint: disable=R0204
         elif isinstance(value, dict):
             value = JSONable(**value)
         return value
@@ -40,7 +40,7 @@ class JSONable(object):
         self._processFields()
 
     def getFields(self, isOutput = False):
-        if isOutput: # pylint: disable=R1705
+        if isOutput:
             return OrderedDict((field, getattr(self, field)) for field in self.OUTPUT_FIELDS)
         else:
             return dict((field, value) for (field, value) in self.__dict__.iteritems() if field[0].islower() and field not in self.IGNORE_FIELDS)
