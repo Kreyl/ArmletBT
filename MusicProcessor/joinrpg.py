@@ -20,7 +20,8 @@ from JSONable import JSONable
 
 API_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
-DUMP_FILE_NAME = 'joinrpg-%d.json'
+CACHE_FILE_NAME = 'joinrpg-%d.json'
+DEBUG_DUMP_FILE_NAME = 'joinrpg-%d-debug.json'
 
 def getFileName(name):
     return join(dirname(realpath(argv[0])), name)
@@ -48,17 +49,13 @@ class Character(JSONable):
 
     def __init__(self, joinRPG, **kwargs):
         self.joinRPG = joinRPG
+        self.fieldValues = {}
         JSONable.__init__(self, **kwargs)
-        self.fieldValues = dict((fieldName, None) for fieldName in self.joinRPG.fieldNames.itervalues())
 
     def _processFields(self):
         if not self.characterLink.startswith(self.joinRPG.joinRPG): # pylint: disable=E0203
             self.characterLink = '%s%s' % (self.joinRPG.joinRPG, self.characterLink)
         self.updatedAt = str2date(self.updatedAt)
-
-    def getDetails(self): # ToDo
-        fields = self.joinRPG.getData(self.characterLink) # pylint: disable=E1101
-        self._parseFields(**fields)
         self.groupNames = set(g.characterGroupName for g in self.groups) # pylint: disable=E1101
         for field in self.fields: # pylint: disable=E1101
             fieldName = self.joinRPG.fieldNames.get(field.projectFieldId)
@@ -68,19 +65,21 @@ class Character(JSONable):
 class JoinRPG(JSONable):
     def __init__(self, projectId, username = None, password = None, joinRPG = 'http://joinrpg.ru', cacheData = False, cacheAuth = False, **kwargs):
         projectId = int(projectId)
+        self.username = username
+        self.password = password
         self.joinRPG = joinRPG
         self.cacheData = cacheData
         self.cacheAuth = cacheAuth
-        self.cacheFileName = getFileName(DUMP_FILE_NAME % projectId)
+        self.cacheFileName = getFileName(CACHE_FILE_NAME % projectId)
         self.IGNORE_FIELDS = set(self.getFields())
-        self.username = username
-        self.password = password
         self.metadata = None
+        self.fieldNames = None
+        self.characterData = None
         self.characters = None
         self.updatedAt = None
         self._resetAuth()
         self.OUTPUT_FIELDS = (('accessToken', 'accessTokenType', 'accessTokenExpiresAt') if cacheAuth else ()) \
-                           + (('updatedAt', 'metadata', 'characters') if cacheData else ())
+                           + (('updatedAt', 'metadata', 'characterData') if cacheData else ())
         self.projectId = projectId
         JSONable.__init__(self, **kwargs)
         self.loadCache()
@@ -109,19 +108,24 @@ class JoinRPG(JSONable):
         if not self.cacheAuth:
             self._resetAuth()
         if not self.cacheData:
-            self.updatedAt = self.metadata = self.characters = None
+            self.updatedAt = self.metadata = self.fieldNames = self.characterData = self.characters = None
 
     def saveCache(self):
         if self.cacheData or self.cacheAuth:
             print "Saving cache..."
             self.metadata = OrderedDict(sorted(self.metadata.iteritems(), key = lambda (field, value): {'ProjectId': 0, 'ProjectName': 1}.get(field, field)))
-            self.characters = sorted(self.characters, key = lambda character: character['CharacterId'])
+            self.characterData = sorted(self.characterData, key = lambda character: character['CharacterId'])
             with open(self.cacheFileName, 'w') as f:
                 f.write(self.json(isOutput = True, cls = MoreJSONEncoder, indent = 4))
 
+    def saveDebugDump(self):
+        print "Saving debug dump..."
+        with open(getFileName(DEBUG_DUMP_FILE_NAME % self.projectId), 'w') as f:
+            f.write(self.json(sort_keys = True, cls = MoreJSONEncoder, indent = 4))
+
     def authorize(self):
         if None in (self.username, self.password):
-            print "Authorization needed, please enter your credentials"
+            print "Authentication needed, please enter your credentials"
             if self.username is None:
                 self.username = raw_input("Username: ")
             if self.password is None:
@@ -140,20 +144,6 @@ class JoinRPG(JSONable):
             raise ValueError("Access token expires too fast: in %d seconds" % expiresSeconds)
         self.accessTokenExpiresAt = datetime.utcnow() + timedelta(seconds = expiresSeconds - 1)
 
-    def getMetadata(self):
-        print "Getting metadata..."
-        metadata = self.getData('%s/x-game-api/%d/metadata/fields' % (self.joinRPG, self.projectId))
-        if metadata == self.metadata:
-            print "Metadata unchanged, updating cache"
-        else:
-            if self.metadata is not None:
-                print "Metadata has changed, discarding cache"
-            self.metadata = metadata
-            self.updatedAt = None
-            self.characters = None
-        self._parseFields(**self.metadata)
-        self.fieldNames = OrderedDict((field.projectFieldId, field.fieldName) for field in self.fields if field.isActive) # pylint: disable=E1101
-
     def getData(self, url):
         wasUnauthorized = not self.accessToken or datetime.utcnow() >= self.accessTokenExpiresAt
         if wasUnauthorized:
@@ -166,41 +156,56 @@ class JoinRPG(JSONable):
         response.raise_for_status()
         return response.json()
 
+    def getMetadata(self):
+        print "Getting metadata..."
+        metadata = self.getData('%s/x-game-api/%d/metadata/fields' % (self.joinRPG, self.projectId))
+        print "Project name is: %s" % metadata['ProjectName']
+        if metadata == self.metadata:
+            print "Metadata unchanged, updating cache"
+        else:
+            if self.metadata is not None:
+                print "Metadata has changed, discarding cache"
+            self.metadata = metadata
+            self.updatedAt = self.characterData = self.characters = None
+        self._parseFields(**self.metadata)
+        self.fieldNames = OrderedDict((field.projectFieldId, field.fieldName) for field in self.fields if field.isActive) # pylint: disable=E1101
+
     def getCharacters(self, modifiedSince = None):
         self.getMetadata()
         if modifiedSince is None or self.updatedAt is not None and modifiedSince <= self.updatedAt:
-            modifiedSince = self.updatedAt
+            modifiedSince = self.updatedAt if self.characterData else None
             self.updatedAt = datetime.utcnow()
         modifiedSinceStr = date2str(modifiedSince) if modifiedSince else None
         print "Getting character data%s..." % ((' modified since %s' % modifiedSinceStr) if modifiedSinceStr else '')
-        if self.characters is None:
-            self.characters = []
+        if self.characterData is None:
+            self.characterData = []
         newCharacters = self.getData('%s/x-game-api/%d/characters/%s' % (self.joinRPG, self.projectId,
-                ('?modifiedSince=%s' % modifiedSinceStr) if modifiedSinceStr else ''))
+                                    ('?modifiedSince=%s' % modifiedSinceStr) if modifiedSinceStr else ''))
         if newCharacters:
             print "Getting details for %d characters... " % len(newCharacters),
             for newCharacter in newCharacters:
-                newCharacter.update(self.getData(self.joinRPG + newCharacter['CharacterLink']))
+                newCharacter.update(self.getData('%s%s' % (self.joinRPG, newCharacter['CharacterLink'])))
                 characterID = newCharacter['CharacterId']
-                for (index, oldCharacter) in enumerate(self.characters):
+                for (index, oldCharacter) in enumerate(self.characterData):
                     if oldCharacter['CharacterId'] == characterID:
-                        self.characters[index] = newCharacter
+                        self.characterData[index] = newCharacter
                         break
                 else:
-                    self.characters.append(newCharacter)
+                    self.characterData.append(newCharacter)
                 stdout.write('.')
                 stdout.flush()
             print
         else:
             print "No updates found"
+        self.characters = OrderedDict(sorted((character.characterId, character) for character in Character.fromIterable(self.characterData, self)))
         self.saveCache()
+        self.saveDebugDump()
         print "DONE"
         return self.characters
 
 def getAllCharacters(*args, **kwargs):
     """Returns all characters for a project with the specified ID as iterator of dictionaries."""
-    joinRPG = JoinRPG(*args, **kwargs)
-    return (character.getFields() for character in joinRPG.getCharacters())
+    return JoinRPG(*args, **kwargs).getCharacters()
 
 def main():
     getAllCharacters(*argv[1:], cacheData = True, cacheAuth = True)

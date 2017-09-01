@@ -1,10 +1,9 @@
 #!/usr/bin/python
 #
-# CSVable.py
+# JSONable.py
 #
-# A class that can be easily constructed from a JSON object..
+# A class that can be easily constructed from a JSON object.
 #
-
 from collections import OrderedDict
 from json import dumps as jsonDumps
 
