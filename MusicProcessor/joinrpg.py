@@ -216,14 +216,14 @@ class JoinRPG(JSONable):
             print
         elif newCharacters is not None:
             print "No updates found"
-        self.characters = OrderedDict(sorted((character.characterId, character) for character in Character.fromIterable(self.characterData, self)))
+        self.characters = tuple(sorted(Character.fromIterable(self.characterData, self), key = lambda character: character.characterId))
         self.saveCache()
         self.saveDebugDump()
         print "DONE"
         return self.characters
 
 def getAllCharacters(*args, **kwargs):
-    """Returns all characters for a project with the specified ID as iterator of dictionaries."""
+    """Returns all characters for a project with the specified ID as iterator of Character objects."""
     if not args:
         raise ValueError("Project ID is not specified")
     return JoinRPG(*args, **kwargs).getCharacters()
