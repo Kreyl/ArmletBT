@@ -12,6 +12,7 @@ class CSVable(object):
     """Interface of an object that can be read from or written to a CSV file row."""
 
     CSV_FIELDS = None # or iterable of ASCII field names or {csvField: asciiObjectField,} dictionary
+
     READ_REST_KEY = 'REST'
     READ_REST_VAL = None
     WRITE_REST_VAL = ''
@@ -41,7 +42,7 @@ class CSVable(object):
         return '%s({%s})' % (self.__class__.__name__, ', '.join('%r: %r' % fv for fv in self._getFieldsValues()))
 
     def __eq__(self, other):
-        return self.__class__ is other.__class__ and tuple(self._getFieldsValues()) == tuple(other._getFieldsValues()) # pylint: disable=W0212
+        return self.__class__ is other.__class__ and sorted(self._getFieldsValues()) == sorted(other._getFieldsValues()) # pylint: disable=W0212
 
 class CSVfileable(CSVable):
     """Interface of a class whose instances can be bunch-read from or written to a CSV file."""

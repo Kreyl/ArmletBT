@@ -6,6 +6,7 @@ from collections import OrderedDict
 from datetime import datetime, timedelta
 from getpass import getpass
 from json import loads as jsonLoads, JSONEncoder
+from os import getcwd
 from os.path import dirname, isfile, join, realpath
 from sys import argv, stdout
 
@@ -23,8 +24,13 @@ API_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 CACHE_FILE_NAME = 'joinrpg-%d.json'
 DEBUG_DUMP_FILE_NAME = 'joinrpg-%d-debug.json'
 
+def getWorkingDir():
+    if argv[0].endswith('.py'):
+        return dirname(realpath(argv[0]))
+    return getcwd()
+
 def getFileName(name):
-    return join(dirname(realpath(argv[0])), name)
+    return join(getWorkingDir(), name)
 
 def date2str(date):
     return date.strftime(API_DATE_FORMAT)[:-3]

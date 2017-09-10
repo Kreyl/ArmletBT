@@ -15,7 +15,7 @@ from re import compile as reCompile
 #from traceback import format_exc
 
 from CSVable import CSVable, CSVObjectReader, CSVObjectWriter
-from joinrpg import getAllCharactersAsObjects
+from joinrpg import getAllCharacters
 
 from Settings import currentTime, getFileName, CHARACTER_ID_START, CHARACTER_ID_END, CHARACTER_IDS
 
@@ -46,14 +46,15 @@ class CharacterError(Exception):
 class CharacterCSVable(CSVable):
     CSV_FIELDS = OrderedDict((
         ( 'rID', 'rID'),
-        (u'1344 Имя на браслете', 'shortName'),
-        (u'Персонаж', 'longName'),
-        (u'1346 Мэнни', 'isManni'),
+        ( 'characterID', 'characterID'),
+        (u'Имя на браслете', 'shortName'),
+        (u'Имя персонажа', 'longName'),
+        (u'Мэнни?', 'isManni'),
         (u'Нью-Йорк?', 'isNY'),
-        (u'1200 Внутренний Доган', 'dogan'),
-        (u'1203 Связи ка-тета', 'kaTet'),
-        (u'1399 Стартовое число очков действия', 'nAction'),
-        (u'1622 Музыка прислана?', 'hasMusic')
+        (u'Внутренний Доган', 'dogan'),
+        (u'Связи ка-тета', 'kaTet'),
+        (u'Стартовое число очков действия', 'nAction'),
+        (u'Музыка прислана?', 'hasMusic')
     ))
 
     DOGAN = OrderedDict(((u'Служба Алому Королю', -2), (u'Алое Колебание', -1), (u'Нейтралитет', 0), (u'Белое Колебание', 1), (u'Путь Белизны', 2)))
@@ -72,11 +73,6 @@ class CharacterCSVable(CSVable):
     SHORT_NAMES = set()
     LONG_NAMES = set()
 
-    def addSortKey(self):
-        """Sort characters by last name in short name, then initial."""
-        name = self.shortName.strip()
-        return (name[1:], name[0]) if name else ('Z', 'Z')
-
     def getKaTet(self):
         return tuple(self.kaTet.split(self.KA_TET_SEP)) if self.kaTet else ()
 
@@ -85,7 +81,7 @@ class CharacterCSVable(CSVable):
 
     def processNames(self):
         """Process and validate shortName and longName."""
-        self.shortName = self.shortName.strip()
+        self.shortName = (self.shortName or '').strip()
         if not self.shortName:
             raise CharacterError("Character short name is empty")
         try:
@@ -94,7 +90,7 @@ class CharacterCSVable(CSVable):
             assert False, "Character short name is not ASCII: %r" % self.shortName
         assert self.shortName.isalpha(), "Character short name is not alphabetic: %s" % self.shortName
         assert self.shortName[:2].isupper(), "Character short name doesn't start with two capital letters: %s" % self.shortName
-        self.longName = self.longName.strip()
+        self.longName = (self.longName or '').strip()
 
     def validate(self):
         """Validate fields other than shortName and longName."""
@@ -116,6 +112,7 @@ class CharacterCSVable(CSVable):
             assert kaTetName != self.shortName, "Character is meontioned in one's own ka-tet: %s" % kaTetName
             assert kaTetName in self.CHARACTERS, "Unknown ka-tet member of %s: %s" % (self.shortName, kaTetName)
             assert self.shortName in self.CHARACTERS[kaTetName].getKaTet(), "%s is in %s's ka-tet, but %s is not in %s's one" % (kaTetName, self.shortName, self.shortName, kaTetName)
+            assert set(self.CHARACTERS[kaTetName].getKaTet() + (self.CHARACTERS[kaTetName].shortName,)) == set(self.getKaTet() + (self.shortName,)), "Ka-tets for %s and %s do not match" % (self.shortName, kaTetName)
 
     def integrate(self):
         """Add the character to the list of characters."""
@@ -123,9 +120,10 @@ class CharacterCSVable(CSVable):
         self.CHARACTERS[self.shortName] = self
 
     def processFromCharactersCSV(self):
-        """Process the objects after it was loaded from CSV file."""
+        """Process the object after it was loaded from CSV file."""
         self.processNames()
         self.rID = int(self.rID)
+        self.characterID = int(self.characterID)
         self.isManni = int(self.isManni)
         self.isNY = int(self.isNY)
         self.dogan = int(self.dogan)
@@ -134,23 +132,33 @@ class CharacterCSVable(CSVable):
         self.validate()
         self.integrate()
 
-    def processFromJoinRPG(self):
-        """Process the objects after it was loaded from JoinRPG database."""
+    def fromJoinRPG(self, jCharacter):
+        """Construct the object from informated loaded from JoinRPG."""
+        for (name, field) in self.CSV_FIELDS.iteritems():
+            try:
+                setattr(self, field, getattr(jCharacter, field))
+            except AttributeError:
+                try:
+                    setattr(self, field, jCharacter.fieldValues[name])
+                except KeyError:
+                    pass
+        self.characterID = jCharacter.characterId
         self.processNames()
         self.rID = None
         self.isManni = int(bool((self.isManni or '').strip()))
-        self.isNY = int(u'Нью-Йорк' in self.REST[0].split(' | ')) # pylint: disable=E1101
+        self.isNY = int(u'Нью-Йорк' in jCharacter.groupNames)
         try:
             self.dogan = self.DOGAN[self.dogan.strip()] # pylint: disable=E1101
         except KeyError:
             assert False, "%s: unknown dogan setting: %r" % (self.shortName, self.dogan)
-        self.kaTet = ':'.join(name for name in (name.strip() for name in self.SEPARATORS.split(self.kaTet)) if name)
-        self.nAction = int(self.nAction.strip() or '0') # pylint: disable=E1101
+        self.kaTet = ':'.join(name for name in (name.strip() for name in self.SEPARATORS.split(self.kaTet or '')) if name)
+        self.nAction = int((self.nAction or '').strip() or '0') # pylint: disable=E1101
         try:
-            self.hasMusic = self.HAS_MUSIC[self.hasMusic]
+            self.hasMusic = self.HAS_MUSIC[self.hasMusic or '']
         except KeyError:
             assert False, "%s: unknown hasMusic setting: %r" % (self.shortName, self.hasMusic)
         self.validate()
+        return self
 
     @classmethod
     def validateAllCharacters(cls):
@@ -189,18 +197,21 @@ class CharacterCSVable(CSVable):
         """Update loaded characters set with data from a JoinRPG database."""
         print "Fetching data from JoinRPG.ru..."
         try:
-            characters = getAllCharactersAsObjects(GAME_ID, cls, dumpCSV = True, dumpCSV1251 = True)
-            print "Processing data..."
+            jCharacters = getAllCharacters(GAME_ID, cacheData = True, cacheAuth = True)
+            print "Loaded %d characters" % len(jCharacters)
             nChanged = 0
             nAdded = 0
-            for character in sorted(characters, key = lambda character: character.addSortKey()): # ToDo: sort by creation date instead, when available
+            for jCharacter in jCharacters:
                 try:
-                    character.processFromJoinRPG()
-                except CharacterError:
+                    character = CharacterCSVable()
+                    character.fromJoinRPG(jCharacter)
+                except CharacterError, e:
                     continue
                 oldCharacter = cls.CHARACTERS.get(character.shortName)
                 if oldCharacter:
                     character.rID = oldCharacter.rID # makes comparison work
+                    #print oldCharacter
+                    #print character
                     if character == oldCharacter:
                         continue
                     nChanged += 1
@@ -221,7 +232,7 @@ class CharacterCSVable(CSVable):
                 print "No changes detected"
         except Exception, e:
             #print format_exc()
-            print "ERROR fetching data: %s, using cached version" % e
+            print "ERROR fetching data: %s, using cached version" % unicode(e)
             return ()
 
     @classmethod
