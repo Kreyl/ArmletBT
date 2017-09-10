@@ -12,7 +12,6 @@
 from collections import OrderedDict
 from os.path import isfile
 from re import compile as reCompile
-#from traceback import format_exc
 
 from CSVable import CSVable, CSVObjectReader, CSVObjectWriter
 from joinrpg import getAllCharacters
@@ -175,6 +174,7 @@ class CharacterCSVable(CSVable):
     @classmethod
     def loadCharactersCSV(cls, fileName = getFileName(CHARACTERS_CSV)):
         """Load characters from a Characters.csv file."""
+        print "Loading characters..."
         cls.CHARACTERS.clear()
         if not isfile(fileName):
             print "No character file found"
@@ -198,20 +198,19 @@ class CharacterCSVable(CSVable):
         print "Fetching data from JoinRPG.ru..."
         try:
             jCharacters = getAllCharacters(GAME_ID, cacheData = True, cacheAuth = True)
-            print "Loaded %d characters" % len(jCharacters)
-            nChanged = 0
-            nAdded = 0
+            print "Loaded %d character entities" % len(jCharacters)
+            nLoaded = nChanged = nAdded = nSkipped = 0
             for jCharacter in jCharacters:
                 try:
                     character = CharacterCSVable()
                     character.fromJoinRPG(jCharacter)
                 except CharacterError, e:
+                    nSkipped += 1
                     continue
+                nLoaded += 1
                 oldCharacter = cls.CHARACTERS.get(character.shortName)
                 if oldCharacter:
                     character.rID = oldCharacter.rID # makes comparison work
-                    #print oldCharacter
-                    #print character
                     if character == oldCharacter:
                         continue
                     nChanged += 1
@@ -221,11 +220,17 @@ class CharacterCSVable(CSVable):
                     nAdded += 1
                 character.integrate()
             cls.validateAllCharacters()
+            if nLoaded:
+                print "Loaded %d valid characters" % nLoaded
+            else:
+                print "No valid characters found"
+            if nSkipped:
+                print "Skipped %d characters" % nSkipped
             if nAdded or nChanged:
                 if nAdded:
-                    print "Added characters: %d" % nAdded
+                    print "Added %d characters" % nAdded
                 if nChanged:
-                    print "Changed characters: %d" % nChanged
+                    print "Changed %d characters" % nChanged
                 print "Updating %s..." % CHARACTERS_CSV
                 cls.saveCharactersCSV(cls.CHARACTERS)
             else:
@@ -238,7 +243,6 @@ class CharacterCSVable(CSVable):
     @classmethod
     def update(cls):
         """Load and update the characters set."""
-        print "Processing characters..."
         cls.loadCharactersCSV()
         cls.updateFromJoinRPG()
         return cls.CHARACTERS

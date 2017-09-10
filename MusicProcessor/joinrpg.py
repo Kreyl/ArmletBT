@@ -225,7 +225,6 @@ class JoinRPG(JSONable):
         self.characters = tuple(sorted(Character.fromIterable(self.characterData, self), key = lambda character: character.characterId))
         self.saveCache()
         self.saveDebugDump()
-        print "DONE"
         return self.characters
 
 def getAllCharacters(*args, **kwargs):
