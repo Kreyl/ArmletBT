@@ -43,18 +43,15 @@ class CharacterError(Exception):
     pass
 
 class CharacterCSVable(CSVable):
-    CSV_FIELDS = OrderedDict((
-        ( 'rID', 'rID'),
-        ( 'characterID', 'characterID'),
-        (u'Имя на браслете', 'shortName'),
-        (u'Имя персонажа', 'longName'),
-        (u'Мэнни?', 'isManni'),
-        (u'Нью-Йорк?', 'isNY'),
-        (u'Внутренний Доган', 'dogan'),
-        (u'Связи ка-тета', 'kaTet'),
-        (u'Стартовое число очков действия', 'nAction'),
-        (u'Музыка прислана?', 'hasMusic')
-    ))
+    CSV_FIELDS = ('rID', 'shortName', 'isNY', 'isManni', 'dogan', 'kaTet', 'nAction', 'hasMusic')
+
+    JOINRPG_FIELDS = dict((
+            ('shortName', u'Имя на браслете'),
+            ('isManni', u'Мэнни?'),
+            ('dogan', u'Внутренний Доган'),
+            ('kaTet', u'Связи ка-тета'),
+            ('nAction', u'Стартовое число очков действия'),
+            ('hasMusic', u'Музыка прислана?')))
 
     DOGAN = OrderedDict(((u'Служба Алому Королю', -2), (u'Алое Колебание', -1), (u'Нейтралитет', 0), (u'Белое Колебание', 1), (u'Путь Белизны', 2)))
 
@@ -70,7 +67,6 @@ class CharacterCSVable(CSVable):
     CHARACTERS = OrderedDict()
     RIDS = set()
     SHORT_NAMES = set()
-    LONG_NAMES = set()
 
     def getKaTet(self):
         return tuple(self.kaTet.split(self.KA_TET_SEP)) if self.kaTet else ()
@@ -79,7 +75,7 @@ class CharacterCSVable(CSVable):
         self.kaTet = self.KA_TET_SEP.join(kaCharacters)
 
     def processNames(self):
-        """Process and validate shortName and longName."""
+        """Process and validate shortName."""
         self.shortName = (self.shortName or '').strip()
         if not self.shortName:
             raise CharacterError("Character short name is empty")
@@ -89,10 +85,9 @@ class CharacterCSVable(CSVable):
             assert False, "Character short name is not ASCII: %r" % self.shortName
         assert self.shortName.isalpha(), "Character short name is not alphabetic: %s" % self.shortName
         assert self.shortName[:2].isupper(), "Character short name doesn't start with two capital letters: %s" % self.shortName
-        self.longName = (self.longName or '').strip()
 
     def validate(self):
-        """Validate fields other than shortName and longName."""
+        """Validate fields other than shortName."""
         assert self.isManni in (0, 1), "Bas isManni value: %d" % self.isManni
         assert self.isNY in (0, 1), "Bas isNY value: %d" % self.isNY
         assert self.dogan in self.DOGAN.itervalues(), "Bad dogan value: %s, expected %s" % (self.dogan, '/'.join(str(v) for v in self.DOGAN.itervalues()))
@@ -105,8 +100,6 @@ class CharacterCSVable(CSVable):
         self.RIDS.add(self.rID)
         assert self.shortName.lower() not in self.SHORT_NAMES, "Duplicate character short name %r" % self.shortName
         self.SHORT_NAMES.add(self.shortName.lower())
-        assert not self.longName or self.longName.lower() not in self.LONG_NAMES, "Duplicate character long name %r" % self.longName
-        self.LONG_NAMES.add(self.longName.lower())
         for kaTetName in self.getKaTet():
             assert kaTetName != self.shortName, "Character is meontioned in one's own ka-tet: %s" % kaTetName
             assert kaTetName in self.CHARACTERS, "Unknown ka-tet member of %s: %s" % (self.shortName, kaTetName)
@@ -122,7 +115,6 @@ class CharacterCSVable(CSVable):
         """Process the object after it was loaded from CSV file."""
         self.processNames()
         self.rID = int(self.rID)
-        self.characterID = int(self.characterID)
         self.isManni = int(self.isManni)
         self.isNY = int(self.isNY)
         self.dogan = int(self.dogan)
@@ -133,15 +125,14 @@ class CharacterCSVable(CSVable):
 
     def fromJoinRPG(self, jCharacter):
         """Construct the object from informated loaded from JoinRPG."""
-        for (name, field) in self.CSV_FIELDS.iteritems():
+        for field in self._getFields():
             try:
                 setattr(self, field, getattr(jCharacter, field))
             except AttributeError:
                 try:
-                    setattr(self, field, jCharacter.fieldValues[name])
+                    setattr(self, field, jCharacter.fieldValues[self.JOINRPG_FIELDS[field]])
                 except KeyError:
                     pass
-        self.characterID = jCharacter.characterId
         self.processNames()
         self.rID = None
         self.isManni = int(bool((self.isManni or '').strip()))
@@ -167,7 +158,6 @@ class CharacterCSVable(CSVable):
         assert tuple(character.rID for character in cls.CHARACTERS.itervalues()) == tuple(xrange(CHARACTER_ID_START, CHARACTER_ID_START + len(cls.CHARACTERS))), "Damaged rIDs in %s file: %s" % (CHARACTERS_CSV, tuple(character.rID for character in cls.CHARACTERS.itervalues()))
         cls.RIDS.clear()
         cls.SHORT_NAMES.clear()
-        cls.LONG_NAMES.clear()
         for character in cls.CHARACTERS.itervalues():
             character.validateLinks()
 
@@ -220,12 +210,12 @@ class CharacterCSVable(CSVable):
                     nAdded += 1
                 character.integrate()
             cls.validateAllCharacters()
+            if nSkipped:
+                print "Skipped %d characters" % nSkipped
             if nLoaded:
                 print "Loaded %d valid characters" % nLoaded
             else:
                 print "No valid characters found"
-            if nSkipped:
-                print "Skipped %d characters" % nSkipped
             if nAdded or nChanged:
                 if nAdded:
                     print "Added %d characters" % nAdded

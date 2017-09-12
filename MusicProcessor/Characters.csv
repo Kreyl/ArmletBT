@@ -8,15 +8,15 @@
 #
 # !!! DO NOT EDIT !!!
 #
-# Generated at 2017-09-10 05:34:09
+# Generated at 2017-09-12 06:42:51
 #
-rID,characterID,Имя на браслете,Имя персонажа,Мэнни?,Нью-Йорк?,Внутренний Доган,Связи ка-тета,Стартовое число очков действия,Музыка прислана?
-100,12557,JRight,,0,0,2,,0,0
-101,12558,CRandall,,0,0,-2,,5,0
-102,12560,RDias,,0,0,-1,,4,0
-103,12561,DRice,,0,0,-1,,4,0
-104,12563,AFlores,,1,0,0,,3,0
-105,13118,SJames,,0,0,0,ASExupery:PSayre,7,1
-106,13388,PSayre,,0,0,-2,SJames:ASExupery,0,0
-107,13391,RRobin,,0,0,2,,0,0
-108,13402,ASExupery,,0,0,1,SJames:PSayre,0,0
+rID,shortName,isNY,isManni,dogan,kaTet,nAction,hasMusic
+100,JRight,0,0,2,,0,0
+101,CRandall,0,0,-2,,5,0
+102,RDias,0,0,-1,,4,0
+103,DRice,0,0,-1,,4,0
+104,AFlores,0,1,0,,3,0
+105,SJames,1,0,0,ASExupery:PSayre,7,1
+106,PSayre,0,0,-2,SJames:ASExupery,0,0
+107,RRobin,0,0,2,,0,0
+108,ASExupery,0,0,1,SJames:PSayre,0,0
