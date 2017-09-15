@@ -198,12 +198,12 @@ class CSVObjectReader(CSVableParser, DictReader):
             elif value is not None:
                 rest = getattr(ret, self.csvAbleClass.READ_REST_KEY, None)
                 if rest is None:
-                    rest = value if field == self.csvAbleClass.READ_REST_KEY else [value,]
+                    rest = value if field == self.csvAbleClass.READ_REST_KEY else {csvField: value}
                     setattr(ret, self.csvAbleClass.READ_REST_KEY, rest)
                 elif field == self.csvAbleClass.READ_REST_KEY:
-                    rest.extend(value)
+                    rest.update(value)
                 else:
-                    rest.append(value)
+                    rest[csvField] = value
         return ret
 
 class CSVObjectWriter(CSVableParser, DictWriter):

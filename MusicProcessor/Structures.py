@@ -122,7 +122,7 @@ class Reason(CSVdumpable):
                 cls.addReason(reason)
 
 class Emotion(CSVdumpable):
-    CSV_FIELDS = ('eID', 'eName', 'ePriority')
+    CSV_FIELDS = ('eID', 'eName', 'ePriority', 'isPlayer')
 
     C_NODE = ' /* %s */ %s{ %s, 1, %s, -1, -1 },'
     H_NODE = '#define EMOTION_%s%s %2d'
@@ -131,11 +131,12 @@ class Emotion(CSVdumpable):
     TITLE = 'Emotions'
     HEADER_TITLE = 'Emotions (eID<->eName) global map.'
 
-    def __init__(self, eName, ePriority):
+    def __init__(self, eName, ePriority, isPlayer):
         CSVdumpable.__init__(self)
         self.eID = None
         self.eName = eName
         self.ePriority = ePriority or 0
+        self.isPlayer = isPlayer
 
     def sortKey(self):
         return self.eName

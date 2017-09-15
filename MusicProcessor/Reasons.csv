@@ -7,7 +7,7 @@
 #
 # !!! DO NOT EDIT !!!
 #
-# Generated at 2017-07-04 04:48:58
+# Generated at 2017-09-15 03:24:02
 #
 rID,rName,rPriority,eName
 0,MASTERKA,240,MASTERKA
@@ -110,11 +110,12 @@ rID,rName,rPriority,eName
 97,PLACEHOLDER_97,0,
 98,PLACEHOLDER_98,0,
 99,PLACEHOLDER_99,0,
-100,RDias,80,
-101,AFlores,80,
-102,CRandall,3,CRIMSON_KING
+100,JRight,2,WHITE_GLORY
+101,CRandall,3,CRIMSON_KING
+102,RDias,80,
 103,DRice,80,
-104,JRight,2,WHITE_GLORY
-105,RRobin,80,
-106,ASExupery,80,
-107,PSayre,80,
+104,AFlores,80,
+105,SJames,80,
+106,PSayer,80,
+107,RRobin,80,
+108,ASExupery,80,

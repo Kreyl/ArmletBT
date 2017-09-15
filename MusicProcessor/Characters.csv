@@ -8,7 +8,7 @@
 #
 # !!! DO NOT EDIT !!!
 #
-# Generated at 2017-09-12 06:42:51
+# Generated at 2017-09-15 03:24:02
 #
 rID,shortName,isNY,isManni,dogan,kaTet,nAction,hasMusic
 100,JRight,0,0,2,,0,0
@@ -16,7 +16,7 @@ rID,shortName,isNY,isManni,dogan,kaTet,nAction,hasMusic
 102,RDias,0,0,-1,,4,0
 103,DRice,0,0,-1,,4,0
 104,AFlores,0,1,0,,3,0
-105,SJames,1,0,0,ASExupery:PSayre,7,1
-106,PSayre,0,0,-2,SJames:ASExupery,0,0
+105,SJames,1,0,0,,7,1
+106,PSayer,0,0,-2,,0,0
 107,RRobin,0,0,2,,0,0
-108,ASExupery,0,0,1,SJames:PSayre,0,0
+108,ASExupery,0,0,1,,0,0

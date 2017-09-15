@@ -39,7 +39,7 @@ H_TARGET = join(C_PATH, 'emotions.h')
 TEST_COMMAND = 'gcc -I "%s" -o test "%s" test.c && ./test && rm test' % (C_PATH, C_TARGET)
 
 class GoogleTableEntry(CSVable):
-    CSV_FIELDS = ('rName', 'rPriority', 'nSources', 'eName', 'ePriority')
+    CSV_FIELDS = ('rName', 'rPriority', 'nSources', 'eName', 'ePriority', 'contents')
 
     REASON_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*|[A-Z][a-zA-Z]*')
     EMOTION_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*')
@@ -81,6 +81,8 @@ class GoogleTableEntry(CSVable):
             self.ePriority = int(self.ePriority) if self.ePriority else None
         except ValueError:
             assert False, "Priority is not a number for reason %s, emotion %s: %r" % (self.rName, self.eName, self.ePriority)
+        # isPlayer
+        self.isPlayer = int(u'игроки' in self.contents) # pylint: disable=E1101
         # ePriority consistency
         emotion = Emotion.INSTANCES.get(self.eName)
         if emotion:
@@ -91,7 +93,7 @@ class GoogleTableEntry(CSVable):
                 assert emotion.ePriority == self.ePriority, "Non-consistent priority for emotion %s: %d and %d" % (self.eName, emotion.ePriority, self.ePriority)
         else:
         # Fill in the tables
-            emotion = Emotion.addEmotion(Emotion(self.eName, self.ePriority))
+            emotion = Emotion.addEmotion(Emotion(self.eName, self.ePriority, self.isPlayer))
         if self.rName != '-':
             Reason.addReason(Reason(self.rName, self.rPriority, self.nSources, self.eName))
 
