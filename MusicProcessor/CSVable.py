@@ -7,6 +7,7 @@
 #
 from collections import OrderedDict
 from csv import DictReader, DictWriter
+from os.path import isfile
 
 class CSVable(object):
     """Interface of an object that can be read from or written to a CSV file row."""
@@ -101,6 +102,9 @@ class CSVfileable(CSVable):
             encoding = cls.getEncoding()
         if handleComments is None:
             handleComments = cls.getHeaderComment() is not None
+        if not isfile(fileName):
+            print "No file found"
+            return ()
         with open(fileName, 'rb') as f:
             return CSVObjectReader(f, cls, useHeader, encoding, handleComments, *args, **kwargs)
 

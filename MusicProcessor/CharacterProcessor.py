@@ -207,6 +207,7 @@ class CharacterCSVable(CSVdumpable):
                     print "Changed %d characters" % nChanged
                 print "Updating %s..." % CHARACTERS_CSV
                 cls.dumpCSV()
+                print "Saved characters: %d" % len(cls.INSTANCES)
             else:
                 print "No changes detected"
         except Exception, e:
@@ -217,7 +218,11 @@ class CharacterCSVable(CSVdumpable):
     @classmethod
     def update(cls):
         """Load and update the characters set."""
+        print "Loading characters..."
+        cls.INSTANCES.clear()
         cls.loadCSV()
+        cls.validateAllCharacters()
+        print "Loaded characters: %d" % len(cls.INSTANCES)
         cls.updateFromJoinRPG()
         return cls.INSTANCES
 
