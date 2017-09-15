@@ -13,7 +13,6 @@ from os.path import join
 from platform import system
 from re import compile as reCompile
 from subprocess import Popen, PIPE, STDOUT
-#from traceback import format_exc
 from urllib2 import urlopen
 
 from CSVable import CSVable, CSVObjectReader

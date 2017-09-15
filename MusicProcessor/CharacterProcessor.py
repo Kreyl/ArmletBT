@@ -10,13 +10,12 @@
 # Usage: python CharacterProcessor.py
 #
 from collections import OrderedDict
-from os.path import isfile
 from re import compile as reCompile
 
-from CSVable import CSVable, CSVObjectReader, CSVObjectWriter
-from joinrpg import getAllCharacters
+from Settings import CHARACTER_ID_START, CHARACTER_ID_END, CHARACTER_IDS
+from Structures import CSVdumpable
 
-from Settings import currentTime, getFileName, CHARACTER_ID_START, CHARACTER_ID_END, CHARACTER_IDS
+from joinrpg import getAllCharacters
 
 ENCODING = 'windows-1251'
 
@@ -42,7 +41,7 @@ Generated at %s
 class CharacterError(Exception):
     pass
 
-class CharacterCSVable(CSVable):
+class CharacterCSVable(CSVdumpable):
     CSV_FIELDS = ('rID', 'shortName', 'isNY', 'isManni', 'dogan', 'kaTet', 'nAction', 'hasMusic')
 
     JOINRPG_FIELDS = dict((
@@ -64,7 +63,13 @@ class CharacterCSVable(CSVable):
 
     KA_TET_SEP = ':'
 
-    CHARACTERS = OrderedDict()
+    INSTANCES = OrderedDict()
+    TITLE = 'Characters'
+    HEADER_TITLE = '''# Characters table for ArmLet initialization.
+#
+# Generated, updated from JoinRPG and used by CharacterProcessor.py
+# to track persistent unique character Reason IDs.'''
+
     RIDS = set()
     SHORT_NAMES = set()
 
@@ -102,14 +107,14 @@ class CharacterCSVable(CSVable):
         self.SHORT_NAMES.add(self.shortName.lower())
         for kaTetName in self.getKaTet():
             assert kaTetName != self.shortName, "Character is meontioned in one's own ka-tet: %s" % kaTetName
-            assert kaTetName in self.CHARACTERS, "Unknown ka-tet member of %s: %s" % (self.shortName, kaTetName)
-            assert self.shortName in self.CHARACTERS[kaTetName].getKaTet(), "%s is in %s's ka-tet, but %s is not in %s's one" % (kaTetName, self.shortName, self.shortName, kaTetName)
-            assert set(self.CHARACTERS[kaTetName].getKaTet() + (self.CHARACTERS[kaTetName].shortName,)) == set(self.getKaTet() + (self.shortName,)), "Ka-tets for %s and %s do not match" % (self.shortName, kaTetName)
+            assert kaTetName in self.INSTANCES, "Unknown ka-tet member of %s: %s" % (self.shortName, kaTetName)
+            assert self.shortName in self.INSTANCES[kaTetName].getKaTet(), "%s is in %s's ka-tet, but %s is not in %s's one" % (kaTetName, self.shortName, self.shortName, kaTetName)
+            assert set(self.INSTANCES[kaTetName].getKaTet() + (self.INSTANCES[kaTetName].shortName,)) == set(self.getKaTet() + (self.shortName,)), "Ka-tets for %s and %s do not match" % (self.shortName, kaTetName)
 
     def integrate(self):
         """Add the character to the list of characters."""
         assert CHARACTER_ID_START <= self.rID <= CHARACTER_ID_END, "Bad character ID value: %d" % self.rID
-        self.CHARACTERS[self.shortName] = self
+        self.INSTANCES[self.shortName] = self
 
     def processFromCharactersCSV(self):
         """Process the object after it was loaded from CSV file."""
@@ -153,34 +158,13 @@ class CharacterCSVable(CSVable):
     @classmethod
     def validateAllCharacters(cls):
         """Check validity of the whole set of characters."""
-        assert len(cls.CHARACTERS) <= len(CHARACTER_IDS), "Too many characters in %s file: %d" % (CHARACTERS_CSV, len(cls.CHARACTERS))
-        cls.CHARACTERS = OrderedDict(sorted(cls.CHARACTERS.iteritems(), key = lambda (_shortName, character): character.rID))
-        assert tuple(character.rID for character in cls.CHARACTERS.itervalues()) == tuple(xrange(CHARACTER_ID_START, CHARACTER_ID_START + len(cls.CHARACTERS))), "Damaged rIDs in %s file: %s" % (CHARACTERS_CSV, tuple(character.rID for character in cls.CHARACTERS.itervalues()))
+        assert len(cls.INSTANCES) <= len(CHARACTER_IDS), "Too many characters in %s file: %d" % (CHARACTERS_CSV, len(cls.INSTANCES))
+        cls.INSTANCES = OrderedDict(sorted(cls.INSTANCES.iteritems(), key = lambda (_shortName, character): character.rID))
+        assert tuple(character.rID for character in cls.INSTANCES.itervalues()) == tuple(xrange(CHARACTER_ID_START, CHARACTER_ID_START + len(cls.INSTANCES))), "Damaged rIDs in %s file: %s" % (CHARACTERS_CSV, tuple(character.rID for character in cls.INSTANCES.itervalues()))
         cls.RIDS.clear()
         cls.SHORT_NAMES.clear()
-        for character in cls.CHARACTERS.itervalues():
+        for character in cls.INSTANCES.itervalues():
             character.validateLinks()
-
-    @classmethod
-    def loadCharactersCSV(cls, fileName = getFileName(CHARACTERS_CSV)):
-        """Load characters from a Characters.csv file."""
-        print "Loading characters..."
-        cls.CHARACTERS.clear()
-        if not isfile(fileName):
-            print "No character file found"
-            return
-        with open(fileName, 'rb') as f:
-            for character in CSVObjectReader(f, cls, True, ENCODING, True):
-                character.processFromCharactersCSV()
-        cls.validateAllCharacters()
-        print "Loaded characters: %d" % len(cls.CHARACTERS)
-
-    @classmethod
-    def saveCharactersCSV(cls, characters, fileName = getFileName(CHARACTERS_CSV), header = CHARACTERS_CSV_HEADER): # ToDo: Use CSVdumpable instead
-        """Save characters to a Characters.csv file."""
-        with open(fileName, 'wb') as f:
-            CSVObjectWriter(f, cls, True, ENCODING, header % currentTime()).writerows(characters.itervalues())
-        print "Saved characters: %d" % len(cls.CHARACTERS)
 
     @classmethod
     def updateFromJoinRPG(cls):
@@ -198,14 +182,14 @@ class CharacterCSVable(CSVable):
                     nSkipped += 1
                     continue
                 nLoaded += 1
-                oldCharacter = cls.CHARACTERS.get(character.shortName)
+                oldCharacter = cls.INSTANCES.get(character.shortName)
                 if oldCharacter:
                     character.rID = oldCharacter.rID # makes comparison work
                     if character == oldCharacter:
                         continue
                     nChanged += 1
                 else: # new character
-                    character.rID = max(c.rID for c in cls.CHARACTERS.itervalues()) + 1 if cls.CHARACTERS else CHARACTER_ID_START
+                    character.rID = max(c.rID for c in cls.INSTANCES.itervalues()) + 1 if cls.INSTANCES else CHARACTER_ID_START
                     assert character.rID in CHARACTER_IDS, "Character ID range is full, can't add new character: %d" % character.rID
                     nAdded += 1
                 character.integrate()
@@ -222,7 +206,7 @@ class CharacterCSVable(CSVable):
                 if nChanged:
                     print "Changed %d characters" % nChanged
                 print "Updating %s..." % CHARACTERS_CSV
-                cls.saveCharactersCSV(cls.CHARACTERS)
+                cls.dumpCSV()
             else:
                 print "No changes detected"
         except Exception, e:
@@ -233,9 +217,9 @@ class CharacterCSVable(CSVable):
     @classmethod
     def update(cls):
         """Load and update the characters set."""
-        cls.loadCharactersCSV()
+        cls.loadCSV()
         cls.updateFromJoinRPG()
-        return cls.CHARACTERS
+        return cls.INSTANCES
 
 def updateCharacters():
     return CharacterCSVable.update()
