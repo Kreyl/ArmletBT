@@ -3,8 +3,7 @@
 #
 # Character Processor for "Dark Tower: All Hail" LARP.
 #
-# - Downloads CSV with all characters for a game
-# - Extracts character names and data from CSV
+# - Downloads character data from JoinRPG project.
 # - Loads, verifies and updates Characters.csv file
 #
 # Usage: python CharacterProcessor.py
@@ -43,6 +42,8 @@ class CharacterError(Exception):
 
 class CharacterCSVable(CSVdumpable):
     CSV_FIELDS = ('rID', 'shortName', 'isNY', 'isManni', 'dogan', 'kaTet', 'nAction', 'hasMusic')
+
+    KEY_FUNCTION = lambda character: character.shortName
 
     JOINRPG_FIELDS = dict((
             ('shortName', u'Имя на браслете'),
@@ -176,8 +177,7 @@ class CharacterCSVable(CSVdumpable):
             nLoaded = nChanged = nAdded = nSkipped = 0
             for jCharacter in jCharacters:
                 try:
-                    character = CharacterCSVable()
-                    character.fromJoinRPG(jCharacter)
+                    character = CharacterCSVable().fromJoinRPG(jCharacter)
                 except CharacterError, e:
                     nSkipped += 1
                     continue
@@ -221,6 +221,8 @@ class CharacterCSVable(CSVdumpable):
         print "Loading characters..."
         cls.INSTANCES.clear()
         cls.loadCSV()
+        for character in cls.INSTANCES.itervalues():
+            character.processFromCharactersCSV()
         cls.validateAllCharacters()
         print "Loaded characters: %d" % len(cls.INSTANCES)
         cls.updateFromJoinRPG()

@@ -5,8 +5,7 @@
 #
 # Usage:
 # - Downloads basic reasons and emotions data from Google Docs.
-# - Also processes Locations.csv and Characters.csv
-#   and produces Emotions.csv, Reasons.csv, emotions.c and emotions.h.
+# - Also processes Characters.csv and produces Emotions.csv, Reasons.csv, emotions.c and emotions.h.
 # - Compile and link emotions.c and emotions.h with whatever code that needs emotions data.
 #
 from os.path import join
@@ -173,7 +172,7 @@ class GoogleTableEntry(CSVable):
             subprocess = Popen(TEST_COMMAND, shell = True, stdout = PIPE, stderr = STDOUT)
             output = subprocess.communicate()[0]
             print "Done (%s): %s" % (subprocess.returncode, output),
-        return Reason.INSTANCES
+        return (Emotion.INSTANCES, cls.CHARACTERS)
 
 def updateEmotions():
     return GoogleTableEntry.update()

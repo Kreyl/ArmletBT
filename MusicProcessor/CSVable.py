@@ -53,6 +53,7 @@ class CSVfileable(CSVable):
     NEEDS_HEADER = None
     ENCODING = None
     HEADER_COMMENT = None
+    KEY_FUNCTION = None
 
     @classmethod
     def getInstances(cls):
@@ -90,10 +91,8 @@ class CSVfileable(CSVable):
         return tuple(self._getFieldsValues())
 
     @classmethod
-    def loadCSV(cls, instances = None, fileName = None, useHeader = None, encoding = None, handleComments = None, *args, **kwargs):
+    def loadCSV(cls, fileName = None, useHeader = None, encoding = None, handleComments = None, keyFunction = None, *args, **kwargs):
         """Loads instances of this class from a CSV file."""
-        if instances is None:
-            instances = cls.getInstances()
         if fileName is None:
             fileName = cls.getFileName()
         if useHeader is None:
@@ -102,11 +101,18 @@ class CSVfileable(CSVable):
             encoding = cls.getEncoding()
         if handleComments is None:
             handleComments = cls.getHeaderComment() is not None
+        if keyFunction is None:
+            keyFunction = cls.KEY_FUNCTION
+        cls.INSTANCES = OrderedDict() if keyFunction else []
         if not isfile(fileName):
             print "No file found"
             return ()
         with open(fileName, 'rb') as f:
-            return CSVObjectReader(f, cls, useHeader, encoding, handleComments, *args, **kwargs)
+            for obj in CSVObjectReader(f, cls, useHeader, encoding, handleComments, *args, **kwargs):
+                if isinstance(cls.INSTANCES, list):
+                    cls.INSTANCES.append(obj)
+                else: # dict
+                    cls.INSTANCES[keyFunction(obj)] = obj
 
     @classmethod
     def dumpCSV(cls, instances = None, fileName = None, writeHeader = None, encoding = None, headerComment = None, *args, **kwargs):
