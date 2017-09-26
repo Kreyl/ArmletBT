@@ -36,6 +36,9 @@ class CSVable(object):
     def _getFieldsValues(self): # generator
         return ((field, getattr(self, field)) for field in self._getFields())
 
+    def getFields(self):
+        return dict(self._getFieldsValues())
+
     def __str__(self):
         return '{%s}' % ', '.join('%s: %s' % fv for fv in self._getFieldsValues())
 

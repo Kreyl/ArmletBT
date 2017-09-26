@@ -75,10 +75,10 @@ class CharacterCSVable(CSVdumpable):
     SHORT_NAMES = set()
 
     def getKaTet(self):
-        return tuple(self.kaTet.split(self.KA_TET_SEP)) if self.kaTet else ()
+        return set(self.kaTet.split(self.KA_TET_SEP)) if self.kaTet else set()
 
     def setKaTet(self, kaCharacters):
-        self.kaTet = self.KA_TET_SEP.join(kaCharacters)
+        self.kaTet = self.KA_TET_SEP.join(sorted(kaCharacters))
 
     def processNames(self):
         """Process and validate shortName."""
@@ -106,11 +106,13 @@ class CharacterCSVable(CSVdumpable):
         self.RIDS.add(self.rID)
         assert self.shortName.lower() not in self.SHORT_NAMES, "Duplicate character short name %r" % self.shortName
         self.SHORT_NAMES.add(self.shortName.lower())
-        for kaTetName in self.getKaTet():
-            assert kaTetName != self.shortName, "Character is meontioned in one's own ka-tet: %s" % kaTetName
-            assert kaTetName in self.INSTANCES, "Unknown ka-tet member of %s: %s" % (self.shortName, kaTetName)
-            assert self.shortName in self.INSTANCES[kaTetName].getKaTet(), "%s is in %s's ka-tet, but %s is not in %s's one" % (kaTetName, self.shortName, self.shortName, kaTetName)
-            assert set(self.INSTANCES[kaTetName].getKaTet() + (self.INSTANCES[kaTetName].shortName,)) == set(self.getKaTet() + (self.shortName,)), "Ka-tets for %s and %s do not match" % (self.shortName, kaTetName)
+        kaTet = self.getKaTet()
+        if kaTet:
+            assert not kaTet or self.shortName in kaTet, "Character is not in one's own ka-tet: %s" % self.shortName
+            assert len(kaTet) > 1, "Character is the only member in one's ka-tet: %s" % self.shortName
+            for kaTetName in kaTet:
+                assert kaTetName in self.INSTANCES, "Unknown ka-tet member of %s: %s" % (self.shortName, kaTetName)
+                assert kaTet == self.INSTANCES[kaTetName].getKaTet(), "Ka-tets for %s and %s are different" % (self.shortName, kaTetName)
 
     def integrate(self):
         """Add the character to the list of characters."""
@@ -147,7 +149,7 @@ class CharacterCSVable(CSVdumpable):
             self.dogan = self.DOGAN[self.dogan.strip()] # pylint: disable=E1101
         except KeyError:
             assert False, "%s: unknown dogan setting: %r" % (self.shortName, self.dogan)
-        self.kaTet = ':'.join(name for name in (name.strip() for name in self.SEPARATORS.split(self.kaTet or '')) if name)
+        self.setKaTet(name for name in (name.strip() for name in self.SEPARATORS.split(self.kaTet or '')) if name)
         self.nAction = int((self.nAction or '').strip() or '0') # pylint: disable=E1101
         try:
             self.hasMusic = self.HAS_MUSIC[self.hasMusic or '']
@@ -166,6 +168,8 @@ class CharacterCSVable(CSVdumpable):
         cls.SHORT_NAMES.clear()
         for character in cls.INSTANCES.itervalues():
             character.validateLinks()
+        for character in cls.INSTANCES.itervalues():
+            character.kaTetIDs = ','.join(sorted(str(cls.INSTANCES[k].rID) for k in character.getKaTet() if k != character.shortName))
 
     @classmethod
     def updateFromJoinRPG(cls):
