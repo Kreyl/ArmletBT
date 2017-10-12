@@ -32,16 +32,15 @@
 #define BUTTONS_ENABLED         FALSE
 
 #define ADC_REQUIRED            FALSE
-#define STM32_DMA_REQUIRED      TRUE    // Leave this macro name for OS
 
 #if 1 // ========================== GPIO =======================================
 // EXTI
 #define INDIVIDUAL_EXTI_IRQ_REQUIRED    FALSE
 
 // UART
-#define UART_GPIO       GPIOA
-#define UART_TX_PIN     9
-#define UART_RX_PIN     10
+#define UART_GPIO       GPIOD
+#define UART_TX_PIN     5
+#define UART_RX_PIN     6
 
 // Battery measuremrnt
 #define BAT_MEAS_ADC    GPIOC, 5
@@ -75,9 +74,8 @@
 #endif // GPIO
 
 #if 1 // ========================== USART ======================================
-#define UART            USART1
 #define PRINTF_FLOAT_EN FALSE
-#define CMD_UART        USART1
+#define CMD_UART        USART2
 #define UART_USE_INDEPENDENT_CLK    TRUE
 #define UART_TXBUF_SZ   1024
 #endif
@@ -114,8 +112,8 @@
 #define STM32_DMA_REQUIRED  TRUE
 // ==== Uart ====
 // Remap is made automatically if required
-#define UART_DMA_TX     STM32_DMA2_STREAM7
-#define UART_DMA_RX     STM32_DMA2_STREAM5
+#define UART_DMA_TX     STM32_DMA1_STREAM6
+#define UART_DMA_RX     STM32_DMA1_STREAM5
 #define UART_DMA_CHNL   4
 
 #if I2C1_ENABLED // ==== I2C1 ====
