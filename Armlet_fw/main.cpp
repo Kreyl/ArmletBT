@@ -12,6 +12,7 @@
 #include "led.h"
 #include "Sequences.h"
 #include "shell.h"
+#include "radio_lvl1.h"
 
 // Forever
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
@@ -26,18 +27,18 @@ void ITask();
 int main() {
     // ==== Setup clock ====
     Clk.SetHiPerfMode();
-    Clk.UpdateFreqValues();
 
     // ==== Init OS ====
     halInit();
     chSysInit();
+    Clk.UpdateFreqValues(); // Do it after halInit to update system timer using correct prescaler
 
     // ==== Init Hard & Soft ====
     Uart.Init(115200);
     Printf("\r%S %S\r\n", APP_NAME, BUILD_TIME);
     Clk.PrintFreqs();
 
-//    Radio.Init();
+    Radio.Init();
     // ==== Main cycle ====
     ITask();
 }

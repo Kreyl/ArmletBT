@@ -6,7 +6,6 @@
  */
 
 #include "kl_adc.h"
-//#include "main.h"
 #include "board.h"
 #include "MsgQ.h"
 

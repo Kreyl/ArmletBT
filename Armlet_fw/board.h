@@ -59,7 +59,7 @@
 #define I2C2_BAUDRATE   100000
 
 // Radio: SPI, PGpio, Sck, Miso, Mosi, Cs, Gdo0
-#define CC_Setup0       SPI1, GPIOA, 5,6,7, 1, 0
+#define CC_Setup0       SPI1, GPIOA, 5,6,7, 10, 4
 
 // SD
 #define SD_PWR_PIN      GPIOC, 4
