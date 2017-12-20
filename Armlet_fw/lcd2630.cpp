@@ -222,8 +222,8 @@ void Lcd_t::PutBitmapBegin(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height
     DC_Hi();
 }
 void Lcd_t::PutBitmapNext(uint8_t Byte1, uint8_t Byte2) {
-    WriteByte(Byte1);
     WriteByte(Byte2);
+    WriteByte(Byte1);
 }
 void Lcd_t::PutBitmapEnd() {
     DC_Lo();

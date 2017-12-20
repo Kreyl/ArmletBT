@@ -45,7 +45,7 @@ int main() {
 
     SD.Init();
 
-    DrawBmpFile(0, 0, "StartImage.bmp", &CommonFile);
+    DrawBmpFile(0, 0, "24.bmp", &CommonFile);
 
 //    Radio.Init();
     // ==== Main cycle ====

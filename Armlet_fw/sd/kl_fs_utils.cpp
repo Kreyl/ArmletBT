@@ -17,7 +17,7 @@ char IStr[SD_STRING_SZ];
 
 #if 1 // ============================== Common =================================
 uint8_t TryOpenFileRead(const char *Filename, FIL *PFile) {
-    Printf("%S: %S\r", __FUNCTION__, Filename);
+//    Printf("%S: %S\r", __FUNCTION__, Filename);
     FRESULT rslt = f_open(PFile, Filename, FA_READ);
     if(rslt == FR_OK) {
         // Check if zero file
@@ -33,7 +33,6 @@ uint8_t TryOpenFileRead(const char *Filename, FIL *PFile) {
         else Printf("OpenFile error: %u\r", rslt);
         return retvFail;
     }
-    Printf("end\r");
 }
 
 uint8_t TryOpenFileRewrite(const char *Filename, FIL *PFile) {

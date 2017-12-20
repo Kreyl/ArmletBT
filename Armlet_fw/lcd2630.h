@@ -41,7 +41,7 @@ public:
     void Brightness(uint16_t Brightness)  { BckLt.Set(Brightness); }
     // Direction & Origin
     void SetDirHOrigTopLeft()    { WriteCmd(0x36, 0xA0); } //
-    void SetDirHOrigBottomLeft() { WriteCmd(0x36, 0x20); } //
+    void SetDirHOrigBottomLeft() { WriteCmd(0x36, 0xE0); } //
 
     // High-level
     void SetBounds(uint8_t xStart, uint8_t xEnd, uint8_t yStart, uint8_t yEnd);
