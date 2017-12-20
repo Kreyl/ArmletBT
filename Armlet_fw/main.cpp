@@ -13,6 +13,7 @@
 #include "Sequences.h"
 #include "shell.h"
 #include "radio_lvl1.h"
+#include "lcd2630.h"
 
 // Forever
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
@@ -26,7 +27,7 @@ void ITask();
 
 int main() {
     // ==== Setup clock ====
-    Clk.SetHiPerfMode();
+//    Clk.SetHiPerfMode();
 
     // ==== Init OS ====
     halInit();
@@ -37,6 +38,9 @@ int main() {
     Uart.Init(115200);
     Printf("\r%S %S\r\n", APP_NAME, BUILD_TIME);
     Clk.PrintFreqs();
+
+    Lcd.Init();
+    Lcd.Cls(clGreen);
 
     Radio.Init();
     // ==== Main cycle ====
