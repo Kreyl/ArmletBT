@@ -1,7 +1,5 @@
 /*
  * File:   main.cpp
- * Author: Elessar
- * Project: MasonOrder
  *
  * Created on May 27, 2016, 6:37 PM
  */
@@ -14,6 +12,9 @@
 #include "shell.h"
 #include "radio_lvl1.h"
 #include "lcd2630.h"
+#include "kl_sd.h"
+#include "DrawBmp.h"
+#include "kl_fs_utils.h"
 
 // Forever
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
@@ -27,7 +28,7 @@ void ITask();
 
 int main() {
     // ==== Setup clock ====
-//    Clk.SetHiPerfMode();
+    Clk.SetHiPerfMode();
 
     // ==== Init OS ====
     halInit();
@@ -42,7 +43,11 @@ int main() {
     Lcd.Init();
     Lcd.Cls(clGreen);
 
-    Radio.Init();
+    SD.Init();
+
+    DrawBmpFile(0, 0, "StartImage.bmp", &CommonFile);
+
+//    Radio.Init();
     // ==== Main cycle ====
     ITask();
 }

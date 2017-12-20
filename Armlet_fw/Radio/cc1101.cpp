@@ -28,7 +28,7 @@ uint8_t cc1101_t::Init() {
     // ==== SPI ====
     // MSB first, master, ClkLowIdle, FirstEdge, Baudrate no more than 6.5MHz
     uint32_t div;
-#if defined STM32L1XX || defined STM32F4XX || defined STM32L4XX
+#if defined STM32L1XX || defined STM32F4XX || defined STM32L4XX || defined STM32F2XX
     if(ISpi.PSpi == SPI1) div = Clk.APB2FreqHz / CC_MAX_BAUDRATE_HZ;
     else div = Clk.APB1FreqHz / CC_MAX_BAUDRATE_HZ;
 #elif defined STM32F030 || defined STM32F0

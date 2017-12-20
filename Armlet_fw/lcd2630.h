@@ -21,7 +21,7 @@
 #define LCD_MASK_WR     (0x00FF | (1<<LCD_WR))  // clear bus and set WR low
 #define LCD_MODE_READ   0xFFFF0000
 #define LCD_MODE_WRITE  0x00005555
-#define LCD_BCKLT_PIN   GPIOB, 9, TIM11, 1, invNotInverted, omPushPull, 100
+#define LCD_BCKLT_PIN   { GPIOB, 9, TIM11, 1, invNotInverted, omPushPull, 100 }
 
 #define LCD_X_0             1   // }
 #define LCD_Y_0             2   // } Zero pixels are shifted
@@ -39,11 +39,19 @@ public:
     void Init();
     void Shutdown();
     void Brightness(uint16_t Brightness)  { BckLt.Set(Brightness); }
+    // Direction & Origin
+    void SetDirHOrigTopLeft()    { WriteCmd(0x36, 0xA0); } //
+    void SetDirHOrigBottomLeft() { WriteCmd(0x36, 0x20); } //
+
     // High-level
+    void SetBounds(uint8_t xStart, uint8_t xEnd, uint8_t yStart, uint8_t yEnd);
 //    void Printf(uint8_t x, uint8_t y, Color_t ForeClr, Color_t BckClr, const char *S, ...);
     void Cls(Color_t Color);
     void GetBitmap(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, uint16_t *PBuf);
     void PutBitmap(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, uint16_t *PBuf);
+    void PutBitmapBegin(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height);
+    void PutBitmapNext(uint8_t Byte1, uint8_t Byte2);
+    void PutBitmapEnd();
     void PutPixel (uint8_t x0, uint8_t y0, uint16_t Clr);
 //    void DrawImage(const uint8_t x, const uint8_t y, const uint8_t *Img);
 //    void DrawSymbol(const uint8_t x, const uint8_t y, const uint8_t ACode);

@@ -38,34 +38,19 @@ extern RTCDriver RTCD1;
 #define MMC     0
 #define SDC     0
 
-
-// ====================== KL's semaphored read/write ===========================
-semaphore_t semSDRW;
+extern void SDSignalError();
 
 bool SDRead(uint32_t startblk, uint8_t *buffer, uint32_t n) {
 //    PrintfC("%S\r", __FUNCTION__);
-    msg_t msg = chSemWaitTimeout(&semSDRW, MS2ST(3600));
-    if(msg == MSG_OK) {
-//        PrintfC(" +%S ", chThdSelf()->p_name);
-        bool rslt = sdcRead(&SDCD1, startblk, buffer, n);
-        chSemSignal(&semSDRW);
-//        PrintfC(" =%S ", chThdSelf()->p_name);
-        return rslt;
-    }
-    else {
-        PrintfC("SD Semaphore %d\r", msg);
-        return false;
-    }
+    bool Rslt = sdcRead(&SDCD1, startblk, buffer, n);
+    if(Rslt == HAL_FAILED) SDSignalError();
+    return Rslt;
 }
 
 bool SDWrite(uint32_t startblk, const uint8_t *buffer, uint32_t n) {
-    msg_t msg = chSemWaitTimeout(&semSDRW, MS2ST(3600));
-    if(msg == MSG_OK) {
-        bool rslt = sdcWrite(&SDCD1, startblk, buffer, n);
-        chSemSignal(&semSDRW);
-        return rslt;
-    }
-    else return false;
+    bool Rslt = sdcWrite(&SDCD1, startblk, buffer, n);
+    if(Rslt == HAL_FAILED) SDSignalError();
+    return Rslt;
 }
 
 /*-----------------------------------------------------------------------*/
@@ -77,7 +62,6 @@ DSTATUS disk_initialize (
 {
   DSTATUS stat;
 //  PrintfC("SD init\r");
-  chSemObjectInit(&semSDRW, 1); // Not taken
     stat = 0;
     /* It is initialized externally, just reads the status.*/
     if (blkGetDriverState(&SDCD1) != BLK_READY)
@@ -102,8 +86,6 @@ DSTATUS disk_status (
     /* It is initialized externally, just reads the status.*/
 //    if (blkGetDriverState(&SDCD1) != BLK_READY)
 //      stat |= STA_NOINIT;
-//    if (sdcIsWriteProtected(&SDCD1))
-//      stat |= STA_PROTECT;
     return stat;
 }
 

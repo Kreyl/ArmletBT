@@ -23,6 +23,7 @@ public:
     void Init();
     void Standby();
     void Resume();
+    uint8_t Reconnect();
 };
 
 extern sd_t SD;
