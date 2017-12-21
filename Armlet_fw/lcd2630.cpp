@@ -35,15 +35,21 @@ void Lcd_t::Init() {
     // ======= Init LCD =======
     Brightness(LCD_TOP_BRIGHTNESS);
     XCS_Hi();
-    XRES_Lo();  // }
-    XRES_Hi();  // } Reset display
     DC_Lo();    // Command mode by default
     WR_Hi();    // Default hi
     RD_Hi();    // Default hi
     XCS_Lo();   // Interface is always enabled
 
+    // Reset display
+    XRES_Lo();
+    chThdSleepMilliseconds(7);
+    XRES_Hi();
+    chThdSleepMilliseconds(7);
+    WriteCmd(0x01);         // Software reset
+    chThdSleepMilliseconds(7);
+
     WriteCmd(0x11);         // Sleep out
-    chThdSleepMilliseconds(207);
+    chThdSleepMilliseconds(130);
     WriteCmd(0x13);         // Normal Display Mode ON
     WriteCmd(0x3A, 0x05);   // Pixel format: VIPF=0(undef), IFPF=16 bit per pixel
     WriteCmd(0x29);         // Display on

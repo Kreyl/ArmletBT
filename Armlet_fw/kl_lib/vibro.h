@@ -22,5 +22,8 @@ private:
     }
 public:
     Vibro_t(PwmSetup_t APin) : BaseSequencer_t(), IPin(APin) {}
-    void Init() { IPin.Init(); }
+    void Init(uint32_t Freq = 1000) {
+        IPin.Init();
+        IPin.SetFrequencyHz(Freq);
+    }
 };

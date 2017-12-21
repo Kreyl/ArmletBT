@@ -58,7 +58,11 @@
 
 // Beeper
 #define BEEP_TOP_VALUE  22
-#define BEEPER_PIN      { GPIOD, 12, TIM4, 1, invNotInverted, omPushPull,  BEEP_TOP_VALUE }
+#define BEEPER_PIN      { GPIOD, 12, TIM4, 1, invNotInverted, omPushPull, BEEP_TOP_VALUE }
+
+// Vibro
+#define VIBRO_PIN       { GPIOE, 14, TIM1, 4, invNotInverted, omPushPull, 207 }
+#define VIBRO_TIM_FREQ  171
 
 // I2C
 #define I2C1_GPIO       GPIOB

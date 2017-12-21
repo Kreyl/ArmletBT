@@ -323,11 +323,11 @@ const BeepChunk_t bsqButton[] = {
 };
 const BeepChunk_t bsqBeepBeep[] = {
         {csSetup, BEEP_VOLUME, 1975},
-        {csWait, 54},
+        {csWait, 18},
         {csSetup, 0},
-        {csWait, 54},
+        {csWait, 18},
         {csSetup, BEEP_VOLUME, 1975},
-        {csWait, 54},
+        {csWait, 18},
         {csSetup, 0},
         {csEnd}
 };
@@ -410,7 +410,7 @@ const BeepChunk_t bsqBeepPillBad[] = {
 #endif // ext
 #endif // beeper
 
-#if 0 // ============================== Vibro ==================================
+#if 1 // ============================== Vibro ==================================
 #define VIBRO_VOLUME        100
 
 #define VIBRO_SHORT_MS      99
