@@ -11,6 +11,8 @@
 #include "board.h"
 #include "color.h"
 
+// This LCD embeds SPFD54124B controller
+
 // ================================ Defines ====================================
 #define LCD_GPIO        GPIOE
 #define LCD_DC          8

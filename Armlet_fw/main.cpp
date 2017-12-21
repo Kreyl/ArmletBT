@@ -19,7 +19,7 @@
 // Forever
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
 extern CmdUart_t Uart;
-//void OnCmd(Shell_t *PShell);
+void OnCmd(Shell_t *PShell);
 void ITask();
 
 #if 1 // =========================== Locals ====================================
@@ -36,6 +36,7 @@ int main() {
     Clk.UpdateFreqValues(); // Do it after halInit to update system timer using correct prescaler
 
     // ==== Init Hard & Soft ====
+    EvtQMain.Init();
     Uart.Init(115200);
     Printf("\r%S %S\r\n", APP_NAME, BUILD_TIME);
     Clk.PrintFreqs();
@@ -45,7 +46,7 @@ int main() {
 
     SD.Init();
 
-    DrawBmpFile(0, 0, "24.bmp", &CommonFile);
+    DrawBmpFile(0, 0, "StartImage.bmp", &CommonFile);
 
 //    Radio.Init();
     // ==== Main cycle ====
@@ -55,7 +56,30 @@ int main() {
 __noreturn
 void ITask() {
     while(true) {
-        chThdSleepMilliseconds(205);
+        EvtMsg_t Msg = EvtQMain.Fetch(TIME_INFINITE);
+        switch(Msg.ID) {
+            case evtIdShellCmd:
+                OnCmd((Shell_t*)Msg.Ptr);
+                ((Shell_t*)Msg.Ptr)->SignalCmdProcessed();
+                break;
+
+            default: break;
+        } // switch
     } // while true
 }
+
+#if 1 // ======================= Command processing ============================
+void OnCmd(Shell_t *PShell) {
+    Cmd_t *PCmd = &PShell->Cmd;
+//    __unused int32_t dw32 = 0;  // May be unused in some configurations
+//    Printf("%S  ", PCmd->Name);
+    // Handle command
+    if(PCmd->NameIs("Ping")) PShell->Ack(retvOk);
+    else if(PCmd->NameIs("Version")) PShell->Printf("%S %S\r", APP_NAME, BUILD_TIME);
+
+//    else if(PCmd->NameIs("GetBat")) { PShell->Printf("Battery: %u\r", Audio.GetBatteryVmv()); }
+
+    else PShell->Ack(retvCmdUnknown);
+}
+#endif
 
