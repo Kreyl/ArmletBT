@@ -56,6 +56,10 @@
 #define BTNY_PIN        GPIOD, 10, pudPullUp
 #define BTNZ_PIN        GPIOD, 11, pudPullUp
 
+// Beeper
+#define BEEP_TOP_VALUE  22
+#define BEEPER_PIN      { GPIOD, 12, TIM4, 1, invNotInverted, omPushPull,  BEEP_TOP_VALUE }
+
 // I2C
 #define I2C1_GPIO       GPIOB
 #define I2C1_SCL        6

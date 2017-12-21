@@ -260,7 +260,7 @@ const LedSmoothChunk_t lsqEnterIdle[] = {
 
 #endif
 
-#if 0 // ============================= Beeper ==================================
+#if 1 // ============================= Beeper ==================================
 #define BEEP_VOLUME     1   // Maximum 10
 
 #if 1 // ==== Notes ====

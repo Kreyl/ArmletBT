@@ -15,12 +15,15 @@
 #include "kl_sd.h"
 #include "DrawBmp.h"
 #include "kl_fs_utils.h"
+#include "beeper.h"
 
 // Forever
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
 extern CmdUart_t Uart;
 void OnCmd(Shell_t *PShell);
 void ITask();
+
+Beeper_t Beeper(BEEPER_PIN);
 
 #if 1 // =========================== Locals ====================================
 
@@ -46,9 +49,11 @@ int main() {
 
     SD.Init();
 
-//    DrawBmpFile(0, 0, "StartImage.bmp", &CommonFile);
+    DrawBmpFile(0, 0, "StartImage.bmp", &CommonFile);
 
     SimpleSensors::Init();
+    Beeper.Init();
+    Beeper.StartOrRestart(bsqBeepBeep);
 
 //    Radio.Init();
     // ==== Main cycle ====
