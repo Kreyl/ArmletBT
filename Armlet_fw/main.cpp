@@ -46,7 +46,9 @@ int main() {
 
     SD.Init();
 
-    DrawBmpFile(0, 0, "StartImage.bmp", &CommonFile);
+//    DrawBmpFile(0, 0, "StartImage.bmp", &CommonFile);
+
+    SimpleSensors::Init();
 
 //    Radio.Init();
     // ==== Main cycle ====
@@ -61,6 +63,18 @@ void ITask() {
             case evtIdShellCmd:
                 OnCmd((Shell_t*)Msg.Ptr);
                 ((Shell_t*)Msg.Ptr)->SignalCmdProcessed();
+                break;
+
+            case evtIdBtnA:
+            case evtIdBtnB:
+            case evtIdBtnC:
+            case evtIdBtnL:
+            case evtIdBtnE:
+            case evtIdBtnR:
+            case evtIdBtnX:
+            case evtIdBtnY:
+            case evtIdBtnZ:
+                Printf("Btn: %u\r", (Msg.ID - evtIdBtnA));
                 break;
 
             default: break;

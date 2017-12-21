@@ -26,10 +26,16 @@ enum EvtMsgId_t {
     evtIdUsbInDone,
     evtIdUsbOutDone,
 
-
-    // Misc periph
-    evtIdButtons,
-    evtIdAcc,
+    // Buttons
+    evtIdBtnA,
+    evtIdBtnB,
+    evtIdBtnC,
+    evtIdBtnL,
+    evtIdBtnE,
+    evtIdBtnR,
+    evtIdBtnX,
+    evtIdBtnY,
+    evtIdBtnZ,
 
     // App specific
     evtIdLedDone,

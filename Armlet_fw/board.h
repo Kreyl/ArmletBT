@@ -28,8 +28,8 @@
 #define I2C1_ENABLED            FALSE
 #define I2C2_ENABLED            FALSE
 #define I2C3_ENABLED            FALSE
-#define SIMPLESENSORS_ENABLED   FALSE
-#define BUTTONS_ENABLED         FALSE
+#define SIMPLESENSORS_ENABLED   TRUE
+#define BUTTONS_ENABLED         TRUE
 
 #define ADC_REQUIRED            FALSE
 
@@ -44,6 +44,17 @@
 
 // Battery measuremrnt
 #define BAT_MEAS_ADC    GPIOC, 5
+
+// Buttons
+#define BTNA_PIN        GPIOD, 0, pudPullUp
+#define BTNB_PIN        GPIOD, 1, pudPullUp
+#define BTNC_PIN        GPIOD, 3, pudPullUp
+#define BTNL_PIN        GPIOD, 4, pudPullUp
+#define BTNE_PIN        GPIOD, 7, pudPullUp
+#define BTNR_PIN        GPIOD, 8, pudPullUp
+#define BTNX_PIN        GPIOD, 9, pudPullUp
+#define BTNY_PIN        GPIOD, 10, pudPullUp
+#define BTNZ_PIN        GPIOD, 11, pudPullUp
 
 // I2C
 #define I2C1_GPIO       GPIOB
