@@ -59,26 +59,30 @@ static inline void Lvl250ToLvl1000(uint16_t *PLvl) {
 
 #if 1 // =========================== Pkt_t =====================================
 union rPkt_t  {
-    uint32_t DWord[2];
+    uint32_t DWord;
     struct {
-        uint8_t Length;
+        uint16_t ID : 9;
+        uint8_t Cycle: 3;
+        uint8_t Status : 4;
+        uint16_t Timestamp;
     } __packed;
     rPkt_t& operator = (const rPkt_t &Right) {
-        DWord[0] = Right.DWord[0];
-        DWord[1] = Right.DWord[1];
+        DWord = Right.DWord;
         return *this;
     }
 //    void Print() { Printf("%d %d %d %d %d %d; %X\r", Ch[0],Ch[1],Ch[2],Ch[3],R1, R2, Btns); }
 } __packed;
 
-#define RPKT_LEN    8
-
-
+#define RPKT_LEN    sizeof(rPkt_t)
 #endif
 
+#define RSSI_MIN            -75
+
 #if 1 // ======================= Channels & cycles =============================
-#define RCHNL_SRV       0
-#define ID2RCHNL(ID)    (RCHNL_MIN + ID)
+#define RCHNL_SRV           0
+#define CYCLE_CNT           4
+#define SLOT_CNT            30
+#define SLOT_DURATION_MS    5
 #endif
 
 #if 1 // =========================== Timings ===================================
@@ -89,19 +93,28 @@ union rPkt_t  {
 
 #endif
 
+// Message queue
+#define R_MSGQ_LEN      4
+enum RmsgId_t { rmsgSetPwr, rmsgSetChnl, rmsgNewTimeslot, rmsgPktRx };
+struct RMsg_t {
+    RmsgId_t Cmd;
+    uint8_t Value;
+    RMsg_t() : Cmd(rmsgSetPwr), Value(0) {}
+    RMsg_t(RmsgId_t ACmd, uint8_t AValue) : Cmd(ACmd), Value(AValue) {}
+} __attribute__((packed));
+
 class rLevel1_t {
 private:
-    void TryToSleep(uint32_t SleepDuration) {
-//        if(SleepDuration >= MIN_SLEEP_DURATION_MS) CC.EnterPwrDown();
-        chThdSleepMilliseconds(SleepDuration); // XXX
-    }
+    uint32_t CycleN = 0, TimeSlot = 0;
 public:
     int8_t Rssi;
-    rPkt_t Pkt;
+    rPkt_t PktTx, PktRx;
+    EvtMsgQ_t<RMsg_t, R_MSGQ_LEN> RMsgQ;
     uint8_t Init();
     void SetChannel(uint8_t NewChannel);
     // Inner use
     void ITask();
+    systime_t TimeslotDuration;
 };
 
 extern rLevel1_t Radio;

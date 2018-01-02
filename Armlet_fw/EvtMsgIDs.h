@@ -42,4 +42,6 @@ enum EvtMsgId_t {
     evtIdClash,
     evtIdSwing,
 
+    evtIdTimeslot,
+
 };

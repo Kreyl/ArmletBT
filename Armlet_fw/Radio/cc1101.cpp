@@ -134,6 +134,7 @@ void cc1101_t::SetChannel(uint8_t AChannel) {
 //}
 
 void cc1101_t::Transmit(void *Ptr, uint8_t Len) {
+    ICallback = nullptr;
 //     WaitUntilChannelIsBusy();   // If this is not done, time after time FIFO is destroyed
 //    while(IState != CC_STB_IDLE) EnterIdle();
     EnterTX();  // Start transmission of preamble while writing FIFO
@@ -167,6 +168,12 @@ int8_t cc1101_t::RSSI_dBm(uint8_t ARawRSSI) {
     if (RSSI >= 128) RSSI -= 256;
     RSSI = (RSSI / 2) - 74;    // now it is in dBm
     return RSSI;
+}
+
+void cc1101_t::ReceiveAsync(ftVoidVoid Callback) {
+    FlushRxFIFO();
+    ICallback = Callback;
+    EnterRX();
 }
 #endif
 

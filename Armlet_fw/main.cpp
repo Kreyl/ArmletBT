@@ -17,12 +17,16 @@
 #include "kl_fs_utils.h"
 #include "beeper.h"
 #include "vibro.h"
+#include "sound.h"
 
 // Forever
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
 extern CmdUart_t Uart;
 void OnCmd(Shell_t *PShell);
 void ITask();
+
+uint8_t Status;
+uint16_t ID = 2;
 
 Beeper_t Beeper(BEEPER_PIN);
 Vibro_t Vibro(VIBRO_PIN);
@@ -49,15 +53,20 @@ int main() {
     Lcd.Init();
     Lcd.Cls(clGreen);
 
-    SD.Init();
+//    SD.Init();
+//    Printf("ID = %u\r", ID);
 
-//    DrawBmpFile(0, 0, "StartImage.bmp", &CommonFile);
+//    DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
 
-    SimpleSensors::Init();
-    Beeper.Init();
+//    SimpleSensors::Init();
+//    Beeper.Init();
 //    Beeper.StartOrRestart(bsqBeepBeep);
-    Vibro.Init(VIBRO_TIM_FREQ);
-    Vibro.StartOrRestart(vsqBrrBrr);
+//    Vibro.Init(VIBRO_TIM_FREQ);
+//    Vibro.StartOrRestart(vsqBrrBrr);
+
+//    Sound.Init();
+//    Sound.SetVolume(254);
+
 
 //    Radio.Init();
     // ==== Main cycle ====

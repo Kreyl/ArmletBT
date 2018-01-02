@@ -10,8 +10,11 @@
 #include "MsgQ.h"
 #include "led.h"
 #include "Sequences.h"
+#include "EvtMsgIDs.h"
 
 cc1101_t CC(CC_Setup0);
+extern uint8_t Status;
+extern uint16_t ID;
 
 #define DBG_PINS
 
@@ -30,6 +33,18 @@ cc1101_t CC(CC_Setup0);
 #endif
 
 rLevel1_t Radio;
+virtual_timer_t TmrTimeslot;
+
+void TmrTimeslotCallback(void *p) {
+    chSysLockFromISR();
+    chVTSetI(&TmrTimeslot, Radio.TimeslotDuration, TmrTimeslotCallback, nullptr);
+    Radio.RMsgQ.SendNowOrExitI(RMsg_t(rmsgNewTimeslot, 0));
+    chSysUnlockFromISR();
+}
+
+void RxCallback() {
+    Radio.RMsgQ.SendNowOrExitI(RMsg_t(rmsgPktRx, 0));
+}
 
 #if 1 // ================================ Task =================================
 static THD_WORKING_AREA(warLvl1Thread, 256);
@@ -41,26 +56,57 @@ static void rLvl1Thread(void *arg) {
 
 __noreturn
 void rLevel1_t::ITask() {
+    bool IsPwrDown=false, IsRcvng = false;
     while(true) {
-        chThdSleepMilliseconds(45);
-//        CC.Recalibrate();
-        DBG1_SET();
-        CC.Transmit(&Pkt, RPKT_LEN); // Length byte + payload
-        DBG1_CLR();
-                    // Receive
-//                    uint8_t RxRslt = CC.Receive(RX_T_MS, &rPktReply, 2, &Rssi);
-//                    if(RxRslt == retvOk) {
-//                        EvtMsg_t OutMsg(evtIdRadioRx, Rssi);
-//                        EvtQMain.SendNowOrExit(OutMsg);
-//                    }
-//
-//
-//            Printf("Par %u; Rssi=%d\r", PktRx.CmdID, Rssi);
-            // Transmit reply, it formed inside OnRadioRx
-//            if(OnRadioRx() == retvOk) CC.Transmit(&PktTx);
-//        } // if RxRslt ok
+        RMsg_t msg = RMsgQ.Fetch(TIME_IMMEDIATE);
+//        if(msg.Cmd == rmsgSetPwr) CC.SetTxPower(msg.Value);
+//        else if(msg.Cmd == rmsgSetChnl) CC.SetChannel(msg.Value);
+        if(msg.Cmd == rmsgPktRx) {
+            IsRcvng = false;
+            int8_t Rssi;
+            CC.ReadFIFO(&PktRx, &Rssi, RPKT_LEN);
+            Printf("Rx: %u @ %d\r", PktRx.ID, Rssi);
+        }
+        else if(msg.Cmd == rmsgNewTimeslot) {
+            // Increase Timeslot and cycle if needed
+            TimeSlot++;
+            if(TimeSlot >= SLOT_CNT) {
+                TimeSlot = 0;
+                CycleN++;
+                if(CycleN >= CYCLE_CNT) {
+                    CycleN = 0;
+                    CC.Recalibrate();
+                }
+            }
+            // Act depending on Cycle and timeslot
+            // Tx if timeslot == ID
+            if(TimeSlot == ID) {
+                IsPwrDown = false;
+                IsRcvng = false;
+                PktTx.ID = ID;
+                PktTx.Cycle = CycleN;
+                DBG1_SET();
+                CC.Transmit(&PktTx, RPKT_LEN);
+                DBG1_CLR();
+            }
+            else {
+                if(CycleN == 0) {
+                    if(!IsRcvng) {
+                        IsRcvng = true;
+                        CC.ReceiveAsync(RxCallback);
+                    }
+                }
+                else { //Cycle != 0, sleep
+                    if(!IsPwrDown) {
+                        IsPwrDown = true;
+                        CC.EnterPwrDown();
+                    }
+                }
+            }
+        } // if new timeslot
     } // while
 }
+
 #endif // task
 
 #if 1 // ============================
@@ -70,10 +116,19 @@ uint8_t rLevel1_t::Init() {
 //    PinSetupOut(DBG_GPIO2, DBG_PIN2, omPushPull);
 #endif    // Init radioIC
 
+    RMsgQ.Init();
     if(CC.Init() == retvOk) {
-        CC.SetTxPower(CC_TX_PWR);
         CC.SetPktSize(RPKT_LEN);
         CC.SetChannel(0);
+        // Measure timeslot duration
+        CC.SetTxPower(CC_PwrMinus30dBm);
+        systime_t TimeStart = chVTGetSystemTimeX();
+        CC.Transmit(&PktTx, RPKT_LEN);
+        TimeslotDuration = chVTTimeElapsedSinceX(TimeStart);
+        Printf("Timeslot duration, systime: %u\r", TimeslotDuration);
+        chVTSet(&TmrTimeslot, TimeslotDuration, TmrTimeslotCallback, nullptr);
+
+        CC.SetTxPower(CC_TX_PWR);
         // Thread
         chThdCreateStatic(warLvl1Thread, sizeof(warLvl1Thread), HIGHPRIO, (tfunc_t)rLvl1Thread, NULL);
         return retvOk;

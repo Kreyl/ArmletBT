@@ -1684,6 +1684,15 @@ void Clk_t::UpdateFreqValues() {
 //        pllvco = (pllvco / InputDiv_M) * Multi_N;
 //        if(SysDiv_Q >= 2) UsbSdioFreqHz = pllvco / SysDiv_Q;
 //    }
+
+    // ==== Update prescaler in System Timer ====
+    uint32_t Psc = (SYS_TIM_CLK / OSAL_ST_FREQUENCY) - 1;
+    TMR_DISABLE(STM32_ST_TIM);          // Stop counter
+    uint32_t Cnt = STM32_ST_TIM->CNT;   // Save current time
+    STM32_ST_TIM->PSC = Psc;
+    TMR_GENERATE_UPD(STM32_ST_TIM);
+    STM32_ST_TIM->CNT = Cnt;            // Restore time
+    TMR_ENABLE(STM32_ST_TIM);
 }
 
 // ==== Common use ====

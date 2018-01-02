@@ -419,19 +419,9 @@ enum ExtTrigPsc_t {etpOff=0x0000, etpDiv2=0x1000, etpDiv4=0x2000, etpDiv8=0x3000
 
 class Timer_t {
 protected:
-#if defined LPTIM1 || defined LPTIM2
-    union {
-        TIM_TypeDef* ITmr;
-        LPTIM_TypeDef* ILPTim;
-    };
-#else
     TIM_TypeDef* ITmr;
-#endif
 public:
     Timer_t(TIM_TypeDef *APTimer) : ITmr(APTimer) {}
-#if defined LPTIM1 || defined LPTIM2
-    Timer_t(LPTIM_TypeDef *APTimer) : ILPTim(APTimer) {}
-#endif
     void Init() const;
     void Deinit() const;
     void Enable() const { TMR_ENABLE(ITmr); }
@@ -528,15 +518,6 @@ enum PinSpeed_t {
     psVeryHigh = 0b11
 };
 #define PIN_SPEED_DEFAULT   psMedium
-
-struct LPTimPwmSetup_t {
-    GPIO_TypeDef *PGpio;
-    uint16_t Pin;
-    LPTIM_TypeDef *PTimer;
-    Inverted_t Inverted;
-    PinOutMode_t OutputType;
-    uint32_t TopValue;
-};
 #endif
 
 enum AlterFunc_t {
@@ -568,8 +549,6 @@ static inline void PinToggle(GPIO_TypeDef *PGpio, uint32_t APin) { PGpio->ODR ^=
 // Check input
 __always_inline
 static inline bool PinIsHi(GPIO_TypeDef *PGpio, uint32_t APin) { return PGpio->IDR & (1 << APin); }
-__always_inline
-static inline bool PinIsHi(GPIO_TypeDef *PGpio, uint32_t APin, PinPullUpDown_t Pud) { return PGpio->IDR & (1 << APin); }
 __always_inline
 static inline bool PinIsHi(const GPIO_TypeDef *PGpio, uint32_t APin) { return PGpio->IDR & (1 << APin); }
 __always_inline
@@ -875,34 +854,14 @@ public:
 */
 class PinOutputPWM_t : private Timer_t {
 private:
-    union {
-        const PwmSetup_t ISetup;
-#if defined LPTIM1 || defined LPTIM2
-        const LPTimPwmSetup_t ILpmSetup;
-#endif
-    };
+    const PwmSetup_t ISetup;
 public:
-    void Set(const uint16_t AValue) const {
-#if defined STM32L4XX
-        if(ILPTim == LPTIM1 or ILPTim == LPTIM2) ILpmSetup.PTimer->CMP = AValue;
-        else
-#endif
-            *TMR_PCCR(ITmr, ISetup.TimerChnl) = AValue; // CCR[N] = AValue
-    }
-    uint32_t Get() const {
-#if defined STM32L4XX
-        if(ILPTim == LPTIM1 or ILPTim == LPTIM2) return ILpmSetup.PTimer->CMP;
-        else
-#endif
-            return *TMR_PCCR(ITmr, ISetup.TimerChnl);
-    }
+    void Set(const uint16_t AValue) const { *TMR_PCCR(ITmr, ISetup.TimerChnl) = AValue; }    // CCR[N] = AValue
+    uint32_t Get() const { return *TMR_PCCR(ITmr, ISetup.TimerChnl); }
     void Init() const;
     void Deinit() const { Timer_t::Deinit(); PinSetupAnalog(ISetup.PGpio, ISetup.Pin); }
     void SetFrequencyHz(uint32_t FreqHz) const { Timer_t::SetUpdateFrequencyChangingPrescaler(FreqHz); }
     PinOutputPWM_t(const PwmSetup_t &ASetup) : Timer_t(ASetup.PTimer), ISetup(ASetup) {}
-#if defined LPTIM1 || defined LPTIM2
-    PinOutputPWM_t(const LPTimPwmSetup_t &ASetup) : Timer_t(ASetup.PTimer), ILpmSetup(ASetup) {}
-#endif
 };
 #endif
 
