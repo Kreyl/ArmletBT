@@ -343,7 +343,16 @@ void BaseUart_t::Init(uint32_t ABaudrate) {
     Params->Uart->CR3 = USART_CR3_DMAT | USART_CR3_DMAR;    // Enable DMA at TX & RX
     // ==== Rx pin ====
 #if defined STM32L4XX || defined STM32L1XX || defined STM32F2XX
-    PinAF = AF7; // for all USARTs
+    PinAF = AF7; // for all USARTs save 4/5/6
+#if defined UART4
+    if(Params->Uart == UART4) PinAF = AF8;
+#endif
+#if defined UART5
+    if(Params->Uart == UART5) PinAF = AF8;
+#endif
+#if defined USART6
+    if(Params->Uart == USART6) PinAF = AF8;
+#endif
 #elif defined STM32F0XX
     if(Params->PGpioRx == GPIOA) PinAF = AF1;
     else if(Params->PGpioRx == GPIOB) PinAF = AF0;

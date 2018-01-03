@@ -10,10 +10,20 @@
 #include "kl_lib.h"
 #include "uart.h"
 
-struct NfcPkt_t {
-    uint16_t ID;
-    uint8_t Cmd;
-    uint8_t Value;
+union NfcPkt_t {
+    uint32_t DWord;
+    struct {
+        uint16_t ID;
+        uint8_t Cmd;
+        uint8_t Value;
+        uint16_t crc; // must be last in pkt
+    } __packed;
+    NfcPkt_t& operator = (const NfcPkt_t &Right) {
+        DWord = Right.DWord;
+        return *this;
+    }
+    void CalculateCrc();
+    void Print() { Printf("Id: %u; Cmd: %X; V: %u; crc: %X\r", ID, Cmd, Value, crc); }
 } __packed;
 
 #define NFCPKT_SZ       sizeof(NfcPkt_t)
@@ -23,9 +33,9 @@ private:
     PinOutputPWM_t ITxPin;
     void IOnTxEnd();
 public:
+    NfcPkt_t PktRx;
     void Init();
-    void Transmit(void *Ptr, uint8_t Len);
-    uint8_t Receive(uint32_t Timeout_ms, void *Ptr, uint8_t Len);
+    void Transmit(NfcPkt_t &Pkt);
     KlNfc_t(PwmSetup_t ATxPin, const UartParams_t *APParams) : BaseUart_t(APParams), ITxPin(ATxPin) {}
     // Inner use
     void ITask();

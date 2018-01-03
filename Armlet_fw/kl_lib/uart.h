@@ -74,6 +74,11 @@ public:
     void Init(uint32_t ABaudrate);
     void Shutdown();
     void OnClkChange();
+    // Enable/Disable
+    void EnableTx()  { Params->Uart->CR1 |= USART_CR1_TE; }
+    void DisableTx() { Params->Uart->CR1 &= ~USART_CR1_TE; }
+    void EnableRx()  { Params->Uart->CR1 |= USART_CR1_RE; }
+    void DisableRx() { Params->Uart->CR1 &= ~USART_CR1_RE; }
 #if UART_USE_DMA
     void FlushTx() { while(!IDmaIsIdle) chThdSleepMilliseconds(1); }  // wait DMA
 #endif

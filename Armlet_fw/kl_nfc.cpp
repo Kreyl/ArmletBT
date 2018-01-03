@@ -41,10 +41,12 @@ static const UartParams_t KlNfcParams = {
 #endif
 };
 
-
 KlNfc_t Nfc(KLNFC_TX_PIN, &KlNfcParams);
-NfcPkt_t Pkt;
+NfcPkt_t IPktTx, IPktRx;
+static uint8_t *IPtr;
+bool WasEE = false;
 static thread_reference_t ThdRef = nullptr;
+static enum NfcPktState_t { npsStart, npsData } PktState = npsStart;
 
 static THD_WORKING_AREA(waKlNfc, 256);
 __noreturn
@@ -53,41 +55,83 @@ static void KlNfcThread(void *arg) {
     Nfc.ITask();
 }
 
-__noreturn
-void KlNfc_t::ITask() {
-    while(true) {
-        chThdSleepMilliseconds(27);
-        Transmit(&Pkt, NFCPKT_SZ);
-//        Receive(99, &Pkt, NFCPKT_SZ);
+static void ResetRx() {
+//    Printf("ResetRx\r");
+    PktState = npsData;   // pkt started
+    IPtr = (uint8_t*)&IPktRx;
+    WasEE = false;
+}
+static void AppendPkt(uint8_t b) {
+//    Printf("App %X\r", b);
+    *IPtr++ = b;
+    if(IPtr == ((uint8_t*)&IPktRx + NFCPKT_SZ)) { // End of pkt
+        PktState = npsStart;
+//        IPktRx.Print();
+        // Check crc
+        uint16_t RcvdCrc = IPktRx.crc;
+        IPktRx.CalculateCrc();
+        if(RcvdCrc == IPktRx.crc) { // CRC ok
+            IPktRx.Print();
+        }
+        else Printf("Nfc CRC err\r");
     }
 }
 
-void KlNfc_t::Transmit(void *Ptr, uint8_t Len) {
+__noreturn
+void KlNfc_t::ITask() {
+    while(true) {
+        chThdSleepMilliseconds(54);
+        Transmit(IPktTx);
+        // Check what received
+        uint8_t b;
+        while(GetByte(&b) == retvOk) {
+//            Printf("%X\r", b);
+            if(PktState == npsStart) {
+                if(b == 0xEE) ResetRx();
+            }
+            else { // receiving data
+                if(b == 0xEE) {
+                    if(WasEE) {
+                        WasEE = false;
+                        AppendPkt(b);
+                    }
+                    else WasEE = true;
+                }
+                else { // Not EE
+                    if(WasEE) ResetRx();    // Start of new pkt occured
+                    else AppendPkt(b);
+                }
+            } // rcvng data
+        } // while get byte
+    } // while true
+}
+
+void KlNfc_t::Transmit(NfcPkt_t &Pkt) {
+    DisableRx();
     ITxPin.EnablePin();
-    uint8_t *p = (uint8_t*)Ptr;
-    for(uint8_t i=0; i<Len; i++) IPutByte(*p++);
-    // Calculate and send crc
-    uint16_t crc = calc_crc16((char*)Ptr, Len);
-    IPutByte((crc >> 8) & 0xFF);
-    IPutByte(crc & 0xFF);
+    // Calculate crc
+    Pkt.CalculateCrc();
+    // Send StartByte
+    IPutByte(0xEE);
+    // Send packet byte by byte
+    uint8_t *p = (uint8_t*)&Pkt;
+    for(uint8_t i=0; i<NFCPKT_SZ; i++) {
+        if(*p == 0xEE) IPutByte(0xEE);  // Duplicate EE
+        IPutByte(*p++);
+    }
     // Enter TX and wait IRQ
     chSysLock();
     IStartTransmissionIfNotYet();
     chThdSuspendS(&ThdRef); // Wait IRQ
     chSysUnlock();          // Will be here when IRQ fires
     ITxPin.DisablePin();
-}
-
-uint8_t KlNfc_t::Receive(uint32_t Timeout_ms, void *Ptr, uint8_t Len) {
-
-    return retvOk;
+    EnableRx();
 }
 
 static void TCCallback() {
 //    PrintfI("TC\r");
     chThdResumeI(&ThdRef, MSG_OK);
 }
-
 void KlNfc_t::IOnTxEnd() {
 //    PrintfI("DMATxE\r");
     EnableTCIrq(IRQ_PRIO_MEDIUM, TCCallback);
@@ -110,6 +154,11 @@ void KlNfc_t::Init() {
     // UART
     BaseUart_t::Init(10000);
 
-    Pkt.ID = 7;
+    IPktTx.ID = 7;
     chThdCreateStatic(waKlNfc, sizeof(waKlNfc), NORMALPRIO, (tfunc_t)KlNfcThread, NULL);
+}
+
+
+void NfcPkt_t::CalculateCrc() {
+    crc = calc_crc16((char*)this, 4);
 }
