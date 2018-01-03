@@ -80,12 +80,13 @@ static void AppendPkt(uint8_t b) {
 __noreturn
 void KlNfc_t::ITask() {
     while(true) {
-        chThdSleepMilliseconds(54);
-        Transmit(IPktTx);
+        uint32_t Delay_ms = Random::Generate(36, 108);
+        chThdSleepMilliseconds(Delay_ms);
+//        Transmit(IPktTx);
         // Check what received
         uint8_t b;
         while(GetByte(&b) == retvOk) {
-//            Printf("%X\r", b);
+            Printf("%X %u %u\r", b, PktState, WasEE);
             if(PktState == npsStart) {
                 if(b == 0xEE) ResetRx();
             }
@@ -99,7 +100,7 @@ void KlNfc_t::ITask() {
                 }
                 else { // Not EE
                     if(WasEE) ResetRx();    // Start of new pkt occured
-                    else AppendPkt(b);
+                    AppendPkt(b);
                 }
             } // rcvng data
         } // while get byte
@@ -143,13 +144,13 @@ void KlNfc_t::Init() {
     PinSetHi(GPIOC, 1);
     // TX pin
     ITxPin.Init();
-    ITxPin.SetFrequencyHz(1000000);
+    ITxPin.SetFrequencyHz(1300000);
     ITxPin.Timer.SetTriggerInput(tiETRF);
     ITxPin.Timer.SetEtrPolarity(invInverted);
     ITxPin.Timer.SelectSlaveMode(smGated);
-    ITxPin.Set(2);
+    ITxPin.Set(1);
     ITxPin.DisablePin();
-    // Modulation input pin: T2 C1
+//     Modulation input pin: T2 ETR
     PinSetupAlterFunc(GPIOA, 15, omPushPull, pudNone, AF1);
     // UART
     BaseUart_t::Init(10000);

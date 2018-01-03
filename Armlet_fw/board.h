@@ -81,7 +81,7 @@
 #define CC_Setup0       SPI1, GPIOA, 5,6,7, 10, 4
 
 // KL NFC
-#define KLNFC_TX_PIN    { GPIOA, 2, TIM2, 3, invNotInverted, omPushPull, 3 }
+#define KLNFC_TX_PIN    { GPIOA, 2, TIM2, 3, invNotInverted, omPushPull, 1 }
 
 
 // SD
