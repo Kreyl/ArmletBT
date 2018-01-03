@@ -10,7 +10,7 @@
 #include <string.h>
 #include "MsgQ.h"
 
-#if 1 // ============================ General ==================================
+#if 0 // ============================ General ==================================
 // To replace standard error handler in case of virtual methods implementation
 //extern "C" void __cxa_pure_virtual() {
 //    Uart.PrintfNow("pure_virtual\r");
@@ -254,7 +254,7 @@ void Timer_t::SetupPrescaler(uint32_t PrescaledFreqHz) const {
 }
 
 void PinOutputPWM_t::Init() const {
-    Timer_t::Init();
+    Timer.Init();
 
 #if defined STM32L4XX
     if(ILPTim == LPTIM1 or ILPTim == LPTIM2) {
@@ -270,31 +270,31 @@ void PinOutputPWM_t::Init() const {
 #endif
 
 #if !defined STM32L151xB
-    ITmr->BDTR = 0xC000;   // Main output Enable
+        Timer.ITmr->BDTR = 0xC000;   // Main output Enable
 #endif
-    ITmr->ARR = ISetup.TopValue;
+        Timer.ITmr->ARR = ISetup.TopValue;
     // Setup Output
     uint16_t tmp = (ISetup.Inverted == invInverted)? 0b111 : 0b110; // PWM mode 1 or 2
     switch(ISetup.TimerChnl) {
         case 1:
-            ITmr->CCMR1 |= (tmp << 4);
-            ITmr->CCER  |= TIM_CCER_CC1E;
+            Timer.ITmr->CCMR1 |= (tmp << 4);
+            Timer.ITmr->CCER  |= TIM_CCER_CC1E;
             break;
         case 2:
-            ITmr->CCMR1 |= (tmp << 12);
-            ITmr->CCER  |= TIM_CCER_CC2E;
+            Timer.ITmr->CCMR1 |= (tmp << 12);
+            Timer.ITmr->CCER  |= TIM_CCER_CC2E;
             break;
         case 3:
-            ITmr->CCMR2 |= (tmp << 4);
-            ITmr->CCER  |= TIM_CCER_CC3E;
+            Timer.ITmr->CCMR2 |= (tmp << 4);
+            Timer.ITmr->CCER  |= TIM_CCER_CC3E;
             break;
         case 4:
-            ITmr->CCMR2 |= (tmp << 12);
-            ITmr->CCER  |= TIM_CCER_CC4E;
+            Timer.ITmr->CCMR2 |= (tmp << 12);
+            Timer.ITmr->CCER  |= TIM_CCER_CC4E;
             break;
         default: break;
     }
-    Enable();
+    Timer.Enable();
 #if defined STM32L4XX
     } // if LPTIM
 #endif
@@ -323,10 +323,10 @@ void PinOutputPWM_t::Init() const {
         else PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF2);
     }
 #elif defined STM32F2XX || defined STM32F4XX
-    if(ANY_OF_2(ITmr, TIM1, TIM2)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF1);
-    else if(ANY_OF_3(ITmr, TIM3, TIM4, TIM5)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF2);
-    else if(ANY_OF_4(ITmr, TIM8, TIM9, TIM10, TIM11)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF3);
-    else if(ANY_OF_3(ITmr, TIM12, TIM13, TIM14)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF9);
+    if(ANY_OF_2(Timer.ITmr, TIM1, TIM2)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF1);
+    else if(ANY_OF_3(Timer.ITmr, TIM3, TIM4, TIM5)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF2);
+    else if(ANY_OF_4(Timer.ITmr, TIM8, TIM9, TIM10, TIM11)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF3);
+    else if(ANY_OF_3(Timer.ITmr, TIM12, TIM13, TIM14)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF9);
 #elif defined STM32F100_MCUCONF
     PinSetupAlterFunc(GPIO, N, OutputType, pudNone, AF0);   // Alternate function is dummy
 #elif defined STM32L4XX
@@ -426,12 +426,6 @@ static uint8_t WaitForLastOperation(systime_t Timeout_st) {
     return retvOk;
 }
 #else
-// Dummy
-static uint8_t WaitForLastOperation(systime_t Timeout_st) {
-    return retvFail;
-}
-
-__attribute__((unused))
 static uint8_t GetStatus(void) {
     if(FLASH->SR & FLASH_SR_BSY) return retvBusy;
 #if defined STM32L1XX
@@ -444,6 +438,17 @@ static uint8_t GetStatus(void) {
     else if(FLASH->SR & FLASH_SR_WRPRTERR) return retvFail;
 #endif
     else return retvOk;
+}
+
+static uint8_t WaitForLastOperation(systime_t Timeout_st) {
+    uint8_t status = retvOk;
+    // Wait for a Flash operation to complete or a TIMEOUT to occur
+    do {
+        status = GetStatus();
+        Timeout_st--;
+    } while((status == retvBusy) and (Timeout_st != 0x00));
+    if(Timeout_st == 0x00) status = retvTimeout;
+    return status;
 }
 #endif
 
@@ -508,9 +513,9 @@ uint8_t ErasePage(uint32_t PageAddress) {
 #elif defined STM32F2XX
 
 #else
-        FLASH->CR |= 0x00000002; // XXX
+        FLASH->CR |= FLASH_CR_PER;
         FLASH->AR = PageAddress;
-        FLASH->CR |= 0x00000040;
+        FLASH->CR |= FLASH_CR_STRT;
         // Wait for last operation to be completed
         status = WaitForLastOperation(FLASH_EraseTimeout);
         // Disable the PER Bit
@@ -715,15 +720,11 @@ void LockFirmware() {
     chSysUnlock();
 }
 
+#ifdef STM32L4XX
 bool IwdgIsFrozenInStandby() {
-#if defined STM32F2XX
-    return false;
-#else
     return !(FLASH->OPTR & FLASH_OPTR_IWDG_STDBY);
-#endif
 }
 void IwdgFrozeInStandby() {
-#if !defined STM32F2XX
     chSysLock();
     UnlockFlash();
     ClearPendingFlags();
@@ -738,8 +739,8 @@ void IwdgFrozeInStandby() {
         LockFlash();
     }
     chSysUnlock();
-#endif
 }
+#endif
 
 // ==== Dualbank ====
 #if defined STM32L4XX
@@ -941,7 +942,7 @@ void Vector54() {
     if(ExtiIrqHandler[1] != nullptr) ExtiIrqHandler[1]->IIrqHandler();
 #else
     if(ExtiIrqHandler_0_1 != nullptr) ExtiIrqHandler_0_1->IIrqHandler();
-    else PrintfCNow("Unhandled %S\r", __FUNCTION__);
+//    else PrintfCNow("Unhandled %S\r", __FUNCTION__);
 #endif
     EXTI->PR = 0x0003;  // Clean IRQ flag
     chSysUnlockFromISR();
@@ -957,7 +958,7 @@ void Vector58() {
     if(ExtiIrqHandler[3] != nullptr) ExtiIrqHandler[3]->IIrqHandler();
 #else
     if(ExtiIrqHandler_2_3 != nullptr) ExtiIrqHandler_2_3->IIrqHandler();
-    else PrintfCNow("Unhandled %S\r", __FUNCTION__);
+//    else PrintfCNow("Unhandled %S\r", __FUNCTION__);
 #endif
     EXTI->PR = 0x000C;  // Clean IRQ flag
     chSysUnlockFromISR();
@@ -974,7 +975,7 @@ void Vector5C() {
     }
 #else
     if(ExtiIrqHandler_4_15 != nullptr) ExtiIrqHandler_4_15->IIrqHandler();
-    else PrintfCNow("Unhandled %S\r", __FUNCTION__);
+//    else PrintfCNow("Unhandled %S\r", __FUNCTION__);
 #endif
     EXTI->PR = 0xFFF0;  // Clean IRQ flag
     chSysUnlockFromISR();
@@ -1372,7 +1373,7 @@ uint8_t Clk_t::EnableHSI48() {
 }
 #endif
 
-void Clk_t::UpdateFreqValues() {
+uint32_t Clk_t::GetSysClkHz() {
     uint32_t tmp, PllSrc, PreDiv, PllMul;
     uint32_t SysClkHz = HSI_FREQ_HZ;
     // Figure out SysClk
@@ -1404,11 +1405,15 @@ void Clk_t::UpdateFreqValues() {
         case csHSI48: SysClkHz = HSI48_FREQ_HZ; break;
 #endif
     } // switch
+    return SysClkHz;
+}
 
+
+void Clk_t::UpdateFreqValues() {
     // AHB freq
     const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
-    tmp = AHBPrescTable[((RCC->CFGR & RCC_CFGR_HPRE) >> 4)];
-    AHBFreqHz = SysClkHz >> tmp;
+    uint32_t tmp = AHBPrescTable[((RCC->CFGR & RCC_CFGR_HPRE) >> 4)];
+    AHBFreqHz = GetSysClkHz() >> tmp;
     // APB freq
     const uint8_t APBPrescTable[8] = {0, 0, 0, 0, 1, 2, 3, 4};
     tmp = APBPrescTable[(RCC->CFGR & RCC_CFGR_PPRE) >> 8];
@@ -1518,9 +1523,7 @@ void Clk_t::SetupFlashLatency(uint32_t FrequencyHz) {
 }
 
 void Clk_t::PrintFreqs() {
-    Uart.Printf(
-            "AHBFreq=%uMHz; APBFreq=%uMHz\r",
-            Clk.AHBFreqHz/1000000, Clk.APBFreqHz/1000000);
+    Printf("AHBFreq=%uMHz; APBFreq=%uMHz\r", Clk.AHBFreqHz/1000000, Clk.APBFreqHz/1000000);
 }
 
 #ifdef RCC_CFGR_SW_HSI48

@@ -18,6 +18,7 @@
 #include "beeper.h"
 #include "vibro.h"
 #include "sound.h"
+#include "kl_nfc.h"
 
 // Forever
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
@@ -53,6 +54,7 @@ int main() {
     Lcd.Init();
     Lcd.Cls(clGreen);
 
+    Nfc.Init();
 //    SD.Init();
 //    Printf("ID = %u\r", ID);
 

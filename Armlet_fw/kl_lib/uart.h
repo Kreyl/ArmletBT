@@ -29,6 +29,7 @@ struct UartParams_t {
 };
 
 #define UART_USE_DMA        TRUE
+#define UART_USE_TXE_IRQ    TRUE
 
 // Set to true if RX needed
 #define UART_RX_ENABLED     TRUE
@@ -59,6 +60,7 @@ protected:
     uint8_t IPutByte(uint8_t b);
     uint8_t IPutByteNow(uint8_t b);
     void IStartTransmissionIfNotYet();
+    virtual void IOnTxEnd() = 0;
     // ==== Constructor ====
     BaseUart_t(const UartParams_t *APParams) : Params(APParams), IBaudrate(115200)
 #if UART_USE_DMA
@@ -75,6 +77,7 @@ public:
 #if UART_USE_DMA
     void FlushTx() { while(!IDmaIsIdle) chThdSleepMilliseconds(1); }  // wait DMA
 #endif
+    void EnableTCIrq(const uint32_t Priority, ftVoidVoid ACallback);
     // Inner use
 #if UART_USE_DMA
     void IRQDmaTxHandler();
@@ -87,6 +90,7 @@ public:
 
 class CmdUart_t : public BaseUart_t, public PrintfHelper_t, public Shell_t {
 private:
+    void IOnTxEnd() {} // Dummy
     uint8_t IPutChar(char c) { return IPutByte(c);  }
     void IStartTransmissionIfNotYet() { BaseUart_t::IStartTransmissionIfNotYet(); }
     void Printf(const char *format, ...) {

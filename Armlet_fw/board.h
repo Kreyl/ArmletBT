@@ -80,6 +80,10 @@
 // Radio: SPI, PGpio, Sck, Miso, Mosi, Cs, Gdo0
 #define CC_Setup0       SPI1, GPIOA, 5,6,7, 10, 4
 
+// KL NFC
+#define KLNFC_TX_PIN    { GPIOA, 2, TIM2, 3, invNotInverted, omPushPull, 3 }
+
+
 // SD
 #define SD_PWR_PIN      GPIOC, 4
 #define SD_AF           AF12
@@ -97,6 +101,9 @@
 #define CMD_UART        USART2
 #define UART_USE_INDEPENDENT_CLK    TRUE
 #define UART_TXBUF_SZ   1024
+
+// KL NFC
+
 #endif
 
 #if ADC_REQUIRED // ======================= Inner ADC ==========================
@@ -134,6 +141,10 @@
 #define UART_DMA_TX     STM32_DMA1_STREAM6
 #define UART_DMA_RX     STM32_DMA1_STREAM5
 #define UART_DMA_CHNL   4
+
+#define KLNFC_DMA_TX    STM32_DMA1_STREAM4
+#define KLNFC_DMA_RX    STM32_DMA1_STREAM2
+#define KLNFC_DMA_CHNL  4
 
 #if I2C1_ENABLED // ==== I2C1 ====
 #define I2C1_DMA_TX     STM32_DMA1_STREAM6
