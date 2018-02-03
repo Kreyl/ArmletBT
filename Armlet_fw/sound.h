@@ -1,10 +1,3 @@
-/*
- * File:   media.h
- * Author: g.kruglov
- *
- * Created on June 15, 2011, 4:44 PM
- */
-
 #pragma once
 
 #include "kl_sd.h"
@@ -56,127 +49,29 @@
 #define VS_REG_AIADDR       0x0A
 #define VS_REG_VOL          0x0B
 
-enum sndState_t {sndStopped, sndPlaying, sndWritingZeroes};
-
-union VsCmd_t {
-    struct {
-        uint8_t OpCode;
-        uint8_t Address;
-        uint16_t Data;
-    } __packed;
-    msg_t Msg;
-};
-
-union SndMsg_t {
-   uint32_t DWord[2];
-   VsCmd_t Cmd;
-   SndMsg_t& operator = (const SndMsg_t &Right) {
-       DWord[0] = Right.DWord[0];
-       DWord[1] = Right.DWord[1];
-       return *this;
-   }
-   SndMsg_t() {
-       DWord[0] = 0;
-       DWord[1] = 0;
-   }
-
-} __packed;
-
-#define VS_VOLUME_STEP          4
-#define VS_INITIAL_ATTENUATION  0x33
-#define VS_CMD_BUF_SZ           4       // Number of cmds in buf
-#define VS_DATA_BUF_SZ          4096    // bytes. Must be multiply of 512.
-
-struct VsBuf_t {
-    uint8_t Data[VS_DATA_BUF_SZ], *PData;
-    UINT DataSz;
-    FRESULT ReadFromFile(FIL *PFile) {
-        PData = Data;   // Set pointer at beginning
-        return f_read(PFile, Data, VS_DATA_BUF_SZ, &DataSz);
-    }
-};
-
-// Event mask to wake from IRQ
-#define VS_EVT_READ_NEXT    (eventmask_t)1
-#define VS_EVT_STOP         (eventmask_t)2
-#define VS_EVT_COMPLETED    (eventmask_t)4
-#define VS_EVT_DMA_DONE     (eventmask_t)8
-#define VS_EVT_DREQ_IRQ     (eventmask_t)16
-/*
 class Sound_t : public IrqHandler_t {
 private:
-    Spi_t ISpi;
-    msg_t CmdBuf[VS_CMD_BUF_SZ];
-    EvtMsgQ_t<SndMsg_t, MAIN_EVT_Q_LEN> MsgQ;
-    VsCmd_t ICmd;
-    VsBuf_t Buf1, Buf2, *PBuf;
+    Spi_t ISpi{VS_SPI};
     uint32_t ZeroesCount;
-    FIL IFile;
-    bool IDmaIdle;
-    int16_t IAttenuation;
-    const char* IFilename;
-    uint32_t IStartPosition;
-    // Pin operations
-    inline void Rst_Lo()   { PinSetLo(VS_GPIO, VS_RST); }
-    inline void Rst_Hi()   { PinSetHi(VS_GPIO, VS_RST); }
-    inline void XCS_Lo()   { PinSetLo(VS_GPIO, VS_XCS); }
-    inline void XCS_Hi()   { PinSetHi(VS_GPIO, VS_XCS); }
-    inline void XDCS_Lo()  { PinSetLo(VS_GPIO, VS_XDCS); }
-    inline void XDCS_Hi()  { PinSetHi(VS_GPIO, VS_XDCS); }
+    PinIrq_t IDreq{VS_GPIO, VS_DREQ, pudPullDown, this};
     // Cmds
     uint8_t CmdRead(uint8_t AAddr, uint16_t *AData);
     uint8_t CmdWrite(uint8_t AAddr, uint16_t AData);
-    void AddCmd(uint8_t AAddr, uint16_t AData);
-    inline void StartTransmissionIfNotBusy() {
-        if(IDmaIdle and IDreq.IsHi()) {
-//            Uart.Printf("T");
-            IDreq.EnableIrq(IRQ_PRIO_MEDIUM);
-            IDreq.GenerateIrq();    // Do not call SendNexData directly because of its interrupt context
-        }
-    }
-    void PrepareToStop();
-    void SendZeroes();
-    void IPlayNew();
+
+    volatile uint8_t *ptr;
+    volatile uint32_t RemainedSz;
+    volatile bool BufSent;
+
+    void SendBuf(uint8_t* ABuf, uint32_t Sz);
 public:
-    sndState_t State;
     void Init();
     void Shutdown();
-    void Play(const char* AFilename, uint32_t StartPosition = 0) {
-        IFilename = AFilename;
-        if(StartPosition & 1) StartPosition--;
-        IStartPosition = StartPosition;
-//        chEvtSignal(PThread, VS_EVT_STOP);
-    }
-    void Stop() {
-        IFilename = NULL;
-//        chEvtSignal(PThread, VS_EVT_STOP);
-    }
-    // 0...254
-    void SetVolume(uint8_t AVolume) {
-        if(AVolume == 0xFF) AVolume = 0xFE;
-        IAttenuation = 0xFE - AVolume; // Transform Volume to attenuation
-        AddCmd(VS_REG_VOL, ((IAttenuation * 256) + IAttenuation));
-    }
-    void VolumeIncrease() {
-        IAttenuation -= VS_VOLUME_STEP;
-        if(IAttenuation < 0) IAttenuation = 0;
-        AddCmd(VS_REG_VOL, ((IAttenuation * 256) + IAttenuation));
-    }
-    void VolumeDecrease() {
-        IAttenuation += VS_VOLUME_STEP;
-        if(IAttenuation > 0x8F) IAttenuation = 0x8F;
-        AddCmd(VS_REG_VOL, ((IAttenuation * 256) + IAttenuation));
-    }
-
-    uint32_t GetPosition() { return IFile.fptr; }
     // Inner use
-    PinIrq_t IDreq;
     thread_reference_t ThdRef;
-    void IrqDreqHandler();
+    bool IDmaIsIdle;
     void ITask();
-    void ISendNextData();
-    void IIrqHandler() {}
+    void ISendNexChunk();
+    void IIrqHandler();
 };
 
 extern Sound_t Sound;
-*/

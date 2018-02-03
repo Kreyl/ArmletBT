@@ -54,11 +54,11 @@ int main() {
     Lcd.Init();
     Lcd.Cls(clGreen);
 
-    Nfc.Init();
-//    SD.Init();
+//    Nfc.Init();
+    SD.Init();
 //    Printf("ID = %u\r", ID);
 
-//    DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
+    DrawBmpFile(0, 00, "Splash.bmp", &CommonFile);
 
 //    SimpleSensors::Init();
 //    Beeper.Init();
@@ -66,11 +66,9 @@ int main() {
 //    Vibro.Init(VIBRO_TIM_FREQ);
 //    Vibro.StartOrRestart(vsqBrrBrr);
 
-//    Sound.Init();
-//    Sound.SetVolume(254);
+    Sound.Init();
 
-
-//    Radio.Init();
+    //    Radio.Init();
     // ==== Main cycle ====
     ITask();
 }

@@ -86,7 +86,7 @@ void KlNfc_t::ITask() {
         // Check what received
         uint8_t b;
         while(GetByte(&b) == retvOk) {
-            Printf("%X %u %u\r", b, PktState, WasEE);
+//            Printf("%X %u %u\r", b, PktState, WasEE);
             if(PktState == npsStart) {
                 if(b == 0xEE) ResetRx();
             }
