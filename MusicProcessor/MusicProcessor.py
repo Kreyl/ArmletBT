@@ -7,7 +7,7 @@
 # - Updates and verifies information in DTAH Music Directory
 #   specified with DTAH_MUSIC environment variable, with a parameter
 #   or in current directory.
-# - DTAH Music directory must contain dtah_music_here file.
+# - DTAH Music directory must contain DTAH_Music_Here file.
 # - If -v|--verify option is used, actual processed files are verified for consistency.
 #
 # Usage:
@@ -75,7 +75,7 @@ NEW_EXTENSION = '.%s' % NEW_FORMAT
 
 DEFAULT_TARGET_DIR = 'processed'
 
-MUSIC_MARK = 'dtah_music_here'
+MUSIC_MARK = 'DTAH_Music_Here'
 
 RESULT_MARKS = { True: 'music_errors', False: 'music_ok' }
 

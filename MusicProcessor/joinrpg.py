@@ -69,7 +69,7 @@ class Character(JSONable):
                 self.fieldValues[fieldName] = field.displayString
 
 class JoinRPG(JSONable):
-    def __init__(self, projectId, username = None, password = None, joinRPG = 'http://joinrpg.ru', cacheData = False, cacheAuth = False, **kwargs):
+    def __init__(self, projectId, username = None, password = None, joinRPG = 'https://joinrpg.ru', cacheData = False, cacheAuth = False, **kwargs):
         projectId = int(projectId)
         self.username = username
         self.password = password

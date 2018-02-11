@@ -48,4 +48,4 @@ def convertTitle(s):
 
 def convertEmotion(s):
     e = convertTitle(s).lower()
-    return EMOTION_PATCHES.get(e, e)
+    return EMOTION_PATCHES.get(e, e).upper()

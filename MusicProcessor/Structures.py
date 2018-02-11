@@ -64,7 +64,7 @@ class Source(CSVdumpable):
         return self.sID
 
 class Reason(CSVdumpable):
-    CSV_FIELDS = ('rID', 'rName', 'rPriority', 'eName')
+    CSV_FIELDS = ('rID', 'rName', 'eName')
 
     C_NODE = ' /* %s */ { %s, %d, %d, %d },'
     H_NODE = '#define REASON_%s%s %2d'
@@ -83,16 +83,15 @@ class Reason(CSVdumpable):
 
     PLACEHOLDER_NAME = 'PLACEHOLDER_%02d'
 
-    def __init__(self, rName, rPriority, nSources, eName):
+    def __init__(self, rName, nSources, eName):
         CSVdumpable.__init__(self)
         self.rID = None
         self.rName = rName
-        self.rPriority = rPriority
         self.nSources = nSources
         self.eName = eName
 
     def sortKey(self):
-        return None if self.rPriority >= self.TOP_PRIORITY else (int(self.rPriority in CHARACTER_IDS), self.rName)
+        return self.rName
 
     @classmethod
     def sortByIDs(cls):
@@ -108,7 +107,7 @@ class Reason(CSVdumpable):
         start = sum(1 for reason in cls.INSTANCES.itervalues() if reason.rID is None)
         assert start <= CHARACTER_ID_START
         for rID in xrange(start, CHARACTER_ID_START):
-            reason = Reason(cls.PLACEHOLDER_NAME % rID, 0, 0, None)
+            reason = Reason(cls.PLACEHOLDER_NAME % rID, 0, None)
             reason.rID = rID
             cls.addReason(reason)
 
@@ -118,7 +117,7 @@ class Reason(CSVdumpable):
             if character.shortName in cls.INSTANCES:
                 cls.INSTANCES[character.shortName].rID = character.rID
             else:
-                reason = Reason(character.shortName, cls.CHARACTER_PRIORITY, 0, None)
+                reason = Reason(character.shortName, 0, None)
                 reason.rID = character.rID
                 cls.addReason(reason)
 

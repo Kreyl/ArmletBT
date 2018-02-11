@@ -37,7 +37,7 @@ H_TARGET = join(C_PATH, 'emotions.h')
 TEST_COMMAND = 'gcc -I "%s" -o test "%s" test.c && ./test && rm test' % (C_PATH, C_TARGET)
 
 class GoogleTableEntry(CSVable):
-    CSV_FIELDS = ('rName', 'rPriority', 'nSources', 'eName', 'ePriority', 'contents')
+    CSV_FIELDS = ('rName', 'nSources', 'eName', 'ePriority', 'contents')
 
     REASON_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*|[A-Z][a-zA-Z]*')
     EMOTION_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*')
@@ -55,13 +55,6 @@ class GoogleTableEntry(CSVable):
         if self.rName != '-':
             assert self.REASON_PATTERN.match(self.rName), "Reason name is not in PROPER_FORMAT_WITH_DIGITS: %s" % self.rName
         assert self.rName not in Reason.INSTANCES, "Duplicate reason name: %s" % self.rName
-        # rPriority
-        self.rPriority = self.rPriority.strip() # pylint: disable=E1101
-        assert self.rPriority, "Priority not specified for reason %s" % self.rName
-        try:
-            self.rPriority = int(self.rPriority)
-        except ValueError:
-            assert False, "Priority is not a number for reason %s: %r" % (self.rName, self.rPriority)
         # nSources
         try:
             self.nSources = int(self.nSources)
@@ -73,7 +66,7 @@ class GoogleTableEntry(CSVable):
             self.eName = self.eName.strip().encode('ascii')
         except UnicodeError:
             assert False, "Emotion name is not ASCII for reason %s: %r" % (self.rName, self.eName)
-        assert self.EMOTION_PATTERN.match(self.eName), "Emotion name is not in PROPER_FORMAT_WITH_DIGITS for reason %s: %s" % (self.rName, self.eName)
+        assert not self.eName or self.EMOTION_PATTERN.match(self.eName), "Emotion name is not in PROPER_FORMAT_WITH_DIGITS for reason %s: %s" % (self.rName, self.eName)
         # ePriority
         try:
             self.ePriority = int(self.ePriority) if self.ePriority else None
@@ -93,7 +86,7 @@ class GoogleTableEntry(CSVable):
         # Fill in the tables
             emotion = Emotion.addEmotion(Emotion(self.eName, self.ePriority, self.isPlayer))
         if self.rName != '-':
-            Reason.addReason(Reason(self.rName, self.rPriority, self.nSources, self.eName))
+            Reason.addReason(Reason(self.rName, self.nSources, self.eName))
 
     @classmethod
     def loadFromGoogleDocs(cls, dumpCSV = False, dumpCSV1251 = False):

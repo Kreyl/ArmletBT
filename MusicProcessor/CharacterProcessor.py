@@ -90,7 +90,8 @@ class CharacterCSVable(CSVdumpable):
         except UnicodeError:
             assert False, "Character short name is not ASCII: %r" % self.shortName
         assert self.shortName.isalpha(), "Character short name is not alphabetic: %s" % self.shortName
-        assert self.shortName[:2].isupper(), "Character short name doesn't start with two capital letters: %s" % self.shortName
+        assert self.shortName[:1].isupper(), "Character short name doesn't start with a capital letter: %s" % self.shortName
+        assert self.shortName[-1].islower(), "Character short name doesn't end with a non-capital letter: %s" % self.shortName
 
     def validate(self):
         """Validate fields other than shortName."""
