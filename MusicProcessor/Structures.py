@@ -5,7 +5,7 @@
 from collections import OrderedDict
 
 from CSVable import CSVfileable
-from Settings import currentTime, getFileName, CHARACTER_ID_START, CHARACTER_IDS
+from Settings import currentTime, getFileName, CHARACTER_ID_START
 
 class CSVdumpable(CSVfileable):
     NEEDS_HEADER = True
@@ -64,7 +64,7 @@ class Source(CSVdumpable):
         return self.sID
 
 class Reason(CSVdumpable):
-    CSV_FIELDS = ('rID', 'rName', 'eName')
+    CSV_FIELDS = ('rID', 'rName', 'level', 'timeout', 'doganAmount', 'eName')
 
     C_NODE = ' /* %s */ { %s, %d, %d, %d },'
     H_NODE = '#define REASON_%s%s %2d'
@@ -83,11 +83,14 @@ class Reason(CSVdumpable):
 
     PLACEHOLDER_NAME = 'PLACEHOLDER_%02d'
 
-    def __init__(self, rName, nSources, eName):
+    def __init__(self, rName, nSources, level, timeout, doganAmount, eName):
         CSVdumpable.__init__(self)
         self.rID = None
         self.rName = rName
         self.nSources = nSources
+        self.level = level
+        self.timeout = timeout
+        self.doganAmount = doganAmount
         self.eName = eName
 
     def sortKey(self):
@@ -107,7 +110,7 @@ class Reason(CSVdumpable):
         start = sum(1 for reason in cls.INSTANCES.itervalues() if reason.rID is None)
         assert start <= CHARACTER_ID_START
         for rID in xrange(start, CHARACTER_ID_START):
-            reason = Reason(cls.PLACEHOLDER_NAME % rID, 0, None)
+            reason = Reason(cls.PLACEHOLDER_NAME % rID, 0, 0, 0, 0, None)
             reason.rID = rID
             cls.addReason(reason)
 
@@ -117,7 +120,7 @@ class Reason(CSVdumpable):
             if character.shortName in cls.INSTANCES:
                 cls.INSTANCES[character.shortName].rID = character.rID
             else:
-                reason = Reason(character.shortName, 0, None)
+                reason = Reason(character.shortName, 0, 0, 0, 0, None)
                 reason.rID = character.rID
                 cls.addReason(reason)
 

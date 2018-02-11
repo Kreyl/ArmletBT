@@ -8,6 +8,7 @@
 # - Also processes Characters.csv and produces Emotions.csv, Reasons.csv, emotions.c and emotions.h.
 # - Compile and link emotions.c and emotions.h with whatever code that needs emotions data.
 #
+from collections import OrderedDict
 from os.path import join
 from platform import system
 from re import compile as reCompile
@@ -37,10 +38,12 @@ H_TARGET = join(C_PATH, 'emotions.h')
 TEST_COMMAND = 'gcc -I "%s" -o test "%s" test.c && ./test && rm test' % (C_PATH, C_TARGET)
 
 class GoogleTableEntry(CSVable):
-    CSV_FIELDS = ('rName', 'nSources', 'eName', 'ePriority', 'contents')
+    CSV_FIELDS = ('rName', 'nSources', 'level', 'timeout', 'doganAmount', 'eName', 'ePriority', 'contents')
 
     REASON_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*|[A-Z][a-zA-Z]*')
     EMOTION_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*')
+
+    LEVELS = OrderedDict({'NONE': 0, 'NEAR': 1, 'MEDIUM': 2, 'FAR': 3})
 
     def processFromGoogleCSV(self):
         """Process the objects after it was loaded from CSV exported from Google Docs spreadsheet."""
@@ -57,10 +60,27 @@ class GoogleTableEntry(CSVable):
         assert self.rName not in Reason.INSTANCES, "Duplicate reason name: %s" % self.rName
         # nSources
         try:
-            self.nSources = int(self.nSources)
+            self.nSources = int(self.nSources or 0)
         except ValueError:
             assert False, "Number of sources is not a number for reason %s: %r" % (self.rName, self.nSources)
         assert 0 <= self.nSources <= 30, "Bad number of sources for reason %s: %r" % (self.rName, self.nSources)
+        # level
+        try:
+            self.level = self.LEVELS[self.level.upper()]
+        except KeyError:
+            assert False, "Incorrect level reason %s: %r, expected '%s'" % (self.rName, self.level, '\' or \''.join(self.LEVELS))
+        # timeout
+        try:
+            self.timeout = int(self.timeout or 0)
+        except ValueError:
+            assert False, "Timeout is not a number for reason %s: %r" % (self.rName, self.timeout)
+        assert 0 <= self.timeout <= 600, "Bad timeout for reason %s: %r" % (self.rName, self.timeout)
+        # doganAmount
+        try:
+            self.doganAmount = int(self.doganAmount or 0)
+        except ValueError:
+            assert False, "Dogan amount is not a number for reason %s: %r" % (self.rName, self.doganAmount)
+        assert -3 <= self.doganAmount <= 5, "Bad dogan amount for reason %s: %r" % (self.rName, self.doganAmount)
         # eName
         try:
             self.eName = self.eName.strip().encode('ascii')
@@ -82,11 +102,11 @@ class GoogleTableEntry(CSVable):
                     emotion.ePriority = self.ePriority
             elif self.ePriority is not None:
                 assert emotion.ePriority == self.ePriority, "Non-consistent priority for emotion %s: %d and %d" % (self.eName, emotion.ePriority, self.ePriority)
-        else:
-        # Fill in the tables
+        elif self.eName:
             emotion = Emotion.addEmotion(Emotion(self.eName, self.ePriority, self.isPlayer))
-        if self.rName != '-':
-            Reason.addReason(Reason(self.rName, self.nSources, self.eName))
+        else:
+            emotion = None
+        Reason.addReason(Reason(self.rName, self.nSources, self.level, self.timeout, self.doganAmount, self.eName))
 
     @classmethod
     def loadFromGoogleDocs(cls, dumpCSV = False, dumpCSV1251 = False):
