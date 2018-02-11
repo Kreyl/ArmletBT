@@ -13,6 +13,7 @@ from os.path import join
 from platform import system
 from re import compile as reCompile
 from subprocess import Popen, PIPE, STDOUT
+from traceback import format_exc
 from urllib2 import urlopen
 
 from CSVable import CSVable, CSVObjectReader
@@ -38,12 +39,13 @@ H_TARGET = join(C_PATH, 'emotions.h')
 TEST_COMMAND = 'gcc -I "%s" -o test "%s" test.c && ./test && rm test' % (C_PATH, C_TARGET)
 
 class GoogleTableEntry(CSVable):
-    CSV_FIELDS = ('rName', 'nSources', 'level', 'timeout', 'doganAmount', 'eName', 'ePriority', 'contents')
+    CSV_FIELDS = ('rName', 'nSources', 'level', 'timeout', 'doganAmount', 'eName', 'eType', 'ePriority', 'contents')
 
     REASON_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*|[A-Z][a-zA-Z]*')
     EMOTION_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*')
 
     LEVELS = OrderedDict({'NONE': 0, 'NEAR': 1, 'MEDIUM': 2, 'FAR': 3})
+    ETYPES = OrderedDict({'SINGLE': 0, 'REPEAT': 1})
 
     def processFromGoogleCSV(self):
         """Process the objects after it was loaded from CSV exported from Google Docs spreadsheet."""
@@ -68,7 +70,7 @@ class GoogleTableEntry(CSVable):
         try:
             self.level = self.LEVELS[self.level.upper()]
         except KeyError:
-            assert False, "Incorrect level reason %s: %r, expected '%s'" % (self.rName, self.level, '\' or \''.join(self.LEVELS))
+            assert False, "Incorrect level for reason %s: %r, expected '%s'" % (self.rName, self.level, '\' or \''.join(self.LEVELS))
         # timeout
         try:
             self.timeout = int(self.timeout or 0)
@@ -87,23 +89,26 @@ class GoogleTableEntry(CSVable):
         except UnicodeError:
             assert False, "Emotion name is not ASCII for reason %s: %r" % (self.rName, self.eName)
         assert not self.eName or self.EMOTION_PATTERN.match(self.eName), "Emotion name is not in PROPER_FORMAT_WITH_DIGITS for reason %s: %s" % (self.rName, self.eName)
-        # ePriority
-        try:
-            self.ePriority = int(self.ePriority) if self.ePriority else None
-        except ValueError:
-            assert False, "Priority is not a number for reason %s, emotion %s: %r" % (self.rName, self.eName, self.ePriority)
+        if self.eName:
+            # eType
+            try:
+                self.eType = self.ETYPES[self.eType.upper()]
+            except KeyError:
+                assert False, "Incorrect eType for reason %s: %r, expected '%s'" % (self.rName, self.eType, '\' or \''.join(self.ETYPES))
+            # ePriority
+            try:
+                self.ePriority = int(self.ePriority or 0)
+            except ValueError:
+                assert False, "Priority is not a number for reason %s, emotion %s: %r" % (self.rName, self.eName, self.ePriority)
         # isPlayer
         self.isPlayer = int(u'игроки' in self.contents) # pylint: disable=E1101
         # ePriority consistency
         emotion = Emotion.INSTANCES.get(self.eName)
         if emotion:
-            if emotion.ePriority is None:
-                if self.ePriority is not None:
-                    emotion.ePriority = self.ePriority
-            elif self.ePriority is not None:
-                assert emotion.ePriority == self.ePriority, "Non-consistent priority for emotion %s: %d and %d" % (self.eName, emotion.ePriority, self.ePriority)
+            assert emotion.eType == self.eType, "Non-consistent type for emotion %s: %d and %d" % (self.eName, emotion.eType, self.eType)
+            assert emotion.ePriority == self.ePriority, "Non-consistent priority for emotion %s: %d and %d" % (self.eName, emotion.ePriority, self.ePriority)
         elif self.eName:
-            emotion = Emotion.addEmotion(Emotion(self.eName, self.ePriority, self.isPlayer))
+            emotion = Emotion.addEmotion(Emotion(self.eName, self.eType, self.ePriority, self.isPlayer))
         else:
             emotion = None
         Reason.addReason(Reason(self.rName, self.nSources, self.level, self.timeout, self.doganAmount, self.eName))
@@ -127,7 +132,7 @@ class GoogleTableEntry(CSVable):
                 break
             except Exception, e:
                 if attempt == 1:
-                    #print format_exc()
+                    print format_exc()
                     print "ERROR fetching data: %s, using cached version" % e
                 else:
                     raise
