@@ -183,13 +183,13 @@ class GoogleTableEntry(CSVable):
         cls.processEmotions()
         #cls.writeC()
         #cls.writeH()
-        if True: #isWindows: # pylint: disable=W0125
-            print "Not running test on Windows\nDone"
-        else:
-            print "Running test: %s" % TEST_COMMAND
-            subprocess = Popen(TEST_COMMAND, shell = True, stdout = PIPE, stderr = STDOUT)
-            output = subprocess.communicate()[0]
-            print "Done (%s): %s" % (subprocess.returncode, output),
+        #if isWindows: # pylint: disable=W0125
+        #    print "Not running test on Windows\nDone"
+        #else:
+        #    print "Running test: %s" % TEST_COMMAND
+        #    subprocess = Popen(TEST_COMMAND, shell = True, stdout = PIPE, stderr = STDOUT)
+        #    output = subprocess.communicate()[0]
+        #    print "Done (%s): %s" % (subprocess.returncode, output),
         return (Emotion.INSTANCES, cls.CHARACTERS)
 
 def updateEmotions():
