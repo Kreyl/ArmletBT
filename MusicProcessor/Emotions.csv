@@ -7,7 +7,7 @@
 #
 # !!! DO NOT EDIT !!!
 #
-# Generated at 2018-02-12 00:48:08
+# Generated at 2018-02-16 23:18:39
 #
 eID,eName,eType,ePriority,isPlayer
 0,BEAM,1,5,0
@@ -33,7 +33,7 @@ eID,eName,eType,ePriority,isPlayer
 20,EAGLE,1,4,0
 21,FATE_VOICE,0,1,0
 22,FEAR,1,4,1
-23,GERRERO,1,11,0
+23,GERRARO,1,11,0
 24,GUNSLINGER_FEELING,0,9,0
 25,HEART,1,0,0
 26,INN,1,11,0

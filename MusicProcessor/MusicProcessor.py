@@ -151,9 +151,9 @@ def parseFileName(fileName, isCharacter = False):
 def processFile(fullName, newFullName):
     try:
         sourceAudio = AudioSegment.from_file(fullName)
-        if sourceAudio.duration_seconds < 1:
-            return "Audio too short: %d seconds" % sourceAudio.duration_seconds
         if sourceAudio.duration_seconds < 5:
+            return "Audio too short: %d seconds" % sourceAudio.duration_seconds
+        if sourceAudio.duration_seconds < 60:
             print "\nWARNING: %s: Audio too short: %d seconds" % (encodeForConsole(basename(fullName)), sourceAudio.duration_seconds)
         processedAudio = sourceAudio.normalize() # pylint: disable=E1103
         processedAudio.set_sample_width(2)
@@ -260,8 +260,9 @@ def processCharacter(character, emotions, baseDir = '.', verifyFiles = False):
                 print "- Removing file %s" % fileName
                 remove(fileName)
         # Copying common files
+        copyTo(commonMusicDir, armletDir)
         for fileName in listdir(otherDir):
-            copyTo(join(commonDir, fileName), armletDir)
+            copyTo(join(otherDir, fileName), armletDir)
         # Creating settings.ini
         if character.rID > 0:
             with open(join(armletDir, INI_FILE), 'wb') as f:
