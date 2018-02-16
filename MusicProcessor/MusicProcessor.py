@@ -19,21 +19,36 @@ from errno import ENOENT
 from getopt import getopt
 from itertools import chain, count
 from os import getenv, listdir, makedirs, remove, rmdir, walk
-from os.path import basename, expanduser, getmtime, getsize, isdir, isfile, islink, join
+from os.path import basename, expanduser, getmtime, getsize, isdir, isfile, islink, join, relpath
 from re import compile as reCompile
-from shutil import copy, copytree, rmtree
+from shutil import copy, rmtree
 from sys import argv, platform, stdout
 from time import mktime
 from traceback import format_exc
 
+try: # Filesystem symbolic links configuration
+    from os import link as hardlink, symlink # UNIX # pylint: disable=E0611,C0412,W0611
+except ImportError:
+    try:
+        from ctypes import windll # Windows
+        dll = windll.LoadLibrary('kernel32.dll')
+        def hardlink(source, linkName):
+            if not dll.CreateHardLinkW(linkName, source, None):
+                raise OSError("code %d" % dll.GetLastError())
+        def symlink(source, linkName):
+            if not dll.CreateSymbolicLinkW(linkName, source, isdir(source)):
+                raise OSError("code %d" % dll.GetLastError())
+    except Exception as ex:
+        raise ImportError("%s: %s\n\nFilesystem links are not available.\nPlease run on UNIX or Windows Vista or later.\n" % (ex.__class__.__name__, ex))
+
 try:
     from pydub import AudioSegment
-except ImportError, ex:
+except ImportError as ex:
     raise ImportError("%s: %s\n\nPlease install pydub v0.20 or later: https://pypi.python.org/pypi/pydub\n" % (ex.__class__.__name__, ex))
 
 from CharacterProcessor import CharacterCSVable
 
-from EmotionConverter import convert, convertEmotion, convertTitle
+from EmotionConverter import convertEmotion, convertTitle
 from EmotionProcessor import updateEmotions
 
 #
@@ -44,12 +59,12 @@ MUSIC_LOCATION_VARIABLE = 'DTAH_MUSIC'
 
 SOURCE_DIR = 'src'
 ARMLET_DIR = 'armlet'
-MUSIC_DIR = 'music'
+MUSIC_DIR = 'personal'
+COMMON_MUSIC_DIR = 'common'
 ERROR_DIR = 'errors'
+OTHER_DIR = 'other'
 
-SD_DIR = '_SD'
 COMMON_DIR = '_COMMON'
-EXCLUDE_DIRS = (SD_DIR, COMMON_DIR)
 
 INI_FILE = 'settings.ini'
 
@@ -57,16 +72,8 @@ INI_CONTENT = open('settings_ini.tpl').read().replace('\r\n', '\n').replace('\n'
 
 CHARACTER_CSV_PATTERN = reCompile(r'character.*\.csv')
 
-FILE_PATTERN = reCompile(r'.*\..*')
-
-EMOTION = 'emotion'
-ARTIST = 'artist'
-TITLE = 'title'
-TAIL = 'tail'
-
 SEPARATOR = '-'
 
-CHECK_PATTERN = reCompile(r'(?i)^(?P<%s>[^%s\s\d]+)\s*\d*\s*%s\s*(?P<%s>[^%s]*)(?:\s*%s\s*(?P<%s>[^%s]*?)(?:\s*%s\s*(?P<%s>.*))?)?\.[^.]*$' % (EMOTION, SEPARATOR, SEPARATOR, ARTIST, SEPARATOR, SEPARATOR, TITLE, SEPARATOR, SEPARATOR, TAIL))
 NEW_FORMAT = 'wav'
 
 MAX_FILE_NAME = 64
@@ -97,32 +104,56 @@ def getFileModificationTime(fileName):
         return mktime(dt.replace(year = dt.year - 100).timetuple()) # sorry, no easier way to do it
     return t
 
-def silentRemove(filename):
+def silentRemove(fileName):
+    print "- Removing %s" % fileName
     try:
-        remove(filename)
-    except OSError, e:
+        remove(fileName)
+    except OSError as e:
         if e.errno != ENOENT:
             raise
 
 def createDir(dirName):
-    if not isdir(dirName):
+    if isdir(dirName):
+        print "- Directory %s exists" % dirName
+    else:
+        print "- Creating directory %s" % dirName
         makedirs(dirName)
 
+def copyTo(what, where):
+    print "- Creating link to %s in %s" % (what, where)
+    assert isdir(where)
+    symlink(relpath(what, where), join(where, basename(what)))
+
 def deepListDir(dirName):
-    return tuple(chain.from_iterable(((dirPath, fileName) for fileName in fileNames) for (dirPath, dirNames, fileNames) in walk(dirName)))
+    ret = tuple(chain.from_iterable(((dirPath, fileName) for fileName in fileNames) for (dirPath, dirNames, fileNames) in walk(dirName)))
+    print "- Got deep list of directory %s: %d files found" % (dirName, len(ret))
+    return ret
 
 def getFiles(dirName):
-    return tuple(join(dirName, f) for f in listdir(dirName)) if isdir(dirName) else ()
+    ret = tuple(join(dirName, f) for f in listdir(dirName)) if isdir(dirName) else ()
+    print "- Got files from directory %s: %d files found" % (dirName, len(ret))
+    return ret
 
 def deepGetFiles(dirName):
     return tuple(join(d, f) for (d, f) in deepListDir(dirName)) if isdir(dirName) else ()
 
+def parseFileName(fileName, isCharacter = False):
+    ret = [] if isCharacter else [None,]
+    for (n, token) in enumerate(fileName.rsplit('.', 1)[0].split(SEPARATOR)):
+        token = token.strip()
+        if n == 0:
+            token = token.lower() if isCharacter else token.upper()
+        elif n == 1 and isCharacter:
+            token = token.upper()
+        ret.append(token)
+    return (ret[0], ret[1] if ret[1:] else None, ret[2:])
+
 def processFile(fullName, newFullName):
     try:
         sourceAudio = AudioSegment.from_file(fullName)
-        if sourceAudio.duration_seconds < 4:
+        if sourceAudio.duration_seconds < 1:
             return "Audio too short: %d seconds" % sourceAudio.duration_seconds
-        if sourceAudio.duration_seconds < 60:
+        if sourceAudio.duration_seconds < 5:
             print "\nWARNING: %s: Audio too short: %d seconds" % (encodeForConsole(basename(fullName)), sourceAudio.duration_seconds)
         processedAudio = sourceAudio.normalize() # pylint: disable=E1103
         processedAudio.set_sample_width(2)
@@ -134,7 +165,7 @@ def processFile(fullName, newFullName):
         if not isfile(newFullName) or getsize(newFullName) < 0.1 * getsize(fullName):
             return "Processed file is too small: %d bytes, while original file was %d bytes" % (getsize(newFullName), getsize(fullName))
         return None
-    except Exception, e:
+    except Exception as e:
         print format_exc()
         return e
 
@@ -150,7 +181,7 @@ def verifyFile(fullName):
             return "Normalized audio duration mismatch: %d seconds, expected %d seconds" % (processedAudio.duration_seconds, sourceAudio.duration_seconds)
         processedAudio.export(format = 'null')
         return None
-    except Exception, e:
+    except Exception as e:
         return e
 
 def resultMark(targetDir, result, okNum = None, okSize = None, errorText = None):
@@ -169,7 +200,7 @@ def checkResultMark(targetDir):
     okText = ''
     if okDate:
         with open(okMark) as f:
-            okText = tuple(int(i) for i in f.read().split(','))
+            okText = tuple(int(i) for i in f.read().split(',')) # pylint: disable=R0204
             okNum = okText[0]
             okSize = okText[1] if len(okText) > 1 else 0
     else:
@@ -192,56 +223,51 @@ def processCharacter(character, emotions, baseDir = '.', verifyFiles = False):
         print encodeForConsole(s)
         messages.append('%s\r\n' % s)
         hasErrors[0] = hasErrors[0] or error # pylint: disable=E0601
-    print "\nProcessing character: %s (%s)" % (character.shortName, character.rID if character.rID is not None else 'UNKNOWN')
+    if character is None:
+        print "\nProcessing common directory"
+    else:
+        print "\nProcessing character: %s (%s)" % (character.shortName, character.rID if character.rID is not None else 'UNKNOWN')
     messages = []
     hasErrors = [False]
-    sdDir = join(unicode(baseDir), SD_DIR)
     commonDir = join(unicode(baseDir), COMMON_DIR)
-    baseDir = join(unicode(baseDir), character.shortName)
+    commonMusicDir = join(commonDir, COMMON_MUSIC_DIR)
+    if character:
+        baseDir = join(unicode(baseDir), character.shortName)
+    else:
+        baseDir = commonDir
     sourceDir = join(baseDir, SOURCE_DIR)
     errorDir = join(baseDir, ERROR_DIR)
-    armletDir = join(baseDir, ARMLET_DIR)
-    musicDir = join(armletDir, MUSIC_DIR)
-    createDir(armletDir)
+    if character:
+        otherDir = join(commonDir, OTHER_DIR)
+        armletDir = join(baseDir, ARMLET_DIR)
+        musicDir = join(armletDir, MUSIC_DIR)
+        createDir(armletDir)
+    else:
+        armletDir = None
+        musicDir = commonMusicDir
     sourceFiles = deepGetFiles(sourceDir)
     musicFiles = getFiles(musicDir)
     errorFiles = getFiles(errorDir)
     newFileNameSet = set()
-    # Removing common files
-    for fileName in (join(armletDir, f) for f in listdir(armletDir) if f != MUSIC_DIR and not CHARACTER_CSV_PATTERN.match(f)):
-        if isdir(fileName) and not islink(fileName):
-            rmtree(fileName)
-        else:
-            remove(fileName)
-    # Copying SD files
-    for fileName in listdir(sdDir):
-        src = join(sdDir, fileName)
-        dst = join(armletDir, fileName)
-        if isdir(src):
-            copytree(src, dst)
-        else:
-            copy(src, dst)
-    # Copying common files
-    for fileName in listdir(commonDir):
-        src = join(commonDir, fileName)
-        dst = join(armletDir, 'common', fileName)
-        if isdir(src):
-            copytree(src, dst)
-        else:
-            copy(src, dst)
-    # Creating settings.ini
-    if character.rID > 0:
-        with open(join(armletDir, INI_FILE), 'wb') as f:
-            fields = character.getFields()
-            fields['kaTetIDs'] = character.kaTetIDs
-            f.write(INI_CONTENT % fields)
-    # Processing character.csv
-    characterFiles = tuple(fileName for fileName in listdir(armletDir) if CHARACTER_CSV_PATTERN.match(fileName))
-    if len(characterFiles) > 1:
-        raise ProcessException("Multiple character files found: %s" % ', '.join(characterFiles))
-    if characterFiles:
-        print "Character file found: %s, verifying" % characterFiles[0]
-        # ToDo verifyCharacter(emotions, join(armletDir, characterFiles[0]))
+    if character:
+        # Removing common files
+        for fileName in (join(armletDir, f) for f in listdir(armletDir) if f != MUSIC_DIR and not CHARACTER_CSV_PATTERN.match(f)):
+            # ToDo: Exclude other CSV files
+            if isdir(fileName) and not islink(fileName):
+                print "- Removing directory %s" % fileName
+                rmtree(fileName)
+            else:
+                print "- Removing file %s" % fileName
+                remove(fileName)
+        # Copying common files
+        for fileName in listdir(otherDir):
+            copyTo(join(commonDir, fileName), armletDir)
+        # Creating settings.ini
+        if character.rID > 0:
+            with open(join(armletDir, INI_FILE), 'wb') as f:
+                fields = character.getFields()
+                fields['kaTetIDs'] = character.kaTetIDs
+                f.write(INI_CONTENT % fields)
     # Check music status
     (withErrors, markDate, okNum, okSize, errorText) = checkResultMark(baseDir)
     if markDate:
@@ -263,15 +289,10 @@ def processCharacter(character, emotions, baseDir = '.', verifyFiles = False):
                 stdout.flush()
                 fullName = join(musicDir, fileName)
                 dumpToErrors = False
-                match = CHECK_PATTERN.match(fileName)
-                if match:
-                    groups = match.groupdict()
-                    emotion = convertEmotion(groups[EMOTION])
-                    artist = convertTitle(groups[ARTIST])
-                    title = convertTitle(groups[TITLE] or '')
-                    tail = convert(groups[TAIL] or '')
+                (ch, emotion, tail) = parseFileName(fileName, character)
+                if emotion and (not character or ch == character):
                     if emotion not in emotions:
-                        raise ProcessException("\nUnknown emotion: %d" % emotion)
+                        raise ProcessException("\nUnknown emotion: %s in file name %s" % (emotion, fileName))
                     foundEmotions.add(emotion)
                 else:
                     raise ProcessException("\nBad file name: %s" % fileName)
@@ -282,7 +303,7 @@ def processCharacter(character, emotions, baseDir = '.', verifyFiles = False):
             print
             for emotion in (e for e in emotions if e not in foundEmotions):
                 print "WARNING: Emotion %s is missing" % emotion.upper()
-        except ProcessException, e:
+        except ProcessException as e:
             print "%s, reprocessing" % e
             resultMark(baseDir, None)
             markDate = None
@@ -313,25 +334,14 @@ def processCharacter(character, emotions, baseDir = '.', verifyFiles = False):
                 stdout.flush()
                 fullName = join(dirName, fileName)
                 dumpToErrors = False
-                match = CHECK_PATTERN.match(fileName)
-                if match:
-                    groups = match.groupdict()
-                    emotion = groups[EMOTION]
-                    artist = convertTitle(groups[ARTIST])
-                    title = convertTitle(groups[TITLE] or '')
-                    tail = convert(groups[TAIL] or '')
-                    if not title:
-                        title = artist
-                        artist = ''
+                (ch, emotion, tail) = parseFileName(fileName, character)
+                if emotion and (not character or ch.lower() == character.lower()):
+                    emotion = convertEmotion(emotion)
                     if emotion not in emotions:
                         log(True, fileName, "Unknown emotion")
                         dumpToErrors = True
                     foundEmotions.add(emotion)
-                    newFileNamePrefix = SEPARATOR.join((emotion, character.shortName))
-                    for s in (artist, title, tail):
-                        if s:
-                            newFileNamePrefix += SEPARATOR + s
-                    newFileNamePrefix = cleanupFileName(newFileNamePrefix)[:MAX_FILE_NAME]
+                    newFileNamePrefix = cleanupFileName(SEPARATOR.join(chain((character.shortName, emotion) if character else (emotion,), (convertTitle(t) for t in tail))))[:MAX_FILE_NAME]
                     for i in count():
                         newFileName = '%s%s%s' % (newFileNamePrefix, i or '', NEW_EXTENSION)
                         if newFileName.lower() not in newFileNameSet:
@@ -345,10 +355,10 @@ def processCharacter(character, emotions, baseDir = '.', verifyFiles = False):
                 if dumpToErrors:
                     createDir(errorDir)
                     newFullName = join(errorDir, newFileName)
-                if match:
+                if newFullName:
                     e = processFile(fullName, newFullName)
                 else:
-                    e = True
+                    e = True # pylint: disable=R0204
                 if e:
                     if e != True:
                         log(True, fileName, "Error processing: %s" % e)
@@ -381,7 +391,7 @@ def updateMusic(sourceDir = '.', verifyFiles = False):
     if not isfile(join(sourceDir, MUSIC_MARK)):
         print "Not a music directory: %s" % sourceDir
         return
-    characterDirs = [str(d) for d in listdir(unicode(sourceDir)) if d not in EXCLUDE_DIRS and isdir(join(sourceDir, d))]
+    characterDirs = [str(d) for d in listdir(unicode(sourceDir)) if d != COMMON_DIR and isdir(join(sourceDir, d))]
     (emotions, characters) = updateEmotions()
     okCharacters = []
     unknownCharacters = tuple(sorted(d for d in characterDirs if d not in characters))
@@ -395,6 +405,7 @@ def updateMusic(sourceDir = '.', verifyFiles = False):
     print "Character directories found: %d%s" % (len(characterDirs), (' (%d unknown)' % len(unknownCharacters)) if unknownCharacters else '')
     noMusicCharacters = []
     errorCharacters = []
+    processCharacter(None, emotions, sourceDir, verifyFiles)
     for d in characterDirs:
         character = characters.get(d)
         if not character:
