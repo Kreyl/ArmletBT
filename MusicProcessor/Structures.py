@@ -64,7 +64,7 @@ class Source(CSVdumpable):
         return self.sID
 
 class Reason(CSVdumpable):
-    CSV_FIELDS = ('rID', 'rName', 'level', 'timeout', 'doganAmount', 'eName')
+    CSV_FIELDS = ('rID', 'rName', 'level', 'timeout', 'doganAmount', 'eID', 'eName')
 
     C_NODE = ' /* %s */ { %s, %d, %d, %d },'
     H_NODE = '#define REASON_%s%s %2d'
@@ -91,6 +91,7 @@ class Reason(CSVdumpable):
         self.level = level
         self.timeout = timeout
         self.doganAmount = doganAmount
+        self.eID = None
         self.eName = eName
 
     def sortKey(self):

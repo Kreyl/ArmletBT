@@ -76,7 +76,7 @@ class GoogleTableEntry(CSVable):
             self.timeout = int(self.timeout or 0)
         except ValueError:
             assert False, "Timeout is not a number for reason %s: %r" % (self.rName, self.timeout)
-        assert 0 <= self.timeout <= 600, "Bad timeout for reason %s: %r" % (self.rName, self.timeout)
+        assert 0 <= self.timeout <= 600 or self.timeout == -1, "Bad timeout for reason %s: %r" % (self.rName, self.timeout)
         # doganAmount
         try:
             self.doganAmount = int(self.doganAmount or 0)
@@ -183,13 +183,13 @@ class GoogleTableEntry(CSVable):
         cls.processEmotions()
         #cls.writeC()
         #cls.writeH()
-        #if isWindows: # pylint: disable=W0125
-        #    print "Not running test on Windows\nDone"
-        #else:
-        #    print "Running test: %s" % TEST_COMMAND
-        #    subprocess = Popen(TEST_COMMAND, shell = True, stdout = PIPE, stderr = STDOUT)
-        #    output = subprocess.communicate()[0]
-        #    print "Done (%s): %s" % (subprocess.returncode, output),
+        if True: #isWindows: # pylint: disable=W0125
+            print "Not running test on Windows\nDone"
+        else:
+            print "Running test: %s" % TEST_COMMAND
+            subprocess = Popen(TEST_COMMAND, shell = True, stdout = PIPE, stderr = STDOUT)
+            output = subprocess.communicate()[0]
+            print "Done (%s): %s" % (subprocess.returncode, output),
         return (Emotion.INSTANCES, cls.CHARACTERS)
 
 def updateEmotions():

@@ -8,17 +8,17 @@
 #
 # !!! DO NOT EDIT !!!
 #
-# Generated at 2018-03-31 23:56:44
+# Generated at 2018-04-01 02:12:39
 #
 rID,shortName,isNY,isManni,dogan,kaTet,nAction,hasMusic
 100,JRight,0,0,2,,0,0
-101,CRandall,0,0,-2,,5,0
-102,RDias,0,0,-1,,4,0
-103,DRice,0,0,-1,,4,0
-104,AFlores,0,1,0,,3,0
+101,CRandall,0,0,-2,,0,0
+102,RDias,0,0,-1,,0,0
+103,DRice,0,0,-2,,0,0
+104,AFlores,0,1,0,,0,0
 105,Isaak,0,0,0,Cordelia:Isaak:Ruth,0,0
 106,Cordelia,0,0,1,Cordelia:Isaak:Ruth,0,0
-107,SJames,1,0,0,,7,1
+107,SJames,1,0,0,,0,1
 108,FPibody,0,0,0,,0,0
 109,RHarris,0,0,0,,0,0
 110,KMurray,0,0,0,,0,0
@@ -61,7 +61,7 @@ rID,shortName,isNY,isManni,dogan,kaTet,nAction,hasMusic
 147,DWinch,0,0,1,DWinch:MParker:SWinch:Seven,0,0
 148,Ruth,0,1,1,Cordelia:Isaak:Ruth,0,0
 149,Seven,0,0,1,DWinch:MParker:SWinch:Seven,0,0
-150,SKing,0,0,1,BCassidy:SKing,0,0
+150,SKing,0,0,1,BCassidy:SKing,0,1
 151,MParker,0,0,1,DWinch:MParker:SWinch:Seven,0,0
 152,Samantha,0,0,1,,0,0
 153,RMcCoy,0,0,1,,0,0
