@@ -38,6 +38,8 @@ def date2str(date):
 def str2date(s):
     if s is None or isinstance(s, datetime):
         return s
+    if '.' not in s:
+        s += '.0'
     return datetime.strptime(s, API_DATE_FORMAT)
 
 class MoreJSONEncoder(JSONEncoder):
