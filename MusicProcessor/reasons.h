@@ -8,7 +8,7 @@
  *
  * !!! DO NOT EDIT !!!
  *
- * Generated at 2018-04-02 00:28:57
+ * Generated at 2018-04-02 00:34:10
  */
 #ifndef REASONS_H
 #define REASONS_H
@@ -117,6 +117,34 @@ extern "C" int PLACEHOLDER_96_ID;
 extern "C" int PLACEHOLDER_97_ID;
 extern "C" int PLACEHOLDER_98_ID;
 extern "C" int PLACEHOLDER_99_ID;
+extern "C" int PLACEHOLDER_100_ID;
+extern "C" int PLACEHOLDER_101_ID;
+extern "C" int PLACEHOLDER_102_ID;
+extern "C" int PLACEHOLDER_103_ID;
+extern "C" int PLACEHOLDER_104_ID;
+extern "C" int PLACEHOLDER_105_ID;
+extern "C" int PLACEHOLDER_106_ID;
+extern "C" int PLACEHOLDER_107_ID;
+extern "C" int PLACEHOLDER_108_ID;
+extern "C" int PLACEHOLDER_109_ID;
+extern "C" int PLACEHOLDER_110_ID;
+extern "C" int PLACEHOLDER_111_ID;
+extern "C" int PLACEHOLDER_112_ID;
+extern "C" int PLACEHOLDER_113_ID;
+extern "C" int PLACEHOLDER_114_ID;
+extern "C" int PLACEHOLDER_115_ID;
+extern "C" int PLACEHOLDER_116_ID;
+extern "C" int PLACEHOLDER_117_ID;
+extern "C" int PLACEHOLDER_118_ID;
+extern "C" int PLACEHOLDER_119_ID;
+extern "C" int PLACEHOLDER_120_ID;
+extern "C" int PLACEHOLDER_121_ID;
+extern "C" int PLACEHOLDER_122_ID;
+extern "C" int PLACEHOLDER_123_ID;
+extern "C" int PLACEHOLDER_124_ID;
+extern "C" int PLACEHOLDER_125_ID;
+extern "C" int PLACEHOLDER_126_ID;
+extern "C" int PLACEHOLDER_127_ID;
 extern "C" int JRight_ID;
 extern "C" int CRandall_ID;
 extern "C" int RDias_ID;
