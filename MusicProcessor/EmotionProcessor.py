@@ -171,6 +171,8 @@ class GoogleTableEntry(CSVable):
         print "Sources dumped: %d" % len(Source.INSTANCES)
         Reason.dumpCSV()
         print "Reasons dumped: %d" % len(Reason.INSTANCES)
+        Reason.dumpCPP()
+        print "Reasons CPP code dumped: %d" % len(Reason.INSTANCES)
         Emotion.dumpCSV()
         print "Emotions dumped: %d" % len(Emotion.INSTANCES)
 
@@ -181,8 +183,6 @@ class GoogleTableEntry(CSVable):
         cls.loadFromGoogleDocs(True, True)
         print "Processing emotions..."
         cls.processEmotions()
-        #cls.writeC()
-        #cls.writeH()
         if True: #isWindows: # pylint: disable=W0125
             print "Not running test on Windows\nDone"
         else:
