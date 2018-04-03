@@ -10,7 +10,7 @@
  *
  * Generated at %(currentTime)s
  */
-#include "emotions.h"
+#include "reasons.h"
 
 {%int %(rName)s_ID;}
 
