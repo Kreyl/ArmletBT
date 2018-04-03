@@ -14,7 +14,7 @@
 
 {%int %(rName)s_ID;}
 
-void prepare_globals(const InfluenceTable &table)
+void prepare_reasons(const InfluenceTable &table)
 {
 {%    %(rName)s_ID = table.find("%(rName)s");}
 }

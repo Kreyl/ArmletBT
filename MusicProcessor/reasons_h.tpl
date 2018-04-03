@@ -15,7 +15,7 @@
 
 #include "influencetable.h"
 
-void prepare_globals(const InfluenceTable &table);
+void prepare_reasons(const InfluenceTable &table);
 
 {%extern "C" int %(rName)s_ID;}
 
