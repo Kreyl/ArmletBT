@@ -8,9 +8,9 @@
  *
  * !!! DO NOT EDIT !!!
  *
- * Generated at 2018-04-02 00:34:10
+ * Generated at 2018-04-04 15:46:18
  */
-#include "emotions.h"
+#include "reasons.h"
 
 int BEAM_ID;
 int BEAM_CLOSE_ID;
@@ -195,7 +195,7 @@ int MParker_ID;
 int Samantha_ID;
 int RMcCoy_ID;
 
-void prepare_globals(const InfluenceTable &table)
+void prepare_reasons(const InfluenceTable &table)
 {
     BEAM_ID = table.find("BEAM");
     BEAM_CLOSE_ID = table.find("BEAM_CLOSE");
