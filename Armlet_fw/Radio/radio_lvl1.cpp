@@ -13,7 +13,6 @@
 #include "EvtMsgIDs.h"
 
 cc1101_t CC(CC_Setup0);
-extern uint8_t Status;
 extern uint16_t ID;
 
 #define DBG_PINS
@@ -57,6 +56,7 @@ static void rLvl1Thread(void *arg) {
 __noreturn
 void rLevel1_t::ITask() {
     bool IsPwrDown=false, IsRcvng = false;
+    systime_t TimeStart = chVTGetSystemTimeX();
     while(true) {
         RMsg_t msg = RMsgQ.Fetch(TIME_IMMEDIATE);
 //        if(msg.Cmd == rmsgSetPwr) CC.SetTxPower(msg.Value);
@@ -77,6 +77,8 @@ void rLevel1_t::ITask() {
                     CycleN = 0;
                     CC.Recalibrate();
                 }
+                Printf("Ccl %u, dur %u\r", CycleN, chVTTimeElapsedSinceX(TimeStart));
+                TimeStart = chVTGetSystemTimeX();
             }
             // Act depending on Cycle and timeslot
             // Tx if timeslot == ID
@@ -119,16 +121,20 @@ uint8_t rLevel1_t::Init() {
     RMsgQ.Init();
     if(CC.Init() == retvOk) {
         CC.SetPktSize(RPKT_LEN);
-        CC.SetChannel(0);
+        CC.SetChannel(RCHNL);
+        CC.SetTxPower(CC_TX_PWR);
         // Measure timeslot duration
         CC.SetTxPower(CC_PwrMinus30dBm);
         systime_t TimeStart = chVTGetSystemTimeX();
+        CC.Recalibrate();
         CC.Transmit(&PktTx, RPKT_LEN);
         TimeslotDuration = chVTTimeElapsedSinceX(TimeStart);
+//        TimeslotDuration
         Printf("Timeslot duration, systime: %u\r", TimeslotDuration);
+        Printf("Timeslot duration, ms: %u\r", ST2MS(TimeslotDuration));
+        TimeslotDuration = 13;
         chVTSet(&TmrTimeslot, TimeslotDuration, TmrTimeslotCallback, nullptr);
 
-        CC.SetTxPower(CC_TX_PWR);
         // Thread
         chThdCreateStatic(warLvl1Thread, sizeof(warLvl1Thread), HIGHPRIO, (tfunc_t)rLvl1Thread, NULL);
         return retvOk;

@@ -18,7 +18,6 @@
 #include "beeper.h"
 #include "vibro.h"
 #include "sound.h"
-#include "kl_nfc.h"
 
 // Forever
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
@@ -31,10 +30,6 @@ uint16_t ID = 2;
 
 Beeper_t Beeper(BEEPER_PIN);
 Vibro_t Vibro(VIBRO_PIN);
-
-#if 1 // =========================== Locals ====================================
-
-#endif
 
 int main() {
     // ==== Setup clock ====
@@ -54,11 +49,10 @@ int main() {
     Lcd.Init();
     Lcd.Cls(clGreen);
 
-//    Nfc.Init();
     SD.Init();
-//    Printf("ID = %u\r", ID);
+    Printf("ID = %u\r", ID);
 
-    DrawBmpFile(0, 00, "Splash.bmp", &CommonFile);
+//    DrawBmpFile(0, 00, "Splash.bmp", &CommonFile);
 
 //    SimpleSensors::Init();
 //    Beeper.Init();
@@ -66,9 +60,9 @@ int main() {
 //    Vibro.Init(VIBRO_TIM_FREQ);
 //    Vibro.StartOrRestart(vsqBrrBrr);
 
-    Sound.Init();
+//    Sound.Init();
 
-    //    Radio.Init();
+    Radio.Init();
     // ==== Main cycle ====
     ITask();
 }

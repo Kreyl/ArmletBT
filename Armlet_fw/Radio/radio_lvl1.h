@@ -60,14 +60,17 @@ static inline void Lvl250ToLvl1000(uint16_t *PLvl) {
 #if 1 // =========================== Pkt_t =====================================
 union rPkt_t  {
     uint32_t DWord;
+    uint16_t Word;
     struct {
-        uint16_t ID : 9;
+        uint16_t ID : 13;
         uint8_t Cycle: 3;
-        uint8_t Status : 4;
         uint16_t Timestamp;
+        uint8_t Influence;
+        uint8_t Param;
     } __packed;
     rPkt_t& operator = (const rPkt_t &Right) {
         DWord = Right.DWord;
+        Word = Right.Word;
         return *this;
     }
 //    void Print() { Printf("%d %d %d %d %d %d; %X\r", Ch[0],Ch[1],Ch[2],Ch[3],R1, R2, Btns); }
@@ -79,9 +82,11 @@ union rPkt_t  {
 #define RSSI_MIN            -75
 
 #if 1 // ======================= Channels & cycles =============================
-#define RCHNL_SRV           0
+#define RCHNL               4
 #define CYCLE_CNT           4
-#define SLOT_CNT            30
+#define ARMLET_CNT          80
+#define LUSTRA_CNT          200
+#define SLOT_CNT            (ARMLET_CNT + LUSTRA_CNT)
 #define SLOT_DURATION_MS    5
 #endif
 
