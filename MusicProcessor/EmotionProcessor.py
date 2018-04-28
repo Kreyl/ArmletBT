@@ -8,10 +8,12 @@
 # - Also processes Characters.csv and produces Emotions.csv, Reasons.csv, emotions.c and emotions.h.
 # - Compile and link emotions.c and emotions.h with whatever code that needs emotions data.
 #
+from collections import OrderedDict
 from os.path import join
 from platform import system
 from re import compile as reCompile
 from subprocess import Popen, PIPE, STDOUT
+from traceback import format_exc
 from urllib2 import urlopen
 
 from CSVable import CSVable, CSVObjectReader
@@ -37,10 +39,13 @@ H_TARGET = join(C_PATH, 'emotions.h')
 TEST_COMMAND = 'gcc -I "%s" -o test "%s" test.c && ./test && rm test' % (C_PATH, C_TARGET)
 
 class GoogleTableEntry(CSVable):
-    CSV_FIELDS = ('rName', 'rPriority', 'nSources', 'eName', 'ePriority', 'contents')
+    CSV_FIELDS = ('rName', 'nSources', 'level', 'timeout', 'doganAmount', 'eName', 'eType', 'ePriority', 'contents')
 
     REASON_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*|[A-Z][a-zA-Z]*')
     EMOTION_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*')
+
+    LEVELS = OrderedDict({'NONE': 0, 'NEAR': 1, 'MEDIUM': 2, 'FAR': 3})
+    ETYPES = OrderedDict({'SINGLE': 0, 'REPEAT': 1})
 
     def processFromGoogleCSV(self):
         """Process the objects after it was loaded from CSV exported from Google Docs spreadsheet."""
@@ -55,45 +60,58 @@ class GoogleTableEntry(CSVable):
         if self.rName != '-':
             assert self.REASON_PATTERN.match(self.rName), "Reason name is not in PROPER_FORMAT_WITH_DIGITS: %s" % self.rName
         assert self.rName not in Reason.INSTANCES, "Duplicate reason name: %s" % self.rName
-        # rPriority
-        self.rPriority = self.rPriority.strip() # pylint: disable=E1101
-        assert self.rPriority, "Priority not specified for reason %s" % self.rName
-        try:
-            self.rPriority = int(self.rPriority)
-        except ValueError:
-            assert False, "Priority is not a number for reason %s: %r" % (self.rName, self.rPriority)
         # nSources
         try:
-            self.nSources = int(self.nSources)
+            self.nSources = int(self.nSources or 0)
         except ValueError:
             assert False, "Number of sources is not a number for reason %s: %r" % (self.rName, self.nSources)
         assert 0 <= self.nSources <= 30, "Bad number of sources for reason %s: %r" % (self.rName, self.nSources)
+        # level
+        try:
+            self.level = self.LEVELS[self.level.upper()]
+        except KeyError:
+            assert False, "Incorrect level for reason %s: %r, expected '%s'" % (self.rName, self.level, '\' or \''.join(self.LEVELS))
+        # timeout
+        try:
+            self.timeout = int(self.timeout or 0)
+        except ValueError:
+            assert False, "Timeout is not a number for reason %s: %r" % (self.rName, self.timeout)
+        assert 0 <= self.timeout <= 600 or self.timeout == -1, "Bad timeout for reason %s: %r" % (self.rName, self.timeout)
+        # doganAmount
+        try:
+            self.doganAmount = int(self.doganAmount or 0)
+        except ValueError:
+            assert False, "Dogan amount is not a number for reason %s: %r" % (self.rName, self.doganAmount)
+        assert -3 <= self.doganAmount <= 5, "Bad dogan amount for reason %s: %r" % (self.rName, self.doganAmount)
         # eName
         try:
             self.eName = self.eName.strip().encode('ascii')
         except UnicodeError:
             assert False, "Emotion name is not ASCII for reason %s: %r" % (self.rName, self.eName)
-        assert self.EMOTION_PATTERN.match(self.eName), "Emotion name is not in PROPER_FORMAT_WITH_DIGITS for reason %s: %s" % (self.rName, self.eName)
-        # ePriority
-        try:
-            self.ePriority = int(self.ePriority) if self.ePriority else None
-        except ValueError:
-            assert False, "Priority is not a number for reason %s, emotion %s: %r" % (self.rName, self.eName, self.ePriority)
+        assert not self.eName or self.EMOTION_PATTERN.match(self.eName), "Emotion name is not in PROPER_FORMAT_WITH_DIGITS for reason %s: %s" % (self.rName, self.eName)
+        if self.eName:
+            # eType
+            try:
+                self.eType = self.ETYPES[self.eType.upper()]
+            except KeyError:
+                assert False, "Incorrect eType for reason %s: %r, expected '%s'" % (self.rName, self.eType, '\' or \''.join(self.ETYPES))
+            # ePriority
+            try:
+                self.ePriority = int(self.ePriority or 0)
+            except ValueError:
+                assert False, "Priority is not a number for reason %s, emotion %s: %r" % (self.rName, self.eName, self.ePriority)
         # isPlayer
         self.isPlayer = int(u'игроки' in self.contents) # pylint: disable=E1101
         # ePriority consistency
         emotion = Emotion.INSTANCES.get(self.eName)
         if emotion:
-            if emotion.ePriority is None:
-                if self.ePriority is not None:
-                    emotion.ePriority = self.ePriority
-            elif self.ePriority is not None:
-                assert emotion.ePriority == self.ePriority, "Non-consistent priority for emotion %s: %d and %d" % (self.eName, emotion.ePriority, self.ePriority)
+            assert emotion.eType == self.eType, "Non-consistent type for emotion %s: %d and %d" % (self.eName, emotion.eType, self.eType)
+            assert emotion.ePriority == self.ePriority, "Non-consistent priority for emotion %s: %d and %d" % (self.eName, emotion.ePriority, self.ePriority)
+        elif self.eName:
+            emotion = Emotion.addEmotion(Emotion(self.eName, self.eType, self.ePriority, self.isPlayer))
         else:
-        # Fill in the tables
-            emotion = Emotion.addEmotion(Emotion(self.eName, self.ePriority, self.isPlayer))
-        if self.rName != '-':
-            Reason.addReason(Reason(self.rName, self.rPriority, self.nSources, self.eName))
+            emotion = None
+        Reason.addReason(Reason(self.rName, self.nSources, self.level, self.timeout, self.doganAmount, self.eName))
 
     @classmethod
     def loadFromGoogleDocs(cls, dumpCSV = False, dumpCSV1251 = False):
@@ -114,7 +132,7 @@ class GoogleTableEntry(CSVable):
                 break
             except Exception, e:
                 if attempt == 1:
-                    #print format_exc()
+                    print format_exc()
                     print "ERROR fetching data: %s, using cached version" % e
                 else:
                     raise
@@ -153,6 +171,8 @@ class GoogleTableEntry(CSVable):
         print "Sources dumped: %d" % len(Source.INSTANCES)
         Reason.dumpCSV()
         print "Reasons dumped: %d" % len(Reason.INSTANCES)
+        Reason.dumpCPP()
+        print "Reasons CPP code dumped: %d" % len(Reason.INSTANCES)
         Emotion.dumpCSV()
         print "Emotions dumped: %d" % len(Emotion.INSTANCES)
 
@@ -163,8 +183,6 @@ class GoogleTableEntry(CSVable):
         cls.loadFromGoogleDocs(True, True)
         print "Processing emotions..."
         cls.processEmotions()
-        #cls.writeC()
-        #cls.writeH()
         if True: #isWindows: # pylint: disable=W0125
             print "Not running test on Windows\nDone"
         else:

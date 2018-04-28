@@ -113,7 +113,7 @@ class CSVfileable(CSVable):
         with open(fileName, 'rb') as f:
             for obj in CSVObjectReader(f, cls, useHeader, encoding, handleComments, *args, **kwargs):
                 if isinstance(cls.INSTANCES, list):
-                    cls.INSTANCES.append(obj)
+                    cls.INSTANCES.append(obj) # pylint: disable=E1101
                 else: # dict
                     cls.INSTANCES[keyFunction(obj)] = obj
 

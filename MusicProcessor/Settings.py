@@ -12,7 +12,7 @@ def currentTime():
 def getFileName(name):
     return join(dirname(realpath(argv[0])), name)
 
-CHARACTER_ID_START = 100
+CHARACTER_ID_START = 128
 CHARACTER_ID_END = 199
 CHARACTER_IDS = xrange(CHARACTER_ID_START, CHARACTER_ID_END + 1)
 

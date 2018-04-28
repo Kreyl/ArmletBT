@@ -10,6 +10,7 @@
 #
 from collections import OrderedDict
 from re import compile as reCompile
+from traceback import format_exc
 
 from Settings import CHARACTER_ID_START, CHARACTER_ID_END, CHARACTER_IDS
 from Structures import CSVdumpable
@@ -89,8 +90,8 @@ class CharacterCSVable(CSVdumpable):
             self.shortName = self.shortName.encode('ascii')
         except UnicodeError:
             assert False, "Character short name is not ASCII: %r" % self.shortName
-        assert self.shortName.isalpha(), "Character short name is not alphabetic: %s" % self.shortName
-        assert self.shortName[:2].isupper(), "Character short name doesn't start with two capital letters: %s" % self.shortName
+        assert self.shortName.isalnum(), "Character short name is not alphanumeric: %s" % self.shortName
+        assert self.shortName[:1].isupper(), "Character short name doesn't start with a capital letter: %s" % self.shortName
 
     def validate(self):
         """Validate fields other than shortName."""
@@ -215,7 +216,7 @@ class CharacterCSVable(CSVdumpable):
             else:
                 print "No changes detected"
         except Exception, e:
-            #print format_exc()
+            print format_exc()
             print "ERROR fetching data: %s, using cached version" % unicode(e)
             return ()
 
