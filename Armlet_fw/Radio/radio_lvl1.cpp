@@ -77,7 +77,7 @@ void rLevel1_t::ITask() {
                     CycleN = 0;
                     CC.Recalibrate();
                 }
-                Printf("Ccl %u, dur %u\r", CycleN, chVTTimeElapsedSinceX(TimeStart));
+//                Printf("Ccl %u, dur %u\r", CycleN, chVTTimeElapsedSinceX(TimeStart));
                 TimeStart = chVTGetSystemTimeX();
             }
             // Act depending on Cycle and timeslot
@@ -131,8 +131,7 @@ uint8_t rLevel1_t::Init() {
         TimeslotDuration = chVTTimeElapsedSinceX(TimeStart);
 //        TimeslotDuration
         Printf("Timeslot duration, systime: %u\r", TimeslotDuration);
-        Printf("Timeslot duration, ms: %u\r", ST2MS(TimeslotDuration));
-        TimeslotDuration = 13;
+        TimeslotDuration = 20;
         chVTSet(&TmrTimeslot, TimeslotDuration, TmrTimeslotCallback, nullptr);
 
         // Thread

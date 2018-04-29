@@ -47,7 +47,7 @@ struct BGR_t {
 } __packed;
 static BGR_t ColorTable[256];
 
-//__ramfunc
+__ramfunc
 static inline void PutTablePixel(uint8_t id) {
     uint8_t R = ColorTable[id].R;
     uint8_t G = ColorTable[id].G;
@@ -58,10 +58,10 @@ static inline void PutTablePixel(uint8_t id) {
     // Low byte
     uint8_t byte2 = (G << 3) & 0b11100000;
     byte2 |= B >> 3;
-    Lcd.PutBitmapNext(byte1, byte2);
+    PutBitmapNext(byte1, byte2);
 }
 
-//__ramfunc
+__ramfunc
 void WriteLine1(uint8_t *PBuf, int32_t Width) {
     int32_t Cnt = 0, Top = MIN_(Width, LCD_W);
     while(true) {
@@ -75,7 +75,7 @@ void WriteLine1(uint8_t *PBuf, int32_t Width) {
     } // while(true)
 }
 
-//__ramfunc
+__ramfunc
 void WriteLine4(uint8_t *PBuf, int32_t Width) {
     int32_t Cnt = 0, Top = MIN_(Width, LCD_W);
     while(true) {
@@ -89,7 +89,7 @@ void WriteLine4(uint8_t *PBuf, int32_t Width) {
     } // while(true)
 }
 
-//__ramfunc
+__ramfunc
 void WriteLine8(uint8_t *PBuf, int32_t Width) {
     int32_t Cnt = 0, Top = MIN_(Width, LCD_W);
     while(Cnt < Top) {
@@ -103,7 +103,7 @@ __ramfunc
 void WriteLine16(uint8_t *PBuf, int32_t Width) {
     int32_t Cnt = 0, Top = MIN_(Width, LCD_W);
     while(Cnt < Top) {
-        Lcd.PutBitmapNext(PBuf[1], PBuf[0]);
+        PutBitmapNext(PBuf[1], PBuf[0]);
         PBuf += 2;
         Cnt++;
     }
@@ -122,11 +122,12 @@ void WriteLine24(uint8_t *PBuf, int32_t Width) {
         // Low byte
         uint8_t byte2 = (G << 3) & 0b11100000;
         byte2 |= B >> 3;
-        Lcd.PutBitmapNext(byte1, byte2);
+        PutBitmapNext(byte1, byte2);
         Cnt++;
     }
 }
 
+__ramfunc
 void WriteLine32(uint8_t *PBuf, int32_t Width) {
     int32_t Cnt = 0, Top = MIN_(Width, LCD_W);
     while(Cnt < Top) {
@@ -140,7 +141,7 @@ void WriteLine32(uint8_t *PBuf, int32_t Width) {
         // Low byte
         uint8_t byte2 = (G << 3) & 0b11100000;
         byte2 |= B >> 3;
-        Lcd.PutBitmapNext(byte1, byte2);
+        PutBitmapNext(byte1, byte2);
         Cnt++;
     }
 }

@@ -31,6 +31,9 @@ uint16_t ID = 2;
 Beeper_t Beeper(BEEPER_PIN);
 Vibro_t Vibro(VIBRO_PIN);
 
+static TmrKL_t TmrOneSecond {MS2ST(999), evtIdEverySecond, tktPeriodic}; // Measure battery periodically
+
+
 int main() {
     // ==== Setup clock ====
     Clk.SetHiPerfMode();
@@ -47,12 +50,12 @@ int main() {
     Clk.PrintFreqs();
 
     Lcd.Init();
-    Lcd.Cls(clGreen);
+//    Lcd.Cls(clGreen);
 
     SD.Init();
     Printf("ID = %u\r", ID);
 
-//    DrawBmpFile(0, 00, "Splash.bmp", &CommonFile);
+    DrawBmpFile(0, 00, "Splash.bmp", &CommonFile);
 
 //    SimpleSensors::Init();
 //    Beeper.Init();
@@ -61,6 +64,8 @@ int main() {
 //    Vibro.StartOrRestart(vsqBrrBrr);
 
 //    Sound.Init();
+
+    TmrOneSecond.StartOrRestart();
 
     Radio.Init();
     // ==== Main cycle ====
@@ -87,6 +92,9 @@ void ITask() {
             case evtIdBtnY:
             case evtIdBtnZ:
                 Printf("Btn: %u\r", (Msg.ID - evtIdBtnA));
+                break;
+
+            case evtIdEverySecond:
                 break;
 
             default: break;

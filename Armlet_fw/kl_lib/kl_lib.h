@@ -48,7 +48,7 @@ Maybe, to calm Eclipse, it will be required to write extra quote in the end: "\"
      *(.fastrun)         // RAM-Functions
      Example:
         . = ALIGN(4);
-        *(.fastrun)     // RAM-Functions
+        *(.fastrun)         // "RAM-Functions"
         PROVIDE(_edata = .);
         _data_end = .;
     } > DATA_RAM AT > flash

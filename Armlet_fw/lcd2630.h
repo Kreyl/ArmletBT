@@ -52,7 +52,6 @@ public:
     void GetBitmap(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, uint16_t *PBuf);
     void PutBitmap(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, uint16_t *PBuf);
     void PutBitmapBegin(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height);
-    void PutBitmapNext(uint8_t Byte1, uint8_t Byte2);
     void PutBitmapEnd();
     void PutPixel (uint8_t x0, uint8_t y0, uint16_t Clr);
 //    void DrawImage(const uint8_t x, const uint8_t y, const uint8_t *Img);
@@ -60,3 +59,15 @@ public:
 };
 
 extern Lcd_t Lcd;
+
+__attribute__ ((always_inline)) static inline void WriteByte(uint8_t Byte) {
+    LCD_GPIO->BSRR = (LCD_MASK_WR << 16);  // Clear bus and set WR Low
+    LCD_GPIO->BSRR = Byte;         // Place data on bus
+    LCD_GPIO->BSRR = (1<<LCD_WR);  // WR high
+}
+
+__attribute__ ((always_inline)) inline
+void PutBitmapNext(uint8_t Byte1, uint8_t Byte2) {
+    WriteByte(Byte2);
+    WriteByte(Byte1);
+}

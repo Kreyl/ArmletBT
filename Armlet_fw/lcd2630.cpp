@@ -74,11 +74,6 @@ __attribute__ ((always_inline)) static inline void ModeRead() {
     LCD_GPIO->MODER &= LCD_MODE_READ;
 }
 
-__attribute__ ((always_inline)) static inline void WriteByte(uint8_t Byte) {
-    LCD_GPIO->BSRR = (LCD_MASK_WR << 16);  // Clear bus and set WR Low
-    LCD_GPIO->BSRR = Byte;         // Place data on bus
-    LCD_GPIO->BSRR = (1<<LCD_WR);  // WR high
-}
 __attribute__ ((always_inline)) static inline uint8_t ReadByte() {
     uint16_t w;
     LCD_GPIO->BSRR = ((1<<LCD_RD) << 16);  // RD Low
@@ -227,10 +222,7 @@ void Lcd_t::PutBitmapBegin(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height
     WriteByte(0x2C);    // Memory write
     DC_Hi();
 }
-void Lcd_t::PutBitmapNext(uint8_t Byte1, uint8_t Byte2) {
-    WriteByte(Byte2);
-    WriteByte(Byte1);
-}
+
 void Lcd_t::PutBitmapEnd() {
     DC_Lo();
 }
