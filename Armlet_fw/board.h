@@ -31,7 +31,7 @@
 #define SIMPLESENSORS_ENABLED   TRUE
 #define BUTTONS_ENABLED         TRUE
 
-#define ADC_REQUIRED            FALSE
+#define ADC_REQUIRED            TRUE
 
 #if 1 // ========================== GPIO =======================================
 // EXTI
@@ -43,7 +43,7 @@
 #define UART_RX_PIN     6
 
 // Battery measuremrnt
-#define BAT_MEAS_ADC    GPIOC, 5
+#define BAT_MEAS_PIN    GPIOC, 0
 
 // Buttons
 #define BTNA_PIN        GPIOD, 0, pudPullUp
@@ -58,7 +58,7 @@
 
 // Usb detect & charging
 #define USB_DETECT_PIN  GPIOA, 9
-#define IS_CHARGING     GPIOC, 3, pudPullUp
+#define IS_CHARGING_PIN GPIOC, 3
 
 // Beeper
 #define BEEP_TOP_VALUE  22
@@ -106,30 +106,20 @@
 #define UART_USE_INDEPENDENT_CLK    TRUE
 #define UART_TXBUF_SZ   1024
 
-// KL NFC
-
 #endif
 
 #if ADC_REQUIRED // ======================= Inner ADC ==========================
+#define ADC_MEAS_PERIOD_MS  2007
 // Clock divider: clock is generated from the APB2
 #define ADC_CLK_DIVIDER		adcDiv4
 
 // ADC channels
-#define ADC_CHNL_A 	        2
-#define ADC_CHNL_B 	        3
-#define ADC_CHNL_C 	        4
-#define ADC_CHNL_D 	        10
-#define ADC_CHNL_E 	        11
-#define ADC_CHNL_F 	        12
-#define ADC_CHNL_G 	        13
-#define ADC_CHNL_H 	        14
+#define ADC_CHNL_BATTERY    10
 
-#define ADC_CHNL_BATTERY    15
-
-#define ADC_CHANNELS        { ADC_CHNL_A, ADC_CHNL_B, ADC_CHNL_C, ADC_CHNL_D, ADC_CHNL_E, ADC_CHNL_F, ADC_CHNL_G, ADC_CHNL_H, ADC_CHNL_BATTERY, ADC_CHNL_VREFINT }
-#define ADC_CHANNEL_CNT     10   // Do not use countof(AdcChannels) as preprocessor does not know what is countof => cannot check
+#define ADC_CHANNELS        { ADC_CHNL_BATTERY, ADC_CHNL_VREFINT }
+#define ADC_CHANNEL_CNT     2   // Do not use countof(AdcChannels) as preprocessor does not know what is countof => cannot check
 #define ADC_SAMPLE_TIME     ast84Cycles
-#define ADC_SAMPLE_CNT      1   // How many times to measure every channel
+#define ADC_SAMPLE_CNT      8   // How many times to measure every channel
 
 #define ADC_MAX_SEQ_LEN     16  // 1...16; Const, see ref man
 #define ADC_SEQ_LEN         (ADC_SAMPLE_CNT * ADC_CHANNEL_CNT)

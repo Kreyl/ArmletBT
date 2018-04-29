@@ -40,7 +40,7 @@ const PinSns_t PinSns[] = {
         // USB
         {USB_DETECT_PIN, pudPullDown, ProcessUsbDetect},
         // Charging
-        {IS_CHARGING, ProcessCharging}
+//        {IS_CHARGING, ProcessCharging}
 };
 #define PIN_SNS_CNT     countof(PinSns)
 

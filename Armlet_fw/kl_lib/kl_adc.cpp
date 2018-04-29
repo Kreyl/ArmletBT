@@ -8,6 +8,7 @@
 #include "kl_adc.h"
 #include "board.h"
 #include "MsgQ.h"
+#include "shell.h"
 
 #if ADC_REQUIRED
 
@@ -30,16 +31,15 @@ static void AdcThread(void *arg) {
 //        Printf("AdcDone\r");
         if(FirstConversion) FirstConversion = false;
         else {
-            uint32_t VRef_adc = Adc.GetResult(ADC_VREFINT_CHNL);
+            uint32_t VRef_adc = Adc.GetResult(ADC_CHNL_VREFINT);
 //            Printf("VRef_adc=%u\r", VRef_adc);
             // Iterate all channels
             for(int i=0; i<ADC_CHANNEL_CNT; i++) {
-                if(AdcChannels[i] == ADC_VREFINT_CHNL) continue; // Ignore VrefInt channel
+                if(AdcChannels[i] == ADC_CHNL_VREFINT) continue; // Ignore VrefInt channel
                 uint32_t Vadc = Adc.GetResult(AdcChannels[i]);
-                uint32_t Vmv = Adc.Adc2mV(Vadc, VRef_adc);   // Resistor divider
+                uint32_t Vmv = Adc.Adc2mV(Vadc, VRef_adc) * 2;   // Resistor divider
 //                Printf("N=%u; Vadc=%u; Vmv=%u\r", i, Vadc, Vmv);
-                EvtMsg_t Msg(evtIdAdcRslt, AdcChannels[i], Vmv);
-                EvtQMain.SendNowOrExit(Msg);
+                EvtQMain.SendNowOrExit(EvtMsg_t(evtIdAdcRslt, AdcChannels[i], Vmv));
             } // for
         } // not first conv
     } // while true
@@ -138,7 +138,7 @@ void Adc_t::Init() {
     SetSequenceLength(ADC_SEQ_LEN);
     uint8_t SeqIndx = 1;    // First sequence item is 1, not 0
     for(uint8_t i=0; i < ADC_CHANNEL_CNT; i++) {
-		SetChannelSampleTime(AdcChannels[i], ADC_SAMPLE_TIME_DEFAULT);
+		SetChannelSampleTime(AdcChannels[i], ADC_SAMPLE_TIME);
 		for(uint8_t j=0; j<ADC_SAMPLE_CNT; j++) SetSequenceItem(SeqIndx++, AdcChannels[i]);
 	}
     EnableVRef();

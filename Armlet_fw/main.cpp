@@ -18,7 +18,7 @@
 #include "beeper.h"
 #include "vibro.h"
 #include "sound.h"
-#include "usb_msd.h"
+#include "kl_adc.h"
 
 // Forever
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
@@ -34,6 +34,19 @@ Vibro_t Vibro(VIBRO_PIN);
 
 static TmrKL_t TmrOneSecond {MS2ST(999), evtIdEverySecond, tktPeriodic}; // Measure battery periodically
 
+class Power_t {
+public:
+    bool ExternalPwrOn() { return  PinIsHi(USB_DETECT_PIN); }
+    bool IsCharging()    { return !PinIsHi(IS_CHARGING_PIN); }
+    void Init() {
+        // Battery
+        PinSetupAnalog(BAT_MEAS_PIN);
+        Adc.Init();
+        // Charging
+        PinSetupInput(IS_CHARGING_PIN, pudPullUp);
+    }
+};
+static Power_t Power;
 
 int main() {
     // ==== Setup clock ====
@@ -55,11 +68,14 @@ int main() {
 
     SD.Init();
     Printf("ID = %u\r", ID);
-    UsbMsd.Init();
 
     DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
 
     SimpleSensors::Init();
+
+    Power.Init();
+
+
 //    Beeper.Init();
 //    Beeper.StartOrRestart(bsqBeepBeep);
 //    Vibro.Init(VIBRO_TIM_FREQ);
@@ -99,18 +115,18 @@ void ITask() {
             case evtIdEverySecond:
                 break;
 
+            case evtIdAdcRslt:
+                Printf("Adc: %u; ExtPwr: %u; Charging: %u\r", Msg.Value, Power.ExternalPwrOn(), Power.IsCharging());
+                // TODO: send to statemachine
+                break;
+
 #if 1 // ======= USB =======
             case evtIdUsbConnect:
                 Printf("USB connect\r");
-                UsbMsd.Connect();
                 break;
             case evtIdUsbDisconnect:
                 Printf("USB disconnect\r");
-                UsbMsd.Disconnect();
 //                StateMachine(eventDisconnect);
-                break;
-            case evtIdUsbReady:
-                Printf("USB ready\r");
                 break;
 #endif
 
@@ -125,13 +141,6 @@ void ProcessUsbDetect(PinSnsState_t *PState, uint32_t Len) {
     else if(*PState == pssFalling) Msg.ID = evtIdUsbDisconnect;
     EvtQMain.SendNowOrExit(Msg);
 }
-
-void ProcessCharging(PinSnsState_t *PState, uint32_t Len) {
-//    if(*PState == pssFalling) Led.Indicate5VCharging();
-//    else if(*PState == pssRising) Led.Indicate5VNotCharging();
-}
-
-
 
 #if 1 // ======================= Command processing ============================
 void OnCmd(Shell_t *PShell) {

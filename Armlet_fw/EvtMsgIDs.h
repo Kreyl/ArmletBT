@@ -38,9 +38,7 @@ enum EvtMsgId_t {
     evtIdBtnZ,
 
     // App specific
-    evtIdLedDone,
-    evtIdClash,
-    evtIdSwing,
+    evtIdAdcRslt,
 
     evtIdTimeslot,
 
