@@ -62,6 +62,7 @@
 									<listOptionValue builtIn="false" value="../os/stm32f205"/>
 									<listOptionValue builtIn="false" value=".././"/>
 									<listOptionValue builtIn="false" value="../Radio"/>
+									<listOptionValue builtIn="false" value="../usb"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.std.1413889343" name="Language standard" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.std" useByScannerDiscovery="true" value="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.std.gnu99" valueType="enumerated"/>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.858342779" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>

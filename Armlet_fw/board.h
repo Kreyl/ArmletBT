@@ -56,6 +56,10 @@
 #define BTNY_PIN        GPIOD, 10, pudPullUp
 #define BTNZ_PIN        GPIOD, 11, pudPullUp
 
+// Usb detect & charging
+#define USB_DETECT_PIN  GPIOA, 9
+#define IS_CHARGING     GPIOC, 3, pudPullUp
+
 // Beeper
 #define BEEP_TOP_VALUE  22
 #define BEEPER_PIN      { GPIOD, 12, TIM4, 1, invNotInverted, omPushPull, BEEP_TOP_VALUE }

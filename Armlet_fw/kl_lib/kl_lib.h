@@ -48,7 +48,7 @@ Maybe, to calm Eclipse, it will be required to write extra quote in the end: "\"
      *(.fastrun)         // RAM-Functions
      Example:
         . = ALIGN(4);
-        *(.fastrun)         // "RAM-Functions"
+        *(.fastrun)     // RAM-Functions
         PROVIDE(_edata = .);
         _data_end = .;
     } > DATA_RAM AT > flash
@@ -418,8 +418,9 @@ enum ExtTrigPsc_t {etpOff=0x0000, etpDiv2=0x1000, etpDiv4=0x2000, etpDiv8=0x3000
 #define TMR_GENERATE_UPD(PTimer)    PTimer->EGR = TIM_EGR_UG;
 
 class Timer_t {
-public:
+protected:
     TIM_TypeDef* ITmr;
+public:
     Timer_t(TIM_TypeDef *APTimer) : ITmr(APTimer) {}
     void Init() const;
     void Deinit() const;
@@ -855,23 +856,16 @@ public:
  * #define LED_R_PIN { GPIOB, 1, TIM3, 4, invInverted, omPushPull, 255 }
  * PinOutputPWM_t Led {LedPin};
 */
-class PinOutputPWM_t {
+class PinOutputPWM_t : private Timer_t {
 private:
     const PwmSetup_t ISetup;
 public:
-    Timer_t Timer;
-    void Set(const uint16_t AValue) const { *TMR_PCCR(Timer.ITmr, ISetup.TimerChnl) = AValue; }    // CCR[N] = AValue
-    uint32_t Get() const { return *TMR_PCCR(Timer.ITmr, ISetup.TimerChnl); }
+    void Set(const uint16_t AValue) const { *TMR_PCCR(ITmr, ISetup.TimerChnl) = AValue; }    // CCR[N] = AValue
+    uint32_t Get() const { return *TMR_PCCR(ITmr, ISetup.TimerChnl); }
     void Init() const;
-    void Deinit() const { Timer.Deinit(); PinSetupAnalog(ISetup.PGpio, ISetup.Pin); }
-    void SetFrequencyHz(uint32_t FreqHz) const { Timer.SetUpdateFrequencyChangingPrescaler(FreqHz); }
-    void EnablePin()  const {
-        uint32_t Offset = ISetup.Pin * 2;
-        ISetup.PGpio->MODER &= ~(0b11 << Offset);  // clear previous bits
-        ISetup.PGpio->MODER |= 0b10 << Offset;     // Set new bits (AF mode)
-    }
-    void DisablePin() const { ISetup.PGpio->MODER |= 0b11 << (ISetup.Pin * 2); }
-    PinOutputPWM_t(const PwmSetup_t &ASetup) : ISetup(ASetup), Timer(ASetup.PTimer) {}
+    void Deinit() const { Timer_t::Deinit(); PinSetupAnalog(ISetup.PGpio, ISetup.Pin); }
+    void SetFrequencyHz(uint32_t FreqHz) const { Timer_t::SetUpdateFrequencyChangingPrescaler(FreqHz); }
+    PinOutputPWM_t(const PwmSetup_t &ASetup) : Timer_t(ASetup.PTimer), ISetup(ASetup) {}
 };
 #endif
 
@@ -1221,6 +1215,9 @@ namespace EE {
 #endif
 
 #if 1 // =========================== Clocking ==================================
+// Common
+enum CoreClk_t {cclk8MHz, cclk16MHz, cclk24MHz, cclk48MHz, cclk72MHz};
+
 #if defined STM32L1XX
 #include "stm32l1xx.h"
 /*
@@ -1542,8 +1539,7 @@ public:
     void EnableMCO2(Mco2Src_t Src, McoDiv_t Div);
     void DisableMCO2();
 
-    void SetHiPerfMode();
-    void SetLoPerfMode();
+    void SetCoreClk(CoreClk_t CoreClk);
 };
 
 #elif defined STM32L4XX
@@ -1564,8 +1560,6 @@ enum AHBDiv_t {
     ahbDiv256=0b1110,
     ahbDiv512=0b1111
 };
-
-enum CoreClk_t {cclk8MHz, cclk16MHz, cclk24MHz, cclk48MHz, cclk72MHz};
 
 enum APBDiv_t {apbDiv1=0b000, apbDiv2=0b100, apbDiv4=0b101, apbDiv8=0b110, apbDiv16=0b111};
 enum MCUVoltRange_t {mvrHiPerf, mvrLoPerf};

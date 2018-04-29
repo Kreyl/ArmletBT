@@ -254,7 +254,7 @@ void Timer_t::SetupPrescaler(uint32_t PrescaledFreqHz) const {
 }
 
 void PinOutputPWM_t::Init() const {
-    Timer.Init();
+    Timer_t::Init();
 
 #if defined STM32L4XX
     if(ILPTim == LPTIM1 or ILPTim == LPTIM2) {
@@ -270,31 +270,31 @@ void PinOutputPWM_t::Init() const {
 #endif
 
 #if !defined STM32L151xB
-        Timer.ITmr->BDTR = 0xC000;   // Main output Enable
+    ITmr->BDTR = 0xC000;   // Main output Enable
 #endif
-        Timer.ITmr->ARR = ISetup.TopValue;
+    ITmr->ARR = ISetup.TopValue;
     // Setup Output
     uint16_t tmp = (ISetup.Inverted == invInverted)? 0b111 : 0b110; // PWM mode 1 or 2
     switch(ISetup.TimerChnl) {
         case 1:
-            Timer.ITmr->CCMR1 |= (tmp << 4);
-            Timer.ITmr->CCER  |= TIM_CCER_CC1E;
+            ITmr->CCMR1 |= (tmp << 4);
+            ITmr->CCER  |= TIM_CCER_CC1E;
             break;
         case 2:
-            Timer.ITmr->CCMR1 |= (tmp << 12);
-            Timer.ITmr->CCER  |= TIM_CCER_CC2E;
+            ITmr->CCMR1 |= (tmp << 12);
+            ITmr->CCER  |= TIM_CCER_CC2E;
             break;
         case 3:
-            Timer.ITmr->CCMR2 |= (tmp << 4);
-            Timer.ITmr->CCER  |= TIM_CCER_CC3E;
+            ITmr->CCMR2 |= (tmp << 4);
+            ITmr->CCER  |= TIM_CCER_CC3E;
             break;
         case 4:
-            Timer.ITmr->CCMR2 |= (tmp << 12);
-            Timer.ITmr->CCER  |= TIM_CCER_CC4E;
+            ITmr->CCMR2 |= (tmp << 12);
+            ITmr->CCER  |= TIM_CCER_CC4E;
             break;
         default: break;
     }
-    Timer.Enable();
+    Enable();
 #if defined STM32L4XX
     } // if LPTIM
 #endif
@@ -323,10 +323,10 @@ void PinOutputPWM_t::Init() const {
         else PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF2);
     }
 #elif defined STM32F2XX || defined STM32F4XX
-    if(ANY_OF_2(Timer.ITmr, TIM1, TIM2)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF1);
-    else if(ANY_OF_3(Timer.ITmr, TIM3, TIM4, TIM5)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF2);
-    else if(ANY_OF_4(Timer.ITmr, TIM8, TIM9, TIM10, TIM11)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF3);
-    else if(ANY_OF_3(Timer.ITmr, TIM12, TIM13, TIM14)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF9);
+    if(ANY_OF_2(ITmr, TIM1, TIM2)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF1);
+    else if(ANY_OF_3(ITmr, TIM3, TIM4, TIM5)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF2);
+    else if(ANY_OF_4(ITmr, TIM8, TIM9, TIM10, TIM11)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF3);
+    else if(ANY_OF_3(ITmr, TIM12, TIM13, TIM14)) PinSetupAlterFunc(ISetup.PGpio, ISetup.Pin, ISetup.OutputType, pudNone, AF9);
 #elif defined STM32F100_MCUCONF
     PinSetupAlterFunc(GPIO, N, OutputType, pudNone, AF0);   // Alternate function is dummy
 #elif defined STM32L4XX
@@ -1822,19 +1822,51 @@ void Clk_t::PrintFreqs() {
             Clk.AHBFreqHz/1000000, Clk.APB1FreqHz/1000000, Clk.APB2FreqHz/1000000);
 }
 
-void Clk_t::SetHiPerfMode() {
-//    if(HiPerfModeEnabled) return;
-    // Try to enable HSE
-    if(EnableHSE() == retvOk) {
+void Clk_t::SetCoreClk(CoreClk_t CoreClk) {
+    EnablePrefetch();
+    // Enable/disable HSE
+    if(CoreClk >= cclk16MHz) {
+        if(EnableHSE() != retvOk) return;   // Try to enable HSE
+        DisablePLL();
+    }
+    // Setup dividers
+    switch(CoreClk) {
+        case cclk8MHz:
+            break;
         // Setup PLL (must be disabled first)
-        if(SetupPllMulDiv(6, 192, pllSysDiv8, 8) == retvOk) { // 12MHz / 6 * 192 / 8 => 48MHz
-            SetupBusDividers(ahbDiv2, apbDiv1, apbDiv1); // 12 MHz AHB, 12 MHz APB1, 12 MHz APB2
+        case cclk16MHz:
+            // 12MHz / 6 * 192 / (6 and 8) => 64 and 48MHz
+            if(SetupPllMulDiv(6, 192, pllSysDiv6, 8) != retvOk) return;
+            SetupBusDividers(ahbDiv4, apbDiv1, apbDiv1); // 16 MHz AHB, 16 MHz APB1, 16 MHz APB2
+            SetupFlashLatency(16);
+            break;
+        case cclk24MHz:
+            // 12MHz / 6 * 192 / (8 and 8) => 48 and 48MHz
+            if(SetupPllMulDiv(6, 192, pllSysDiv8, 8) != retvOk) return;
+            SetupBusDividers(ahbDiv2, apbDiv1, apbDiv1); // 24 MHz AHB, 24 MHz APB1, 24 MHz APB2
             SetupFlashLatency(24);
-            EnablePrefetch();
-            SwitchToPLL();  // Switch clock
-        } // if setup pll div
-    } // if Enable HSE
+            break;
+        case cclk48MHz:
+            // 12MHz / 6 * 192 / (8 and 8) => 48 and 48MHz
+            if(SetupPllMulDiv(6, 192, pllSysDiv8, 8) != retvOk) return;
+            SetupBusDividers(ahbDiv1, apbDiv2, apbDiv1); // 48 MHz AHB, 24 MHz APB1, 48 MHz APB2
+            SetupFlashLatency(48);
+            break;
+        case cclk72MHz:
+            // 12MHz / 12 * 288 / (4 and 6) => 72 and 48MHz
+            if(SetupPllMulDiv(12, 288, pllSysDiv4, 6) != retvOk) return;
+            SetupBusDividers(ahbDiv1, apbDiv4, apbDiv2); // 72 MHz AHB, 18 MHz APB1, 36 MHz APB2
+            SetupFlashLatency(48);
+            break;
+    } // switch
+
+    if(CoreClk >= cclk16MHz) {
+        if(EnablePLL() == retvOk) SwitchToPLL();
+    }
 }
+
+
+
 
 /*
  * Early initialization code.

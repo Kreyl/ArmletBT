@@ -138,7 +138,7 @@
 #include "hal_sdc.h"
 //#include "hal_spi.h"
 //#include "hal_uart.h"
-//#include "hal_usb.h"
+#include "hal_usb.h"
 //#include "hal_wdg.h"
 
 /*

@@ -18,6 +18,7 @@
 #include "beeper.h"
 #include "vibro.h"
 #include "sound.h"
+#include "usb_msd.h"
 
 // Forever
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
@@ -36,7 +37,7 @@ static TmrKL_t TmrOneSecond {MS2ST(999), evtIdEverySecond, tktPeriodic}; // Meas
 
 int main() {
     // ==== Setup clock ====
-    Clk.SetHiPerfMode();
+    Clk.SetCoreClk(cclk24MHz);
 
     // ==== Init OS ====
     halInit();
@@ -54,10 +55,11 @@ int main() {
 
     SD.Init();
     Printf("ID = %u\r", ID);
+    UsbMsd.Init();
 
-    DrawBmpFile(0, 00, "Splash.bmp", &CommonFile);
+    DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
 
-//    SimpleSensors::Init();
+    SimpleSensors::Init();
 //    Beeper.Init();
 //    Beeper.StartOrRestart(bsqBeepBeep);
 //    Vibro.Init(VIBRO_TIM_FREQ);
@@ -97,10 +99,39 @@ void ITask() {
             case evtIdEverySecond:
                 break;
 
+#if 1 // ======= USB =======
+            case evtIdUsbConnect:
+                Printf("USB connect\r");
+                UsbMsd.Connect();
+                break;
+            case evtIdUsbDisconnect:
+                Printf("USB disconnect\r");
+                UsbMsd.Disconnect();
+//                StateMachine(eventDisconnect);
+                break;
+            case evtIdUsbReady:
+                Printf("USB ready\r");
+                break;
+#endif
+
             default: break;
         } // switch
     } // while true
 }
+
+void ProcessUsbDetect(PinSnsState_t *PState, uint32_t Len) {
+    EvtMsg_t Msg;
+    if(*PState == pssRising) Msg.ID = evtIdUsbConnect;
+    else if(*PState == pssFalling) Msg.ID = evtIdUsbDisconnect;
+    EvtQMain.SendNowOrExit(Msg);
+}
+
+void ProcessCharging(PinSnsState_t *PState, uint32_t Len) {
+//    if(*PState == pssFalling) Led.Indicate5VCharging();
+//    else if(*PState == pssRising) Led.Indicate5VNotCharging();
+}
+
+
 
 #if 1 // ======================= Command processing ============================
 void OnCmd(Shell_t *PShell) {
