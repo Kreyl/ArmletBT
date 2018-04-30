@@ -44,7 +44,7 @@ private:
     uint16_t TimeSrcTimeout;
 public:
     volatile uint32_t CycleN = 0, TimeSlot = 0;
-    uint16_t TimeSrcId = 0;
+    uint16_t TimeSrcId = ID;
     void StartTimerI() { chVTSetI(&TmrTimeslot, TIMESLOT_DURATION_ST, TmrTimeslotCallback, nullptr); }
     void IncTimeSlot() {
         TimeSlot++;
@@ -63,22 +63,20 @@ public:
     }
     void Adjust() {
         // Adjust time if theirs TimeSrc < OursTimeSrc
-        if(Radio.PktRx.TimeSrcID <= TimeSrcId) {
+        if(Radio.PktRx.TimeSrcID < TimeSrcId) {
             chSysLock();
             StopTimerI();
             CycleN = Radio.PktRx.Cycle;
             TimeSlot = Radio.PktRx.ID;
-            IncTimeSlot();  // Theirs timeslot just ended
             TimeSrcId = Radio.PktRx.TimeSrcID;
             TimeSrcTimeout = 0; // Reset Time Src Timeout
-            StartTimerI();
+            IOnNewTimeslot();
             chSysUnlock();
             Printf("New time: ccl %u; slot %u; Src %u\r", CycleN, TimeSlot, TimeSrcId);
         }
     }
 
     void IOnNewTimeslot() {
-        chSysLockFromISR();
         StartTimerI();
         IncTimeSlot();
         if(TimeSlot == ID) Radio.RMsgQ.SendNowOrExitI(RMsg_t(rmsgTimeToTx));
@@ -90,12 +88,16 @@ public:
                 if(CCState != ccstIdle) Radio.RMsgQ.SendNowOrExitI(RMsg_t(rmsgTimeToSleep));
             }
         }
-        chSysUnlockFromISR();
+
     }
 } RadioTime;
 
 
-void TmrTimeslotCallback(void *p) { RadioTime.IOnNewTimeslot(); }
+void TmrTimeslotCallback(void *p) {
+    chSysLockFromISR();
+    RadioTime.IOnNewTimeslot();
+    chSysUnlockFromISR();
+}
 
 void RxCallback() {
     Radio.RMsgQ.SendNowOrExitI(RMsg_t(rmsgPktRx));

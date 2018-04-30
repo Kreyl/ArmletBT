@@ -27,7 +27,7 @@ void OnCmd(Shell_t *PShell);
 void ITask();
 
 uint8_t Status;
-uint16_t ID = 2;
+uint16_t ID = 7;
 
 Beeper_t Beeper(BEEPER_PIN);
 Vibro_t Vibro(VIBRO_PIN);
@@ -51,6 +51,7 @@ static Power_t Power;
 int main() {
     // ==== Setup clock ====
     Clk.SetCoreClk(cclk24MHz);
+//    Clk.SetCoreClk(cclk48MHz);
 
     // ==== Init OS ====
     halInit();
@@ -63,11 +64,10 @@ int main() {
     Printf("\r%S %S\r\n", APP_NAME, BUILD_TIME);
     Clk.PrintFreqs();
 
-//    Lcd.Init();
+    Lcd.Init();
     SD.Init();
 //    Printf("ID = %u\r", ID);
-
-//    DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
+    DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
 
     SimpleSensors::Init();
     Power.Init();
@@ -149,6 +149,13 @@ void OnCmd(Shell_t *PShell) {
     else if(PCmd->NameIs("Version")) PShell->Printf("%S %S\r", APP_NAME, BUILD_TIME);
 
 //    else if(PCmd->NameIs("GetBat")) { PShell->Printf("Battery: %u\r", Audio.GetBatteryVmv()); }
+
+    else if(PCmd->NameIs("R")) Lcd.Cls(clRed);
+    else if(PCmd->NameIs("G")) Lcd.Cls(clGreen);
+    else if(PCmd->NameIs("B")) Lcd.Cls(clBlue);
+    else if(PCmd->NameIs("p")) DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
+    else if(PCmd->NameIs("S")) Lcd.SetBounds(0,160, 0, 128);
+
 
     else PShell->Ack(retvCmdUnknown);
 }

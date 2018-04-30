@@ -61,13 +61,16 @@ public:
 extern Lcd_t Lcd;
 
 __attribute__ ((always_inline)) static inline void WriteByte(uint8_t Byte) {
-    LCD_GPIO->BSRR = (LCD_MASK_WR << 16);  // Clear bus and set WR Low
-    LCD_GPIO->BSRR = Byte;         // Place data on bus
-    LCD_GPIO->BSRR = (1<<LCD_WR);  // WR high
+    __NOP(); __NOP();
+    LCD_GPIO->BSRR = Byte;                // Place data on bus
+    __NOP(); __NOP();
+    LCD_GPIO->BSRR = (1<<LCD_WR);         // WR high
+    __NOP(); __NOP();
+    LCD_GPIO->BSRR = (LCD_MASK_WR << 16); // Clear bus and set WR Low
 }
 
 __attribute__ ((always_inline)) inline
 void PutBitmapNext(uint8_t Byte1, uint8_t Byte2) {
-    WriteByte(Byte2);
     WriteByte(Byte1);
+    WriteByte(Byte2);
 }

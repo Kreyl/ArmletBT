@@ -13,10 +13,12 @@ Lcd_t Lcd;
 #define LCD_DELAY()        // DelayLoop(36)
 static inline void LCD_XRES_Hi() { PinSetHi(LCD_GPIO, LCD_XRES); }
 static inline void LCD_XRES_Lo() { PinSetLo(LCD_GPIO, LCD_XRES); }
+static inline void LCD_XCS_Hi () { PinSetHi(LCD_GPIO, LCD_XCS);  }
 static inline void LCD_XCS_Lo () { PinSetLo(LCD_GPIO, LCD_XCS);  }
 __always_inline static inline void LCD_DC_Hi()  { PinSetHi(LCD_GPIO, LCD_DC);   LCD_DELAY();}
 __always_inline static inline void LCD_DC_Lo()  { PinSetLo(LCD_GPIO, LCD_DC);   LCD_DELAY();}
 static inline void LCD_WR_Hi()   { PinSetHi(LCD_GPIO, LCD_WR);   LCD_DELAY();}
+static inline void LCD_WR_Lo()   { PinSetLo(LCD_GPIO, LCD_WR);   LCD_DELAY();}
 static inline void LCD_RD_Hi()   { PinSetLo(LCD_GPIO, LCD_RD);   LCD_DELAY();}
 //__attribute__ ((always_inline)) static inline void RD_Lo()  { PinClear(LCD_GPIO, LCD_RD);   LCD_DELAY}
 
@@ -32,24 +34,25 @@ void Lcd_t::Init() {
     for(uint8_t i=0; i<8; i++) PinSetupOut(LCD_GPIO, i, omPushPull, psHigh);
 
     // ======= Init LCD =======
+    // Reset display
+    LCD_XRES_Hi();
+    LCD_XCS_Hi();
+    chThdSleepMilliseconds(9);
+    LCD_XRES_Lo();
+    chThdSleepMilliseconds(9);
+    LCD_XRES_Hi();
+    chThdSleepMilliseconds(130); // No less than 360
     LCD_DC_Lo();    // Command mode by default
     LCD_WR_Hi();    // Default hi
     LCD_RD_Hi();    // Default hi
     LCD_XCS_Lo();   // Interface is always enabled
 
-    // Reset display
-    LCD_XRES_Hi();
-    chThdSleepMilliseconds(360);
-    LCD_XRES_Lo();
-    chThdSleepMilliseconds(360);
-    LCD_XRES_Hi();
-    chThdSleepMilliseconds(360); // No less than 360
-//    WriteCmd(0x01);         // Software reset
-//    chThdSleepMilliseconds(130);
+    WriteCmd(0x01);         // Software reset
+    chThdSleepMilliseconds(130);
     WriteCmd(0x11);         // Sleep out
     chThdSleepMilliseconds(9);
     WriteCmd(0x13);         // Normal Display Mode ON
-    WriteCmd(0x3A, 0x05);   // Pixel format: VIPF=0(undef), IFPF=16 bit per pixel
+    WriteCmd(0x3A, 0x55);   // Pixel format: VIPF=0(undef), IFPF=16 bit per pixel
     WriteCmd(0x29);         // Display on
     WriteCmd(0x20);         // Inv off
     WriteCmd(0x13);         // Normal Display Mode ON
@@ -94,53 +97,6 @@ void Lcd_t::WriteCmd(uint8_t ACmd, uint8_t AData) {
     WriteByte(AData);
     LCD_DC_Lo();
 }
-
-// ================================= Printf ====================================
-//uint16_t Lcd_t::PutChar(uint8_t x, uint8_t y, char c, Color_t ForeClr, Color_t BckClr) {
-//    char *PFont = (char*)Font8x8;  // Font to use
-//    // Read font params
-//    uint8_t nCols = PFont[0];
-//    uint8_t nRows = PFont[1];
-//    uint16_t nBytes = PFont[2];
-    // Get pointer to the first byte of the desired character
-//    const char *PChar = Font8x8 + (nBytes * (c - 0x1F));
-    // Iterate rows of the char
-//    uint8_t row, col;
-//    for(uint8_t row = 0; row < nRows; row++) {
-//        if((y+row) >= LCD_H) break;
-//        uint8_t PixelRow = *PChar++;
-//        // loop on each pixel in the row (left to right)
-//        uint8_t Mask = 0x80;
-//        for (col = 0; col < nCols; col++) {
-//            if((x+col) >= LCD_W) break;
-//            PackedBuf[y+row][x+col] = (PixelRow & Mask)? ForeClr : BckClr;
-//            Mask >>= 1;
-//        } // col
-//    } // row
-//    // Mark area as changed
-//    uint8_t xaStart = x / AREA_W;
-//    uint8_t yaStart = y / AREA_H;
-//    uint8_t xaEnd = (x+nCols) / AREA_W;
-//    uint8_t yaEnd = (y+nRows) / AREA_H;
-//    for(row = yaStart; row<=yaEnd; row++)
-//        for(col = xaStart; col<=xaEnd; col++)
-//            Changed[row][col] = true;
-//    // Return next pixel to right
-//    return x+nCols;
-//}
-
-//void Lcd_t::Printf(uint8_t x, uint8_t y, const Color_t ForeClr, const Color_t BckClr, const char *S, ...) {
-//    // Printf to buffer
-//    va_list args;
-//    va_start(args, S);
-//    uint32_t Cnt = tiny_vsprintf(CharBuf, S, args);
-//    va_end(args);
-//    // Draw what printed
-//    for(uint32_t i=0; i<Cnt; i++) {
-//        x = PutChar(x, y, CharBuf[i], ForeClr, BckClr);
-//        if(x>160) break;
-//    }
-//}
 
 // ================================ Graphics ===================================
 void Lcd_t::SetBounds(uint8_t xStart, uint8_t xEnd, uint8_t yStart, uint8_t yEnd) {
