@@ -64,7 +64,7 @@ union rPkt_t  {
     struct {
         uint16_t ID : 13;
         uint8_t Cycle: 3;
-        uint16_t Timestamp;
+        uint16_t TimeSourceID;
         uint8_t Influence;
         uint8_t Param;
     } __packed;
@@ -99,18 +99,19 @@ union rPkt_t  {
 #endif
 
 // Message queue
-#define R_MSGQ_LEN      4
-enum RmsgId_t { rmsgSetPwr, rmsgSetChnl, rmsgNewTimeslot, rmsgPktRx };
+#define R_MSGQ_LEN      9
+enum RmsgId_t { rmsgSetPwr, rmsgSetChnl, rmsgTimeToRx, rmsgTimeToTx, rmsgTimeToSleep, rmsgPktRx };
 struct RMsg_t {
     RmsgId_t Cmd;
     uint8_t Value;
     RMsg_t() : Cmd(rmsgSetPwr), Value(0) {}
+    RMsg_t(RmsgId_t ACmd) : Cmd(ACmd), Value(0) {}
     RMsg_t(RmsgId_t ACmd, uint8_t AValue) : Cmd(ACmd), Value(AValue) {}
 } __attribute__((packed));
 
 class rLevel1_t {
 private:
-    uint32_t CycleN = 0, TimeSlot = 0;
+
 public:
     int8_t Rssi;
     rPkt_t PktTx, PktRx;
@@ -119,7 +120,6 @@ public:
     void SetChannel(uint8_t NewChannel);
     // Inner use
     void ITask();
-    systime_t TimeslotDuration;
 };
 
 extern rLevel1_t Radio;

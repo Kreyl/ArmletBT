@@ -64,17 +64,13 @@ int main() {
     Clk.PrintFreqs();
 
     Lcd.Init();
-//    Lcd.Cls(clGreen);
-
     SD.Init();
-    Printf("ID = %u\r", ID);
+//    Printf("ID = %u\r", ID);
 
     DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
 
     SimpleSensors::Init();
-
     Power.Init();
-
 
 //    Beeper.Init();
 //    Beeper.StartOrRestart(bsqBeepBeep);
@@ -113,10 +109,11 @@ void ITask() {
                 break;
 
             case evtIdEverySecond:
+//                Printf("Second\r");
                 break;
 
             case evtIdAdcRslt:
-                Printf("Adc: %u; ExtPwr: %u; Charging: %u\r", Msg.Value, Power.ExternalPwrOn(), Power.IsCharging());
+//                Printf("Adc: %u; ExtPwr: %u; Charging: %u\r", Msg.Value, Power.ExternalPwrOn(), Power.IsCharging());
                 // TODO: send to statemachine
                 break;
 

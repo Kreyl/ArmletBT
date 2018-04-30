@@ -323,11 +323,11 @@ const BeepChunk_t bsqButton[] = {
 };
 const BeepChunk_t bsqBeepBeep[] = {
         {csSetup, BEEP_VOLUME, 1975},
-        {csWait, 18},
+        {csWait, 63},
         {csSetup, 0},
-        {csWait, 18},
+        {csWait, 63},
         {csSetup, BEEP_VOLUME, 1975},
-        {csWait, 18},
+        {csWait, 63},
         {csSetup, 0},
         {csEnd}
 };

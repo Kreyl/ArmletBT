@@ -10,15 +10,14 @@ Lcd_t Lcd;
 //static char CharBuf[198];
 
 // Pin driving functions
-#define LCD_DELAY()         DelayLoop(36)
-static inline void XRES_Hi() { PinSetHi(LCD_GPIO, LCD_XRES); LCD_DELAY();}
-static inline void XRES_Lo() { PinSetLo(LCD_GPIO, LCD_XRES); LCD_DELAY();}
-static inline void XCS_Hi () { PinSetHi(LCD_GPIO, LCD_XCS);  LCD_DELAY();}
-static inline void XCS_Lo () { PinSetLo(LCD_GPIO, LCD_XCS);  LCD_DELAY();}
-__always_inline static inline void DC_Hi()  { PinSetHi(LCD_GPIO, LCD_DC);   LCD_DELAY();}
-__always_inline static inline void DC_Lo()  { PinSetLo(LCD_GPIO, LCD_DC);   LCD_DELAY();}
-static inline void WR_Hi()   { PinSetHi(LCD_GPIO, LCD_WR);   LCD_DELAY();}
-static inline void RD_Hi()   { PinSetLo(LCD_GPIO, LCD_RD);   LCD_DELAY();}
+#define LCD_DELAY()        // DelayLoop(36)
+static inline void LCD_XRES_Hi() { PinSetHi(LCD_GPIO, LCD_XRES); }
+static inline void LCD_XRES_Lo() { PinSetLo(LCD_GPIO, LCD_XRES); }
+static inline void LCD_XCS_Lo () { PinSetLo(LCD_GPIO, LCD_XCS);  }
+__always_inline static inline void LCD_DC_Hi()  { PinSetHi(LCD_GPIO, LCD_DC);   LCD_DELAY();}
+__always_inline static inline void LCD_DC_Lo()  { PinSetLo(LCD_GPIO, LCD_DC);   LCD_DELAY();}
+static inline void LCD_WR_Hi()   { PinSetHi(LCD_GPIO, LCD_WR);   LCD_DELAY();}
+static inline void LCD_RD_Hi()   { PinSetLo(LCD_GPIO, LCD_RD);   LCD_DELAY();}
 //__attribute__ ((always_inline)) static inline void RD_Lo()  { PinClear(LCD_GPIO, LCD_RD);   LCD_DELAY}
 
 void Lcd_t::Init() {
@@ -33,36 +32,36 @@ void Lcd_t::Init() {
     for(uint8_t i=0; i<8; i++) PinSetupOut(LCD_GPIO, i, omPushPull, psHigh);
 
     // ======= Init LCD =======
-    Brightness(LCD_TOP_BRIGHTNESS);
-    XCS_Hi();
-    DC_Lo();    // Command mode by default
-    WR_Hi();    // Default hi
-    RD_Hi();    // Default hi
-    XCS_Lo();   // Interface is always enabled
+    LCD_DC_Lo();    // Command mode by default
+    LCD_WR_Hi();    // Default hi
+    LCD_RD_Hi();    // Default hi
+    LCD_XCS_Lo();   // Interface is always enabled
 
     // Reset display
-    XRES_Lo();
-    chThdSleepMilliseconds(7);
-    XRES_Hi();
-    chThdSleepMilliseconds(7);
-    WriteCmd(0x01);         // Software reset
-    chThdSleepMilliseconds(7);
-
+    LCD_XRES_Hi();
+    chThdSleepMilliseconds(360);
+    LCD_XRES_Lo();
+    chThdSleepMilliseconds(360);
+    LCD_XRES_Hi();
+    chThdSleepMilliseconds(360); // No less than 360
+//    WriteCmd(0x01);         // Software reset
+//    chThdSleepMilliseconds(130);
     WriteCmd(0x11);         // Sleep out
-    chThdSleepMilliseconds(130);
+    chThdSleepMilliseconds(9);
     WriteCmd(0x13);         // Normal Display Mode ON
     WriteCmd(0x3A, 0x05);   // Pixel format: VIPF=0(undef), IFPF=16 bit per pixel
     WriteCmd(0x29);         // Display on
     WriteCmd(0x20);         // Inv off
     WriteCmd(0x13);         // Normal Display Mode ON
     WriteCmd(0x36, 0xA0);   // Display mode: Y inv, X none-inv, Row/Col exchanged
+//    Cls(clRed);
+    Brightness(LCD_TOP_BRIGHTNESS);
 
-    Cls(clBlack);
 }
 
 void Lcd_t::Shutdown(void) {
-    XRES_Lo();
-    XCS_Lo();
+    LCD_XRES_Lo();
+    LCD_XCS_Lo();
     Brightness(0);
 }
 
@@ -91,9 +90,9 @@ void Lcd_t::WriteCmd(uint8_t ACmd, uint8_t AData) {
     // DC is lo by default => Cmd by default
     WriteByte(ACmd);    // Send Cmd byte
     // Send data
-    DC_Hi();
+    LCD_DC_Hi();
     WriteByte(AData);
-    DC_Lo();
+    LCD_DC_Lo();
 }
 
 // ================================= Printf ====================================
@@ -147,20 +146,20 @@ void Lcd_t::WriteCmd(uint8_t ACmd, uint8_t AData) {
 void Lcd_t::SetBounds(uint8_t xStart, uint8_t xEnd, uint8_t yStart, uint8_t yEnd) {
     // Set column bounds
     WriteByte(0x2A);
-    DC_Hi();
+    LCD_DC_Hi();
     WriteByte(0x00);            // }
     WriteByte(LCD_X_0+xStart);  // } Col addr start
     WriteByte(0x00);            // }
     WriteByte(LCD_X_0+xEnd-1);  // } Col addr end
-    DC_Lo();
+    LCD_DC_Lo();
     // Set row bounds
     WriteByte(0x2B);
-    DC_Hi();
+    LCD_DC_Hi();
     WriteByte(0x00);            // }
     WriteByte(LCD_Y_0+yStart);  // } Row addr start = 0
     WriteByte(0x00);            // }
     WriteByte(LCD_Y_0+yEnd-1);  // } Row addr end
-    DC_Lo();
+    LCD_DC_Lo();
 }
 
 void Lcd_t::Cls(Color_t Color) {
@@ -170,12 +169,12 @@ void Lcd_t::Cls(Color_t Color) {
     uint8_t LoByte = Color.RGBTo565_LoByte();
     // Write RAM
     WriteByte(0x2C);    // Memory write
-    DC_Hi();
+    LCD_DC_Hi();
     for(uint32_t i=0; i<Cnt; i++) {
         WriteByte(HiByte);
         WriteByte(LoByte);
     }
-    DC_Lo();
+    LCD_DC_Lo();
 }
 
 void Lcd_t::GetBitmap(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, uint16_t *PBuf) {
@@ -185,7 +184,7 @@ void Lcd_t::GetBitmap(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, uin
     uint16_t R, G, B;
     // Read RAM
     WriteByte(0x2E);    // RAMRD
-    DC_Hi();
+    LCD_DC_Hi();
     ModeRead();
     ReadByte();         // Dummy read
     for(uint32_t i=0; i<Cnt; i++) {
@@ -196,7 +195,7 @@ void Lcd_t::GetBitmap(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, uin
         *PBuf++ = ((R & 0xF0) << 4) | (G & 0xF0) | ((B & 0xF0) >> 4);
     }
     ModeWrite();
-    DC_Lo();
+    LCD_DC_Lo();
 }
 
 void Lcd_t::PutBitmap(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, uint16_t *PBuf) {
@@ -207,22 +206,22 @@ void Lcd_t::PutBitmap(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, uin
     uint32_t Cnt = (uint32_t)Width * (uint32_t)Height;    // One pixel at one time
     // Write RAM
     WriteByte(0x2C);    // Memory write
-    DC_Hi();
+    LCD_DC_Hi();
     for(uint32_t i=0; i<Cnt; i++) {
         Clr = *PBuf++;
         WriteByte(Clr >> 8);
         WriteByte(Clr & 0xFF);
     }
-    DC_Lo();
+    LCD_DC_Lo();
 }
 
 void Lcd_t::PutBitmapBegin(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height) {
     SetBounds(x0, x0+Width, y0, y0+Height);
     // Write RAM
     WriteByte(0x2C);    // Memory write
-    DC_Hi();
+    LCD_DC_Hi();
 }
 
 void Lcd_t::PutBitmapEnd() {
-    DC_Lo();
+    LCD_DC_Lo();
 }

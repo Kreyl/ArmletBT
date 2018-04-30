@@ -147,7 +147,6 @@ void cc1101_t::Transmit(void *Ptr, uint8_t Len) {
 
 // Enter RX mode and wait reception for Timeout_ms.
 uint8_t cc1101_t::Receive(uint32_t Timeout_ms, void *Ptr, uint8_t Len, int8_t *PRssi) {
-//    Recalibrate();
     FlushRxFIFO();
     chSysLock();
     EnterRX();
@@ -174,6 +173,11 @@ void cc1101_t::ReceiveAsync(ftVoidVoid Callback) {
     FlushRxFIFO();
     ICallback = Callback;
     EnterRX();
+}
+void cc1101_t::TransmitAsync(void *Ptr, uint8_t Len, ftVoidVoid Callback) {
+    EnterTX(); // Start transmission of preamble
+    WriteTX((uint8_t*)Ptr, Len);
+    ICallback = Callback;
 }
 #endif
 
