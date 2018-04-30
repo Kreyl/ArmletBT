@@ -64,7 +64,7 @@ union rPkt_t  {
     struct {
         uint16_t ID : 13;
         uint8_t Cycle: 3;
-        uint16_t TimeSourceID;
+        uint16_t TimeSrcID;
         uint8_t Influence;
         uint8_t Param;
     } __packed;
@@ -73,7 +73,7 @@ union rPkt_t  {
         Word = Right.Word;
         return *this;
     }
-//    void Print() { Printf("%d %d %d %d %d %d; %X\r", Ch[0],Ch[1],Ch[2],Ch[3],R1, R2, Btns); }
+    void Print() { Printf("ID: %u; Ccl: %u; Tsrc: %u; Inf: %u; P: %u\r", ID,Cycle,TimeSrcID,Influence,Param); }
 } __packed;
 
 #define RPKT_LEN    sizeof(rPkt_t)
@@ -82,19 +82,17 @@ union rPkt_t  {
 #define RSSI_MIN            -75
 
 #if 1 // ======================= Channels & cycles =============================
-#define RCHNL               4
+#define RCHNL               7
 #define CYCLE_CNT           4
 #define ARMLET_CNT          80
 #define LUSTRA_CNT          200
 #define SLOT_CNT            (ARMLET_CNT + LUSTRA_CNT)
-#define SLOT_DURATION_MS    5
 #endif
 
 #if 1 // =========================== Timings ===================================
-#define RX_T_MS                 11
-#define RX_SLEEP_T_MS           810
+#define TIMESLOT_DURATION_ST    20
 #define MIN_SLEEP_DURATION_MS   18
-#define RETRY_CNT               2
+#define SCYCLES_TO_KEEP_TIMESRC 4   // After that amount of supercycles, TimeSrcID become self ID
 
 #endif
 
@@ -110,8 +108,6 @@ struct RMsg_t {
 } __attribute__((packed));
 
 class rLevel1_t {
-private:
-
 public:
     int8_t Rssi;
     rPkt_t PktTx, PktRx;

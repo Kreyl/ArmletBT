@@ -63,11 +63,11 @@ int main() {
     Printf("\r%S %S\r\n", APP_NAME, BUILD_TIME);
     Clk.PrintFreqs();
 
-    Lcd.Init();
+//    Lcd.Init();
     SD.Init();
 //    Printf("ID = %u\r", ID);
 
-    DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
+//    DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
 
     SimpleSensors::Init();
     Power.Init();

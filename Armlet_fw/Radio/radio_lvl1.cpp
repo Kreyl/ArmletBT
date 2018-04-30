@@ -32,34 +32,70 @@ extern uint16_t ID;
 #endif
 
 rLevel1_t Radio;
-virtual_timer_t TmrTimeslot;
-static systime_t TimeslotDuration;
-static volatile uint32_t CycleN = 0, TimeSlot = 0;
+void TmrTimeslotCallback(void *p);
 static volatile enum CCState_t {ccstIdle, ccstRx, ccstTx} CCState = ccstIdle;
-//uint32_t
 
-void TmrTimeslotCallback(void *p) {
-//    DBG1_SET();
-    chSysLockFromISR();
-    chVTSetI(&TmrTimeslot, TimeslotDuration, TmrTimeslotCallback, nullptr);
-    TimeSlot++;
-    if(TimeSlot >= SLOT_CNT) {
-        TimeSlot = 0;
-        CycleN++;
-        if(CycleN >= CYCLE_CNT) CycleN = 0;
-    }
-    if(TimeSlot == ID) Radio.RMsgQ.SendNowOrExitI(RMsg_t(rmsgTimeToTx));
-    else { // Not our timeslot
-        if(CycleN == 0) { // Enter RX if not yet
-            if(CCState != ccstRx) Radio.RMsgQ.SendNowOrExitI(RMsg_t(rmsgTimeToRx));
+__unused static systime_t FTStart = 0;
+
+static class RadioTime_t {
+private:
+    virtual_timer_t TmrTimeslot;
+    void StopTimerI()  { chVTResetI(&TmrTimeslot); }
+    uint16_t TimeSrcTimeout;
+public:
+    volatile uint32_t CycleN = 0, TimeSlot = 0;
+    uint16_t TimeSrcId = 0;
+    void StartTimerI() { chVTSetI(&TmrTimeslot, TIMESLOT_DURATION_ST, TmrTimeslotCallback, nullptr); }
+    void IncTimeSlot() {
+        TimeSlot++;
+        if(TimeSlot >= SLOT_CNT) {
+            TimeSlot = 0;
+            CycleN++;
+            if(CycleN >= CYCLE_CNT) {
+                CycleN = 0;
+//                PrintfI("Ccl dur: %u\r", ST2MS(chVTTimeElapsedSinceX(FTStart)));
+//                FTStart = chVTGetSystemTimeX();
+                // Check TimeSrc timeout
+                if(TimeSrcTimeout >= SCYCLES_TO_KEEP_TIMESRC) TimeSrcId = ID;
+                else TimeSrcTimeout++;
+            }
         }
-        else { // CycleN != 0
-            if(CCState != ccstIdle) Radio.RMsgQ.SendNowOrExitI(RMsg_t(rmsgTimeToSleep));
+    }
+    void Adjust() {
+        // Adjust time if theirs TimeSrc < OursTimeSrc
+        if(Radio.PktRx.TimeSrcID <= TimeSrcId) {
+            chSysLock();
+            StopTimerI();
+            CycleN = Radio.PktRx.Cycle;
+            TimeSlot = Radio.PktRx.ID;
+            IncTimeSlot();  // Theirs timeslot just ended
+            TimeSrcId = Radio.PktRx.TimeSrcID;
+            TimeSrcTimeout = 0; // Reset Time Src Timeout
+            StartTimerI();
+            chSysUnlock();
+            Printf("New time: ccl %u; slot %u; Src %u\r", CycleN, TimeSlot, TimeSrcId);
         }
     }
-    chSysUnlockFromISR();
-//    DBG1_CLR();
-}
+
+    void IOnNewTimeslot() {
+        chSysLockFromISR();
+        StartTimerI();
+        IncTimeSlot();
+        if(TimeSlot == ID) Radio.RMsgQ.SendNowOrExitI(RMsg_t(rmsgTimeToTx));
+        else { // Not our timeslot
+            if(CycleN == 0) { // Enter RX if not yet
+                if(CCState != ccstRx) Radio.RMsgQ.SendNowOrExitI(RMsg_t(rmsgTimeToRx));
+            }
+            else { // CycleN != 0
+                if(CCState != ccstIdle) Radio.RMsgQ.SendNowOrExitI(RMsg_t(rmsgTimeToSleep));
+            }
+        }
+        chSysUnlockFromISR();
+    }
+} RadioTime;
+
+
+void TmrTimeslotCallback(void *p) { RadioTime.IOnNewTimeslot(); }
 
 void RxCallback() {
     Radio.RMsgQ.SendNowOrExitI(RMsg_t(rmsgPktRx));
@@ -75,16 +111,15 @@ static void rLvl1Thread(void *arg) {
 
 __noreturn
 void rLevel1_t::ITask() {
-//    systime_t TimeStart = chVTGetSystemTimeX();
     while(true) {
         RMsg_t msg = RMsgQ.Fetch(TIME_INFINITE);
         switch(msg.Cmd) {
             case rmsgTimeToTx:
-                DBG1_SET();
                 CCState = ccstTx;
                 PktTx.ID = ID;
-                PktTx.Cycle = CycleN;
-                PktTx.TimeSourceID = ID;
+                PktTx.Cycle = RadioTime.CycleN;
+                PktTx.TimeSrcID = RadioTime.TimeSrcId;
+//                PktTx.Print();
                 DBG1_SET();
                 CC.Recalibrate(); // Recalibrate before every TX, do not calibrate before RX
                 CC.Transmit(&PktTx, RPKT_LEN);
@@ -101,19 +136,19 @@ void rLevel1_t::ITask() {
                 CC.EnterIdle();
                 break;
 
-            case rmsgPktRx: {
+            case rmsgPktRx:
                 CCState = ccstIdle;
-                int8_t Rssi;
                 CC.ReadFIFO(&PktRx, &Rssi, RPKT_LEN);
-                Printf("Rx: %u @ %d\r", PktRx.ID, Rssi);
-            } break;
+                Printf("Rssi %d; ", Rssi);
+                PktRx.Print();
+                RadioTime.Adjust();
+                break;
 
             case rmsgSetPwr: CC.SetTxPower(msg.Value); break;
             case rmsgSetChnl: CC.SetChannel(msg.Value); break;
         } // switch
     } // while
 }
-
 #endif // task
 
 #if 1 // ============================
@@ -129,14 +164,14 @@ uint8_t rLevel1_t::Init() {
         CC.SetChannel(RCHNL);
         CC.SetTxPower(CC_TX_PWR);
         // Measure timeslot duration
-        CC.SetTxPower(CC_PwrMinus30dBm);
-        systime_t TimeStart = chVTGetSystemTimeX();
-        CC.Recalibrate();
-        CC.Transmit(&PktTx, RPKT_LEN);
-        TimeslotDuration = chVTTimeElapsedSinceX(TimeStart);
-        Printf("Timeslot duration, systime: %u\r", TimeslotDuration);
-        TimeslotDuration = 20;
-        chVTSet(&TmrTimeslot, TimeslotDuration, TmrTimeslotCallback, nullptr);
+//        systime_t TimeStart = chVTGetSystemTimeX();
+//        CC.Recalibrate();
+//        CC.Transmit(&PktTx, RPKT_LEN);
+//        systime_t TimeslotDuration = chVTTimeElapsedSinceX(TimeStart);
+//        Printf("Timeslot duration, systime: %u\r", TimeslotDuration);
+        chSysLock();
+        RadioTime.StartTimerI();
+        chSysUnlock();
 
         // Thread
         chThdCreateStatic(warLvl1Thread, sizeof(warLvl1Thread), HIGHPRIO, (tfunc_t)rLvl1Thread, NULL);
