@@ -36,7 +36,7 @@ static systime_t LongComboTimer;
 static bool IsLongCombo;
 #endif
 
-//static void AddEvtToQueue(BtnEvtInfo_t &Evt);
+static void AddEvtToQueue(BtnEvtInfo_t &Evt);
 static void AddEvtToQueue(BtnEvt_t AType, uint8_t KeyIndx);
 
 // ========================= Postprocessor for PinSns ==========================
@@ -79,7 +79,13 @@ void ProcessButtons(PinSnsState_t *BtnState, uint32_t Len) {
 #endif // combo
 
 #if BTN_SHORTPRESS // Single key pressed, no combo
-            AddEvtToQueue(beShortPress, i);  // Add single keypress
+#if BTN_COMBO
+            if(!IsCombo)
+#endif // combo
+            {
+                AddEvtToQueue(beShortPress, i);  // Add single keypress
+            }
+
 #endif
 
 #if BTN_LONGPRESS
@@ -156,14 +162,24 @@ void ProcessButtons(PinSnsState_t *BtnState, uint32_t Len) {
 
 #if BTN_REPEAT // Check if repeat
             if(!IsRepeating[i]) {
-                if(TimeElapsed(&RepeatTimer, BTN_DELAY_BEFORE_REPEAT_MS)) {
+                if(chVTTimeElapsedSinceX(RepeatTimer) >= MS2ST(BTN_DELAY_BEFORE_REPEAT_MS)) {
                     IsRepeating[i] = true;
-                    AddEvtToQueue(beRepeat, i);
+#if BTN_COMBO
+                    if(!IsCombo)
+#endif
+                    {
+                        AddEvtToQueue(beRepeat, i);
+                    }
                 }
             }
             else {
-                if(TimeElapsed(&RepeatTimer, BTN_REPEAT_PERIOD_MS)) {
-                    AddEvtToQueue(beRepeat, i);
+                if(chVTTimeElapsedSinceX(RepeatTimer) >= MS2ST(BTN_REPEAT_PERIOD_MS)) {
+#if BTN_COMBO
+                    if(!IsCombo)
+#endif
+                    {
+                        AddEvtToQueue(beRepeat, i);
+                    }
                 }
             }
 #endif
@@ -173,22 +189,21 @@ void ProcessButtons(PinSnsState_t *BtnState, uint32_t Len) {
     } // for i
 }
 
-//__unused
-//void AddEvtToQueue(BtnEvtInfo_t &Evt) {
-//    EvtMsg_t Msg(evtIdButtons);
-//    Msg.BtnEvtInfo = Evt;
-//    EvtQMain.SendNowOrExit(Msg);
-//}
+__unused
+void AddEvtToQueue(BtnEvtInfo_t &Evt) {
+    EvtMsg_t Msg(evtIdButtons);
+    Msg.BtnEvtInfo = Evt;
+    EvtQMain.SendNowOrExit(Msg);
+}
 
 void AddEvtToQueue(BtnEvt_t AType, uint8_t KeyIndx) {
-//    Printf("Btn Type: %u; Indx: %u\r", AType, KeyIndx);
-    EvtMsg_t Msg((EvtMsgId_t)((uint8_t)evtIdBtnA + KeyIndx));
+    EvtMsg_t Msg(evtIdButtons);
     Msg.BtnEvtInfo.Type = AType;
 #if BTN_COMBO || BTN_LONG_COMBO
     Msg.BtnEvtInfo.BtnCnt = 1;
     Msg.BtnEvtInfo.BtnID[0] = KeyIndx;
 #elif BUTTONS_CNT != 1
-//    Msg.BtnEvtInfo.BtnID = KeyIndx;
+    Msg.BtnEvtInfo.BtnID = KeyIndx;
 #endif
     EvtQMain.SendNowOrExit(Msg);
 }

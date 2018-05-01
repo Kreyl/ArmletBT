@@ -18,9 +18,11 @@
 extern FILINFO FileInfo;
 extern DIR Dir;
 extern FIL CommonFile;
+//extern
 
 uint8_t TryOpenFileRead(const char *Filename, FIL *PFile);
 uint8_t TryOpenFileRewrite(const char *Filename, FIL *PFile);
+void CloseFile(FIL *PFile);
 uint8_t CheckFileNotEmpty(FIL *PFile);
 uint8_t TryRead(FIL *PFile, void *Ptr, uint32_t Sz);
 static inline bool FileIsOpen(FIL *PFile) {
@@ -89,7 +91,6 @@ public:
             AddDir(DirName);
             CountFiles("wav");  // Count files in dir
         }
-    //    Printf("Dir %S: Cnt=%u\r", DirName, DirList.GetFileCnt());
         uint32_t Cnt = Dirs[CurrIndx].FileCnt;
         if(Cnt == 0) return retvFail; // Get out if nothing to play
         // Select number of file

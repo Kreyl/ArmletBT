@@ -27,15 +27,7 @@ enum EvtMsgId_t {
     evtIdUsbOutDone,
 
     // Buttons
-    evtIdBtnA,
-    evtIdBtnB,
-    evtIdBtnC,
-    evtIdBtnL,
-    evtIdBtnE,
-    evtIdBtnR,
-    evtIdBtnX,
-    evtIdBtnY,
-    evtIdBtnZ,
+    evtIdButtons,
 
     // App specific
     evtIdAdcRslt,

@@ -44,6 +44,10 @@ uint8_t TryOpenFileRewrite(const char *Filename, FIL *PFile) {
     }
 }
 
+void CloseFile(FIL *PFile) {
+    f_close(PFile);
+}
+
 uint8_t CheckFileNotEmpty(FIL *PFile) {
     if(f_size(PFile) == 0) {
         Printf("Empty file\r");

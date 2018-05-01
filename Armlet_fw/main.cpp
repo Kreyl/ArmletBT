@@ -21,8 +21,9 @@
 #include "kl_adc.h"
 #include "pill.h"
 #include "pill_mgr.h"
+#include "dispatcher.h"
 
-
+#if 1 // =============== Low level ================
 // Forever
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
 extern CmdUart_t Uart;
@@ -51,8 +52,27 @@ public:
     }
 };
 static Power_t Power;
+#endif
+
+#if 1 // ===================== Logic ======================
+// Callbacks. Returns true if OK
+size_t TellCallback(void *file_context);
+bool SeekCallback(void *file_context, size_t offset);
+size_t ReadCallback(void *file_context, uint8_t *buffer, size_t length);
+
+
+
+Dispatcher dispatcher;
+CsvTable csvTable {ReadCallback};
+EmotionTable emoTable;
+InfluenceTable infTable;
+CharacterTable charTable;
+LocalCharacter localChar;
+
+#endif
 
 int main() {
+#if 1 // Low level init
     // ==== Setup clock ====
     Clk.SetCoreClk(cclk24MHz);
 //    Clk.SetCoreClk(cclk48MHz);
@@ -89,6 +109,40 @@ int main() {
     TmrOneSecond.StartOrRestart();
 
     Radio.Init();
+#endif
+
+#if 0 // ==== Logic init ====
+    // Open Emotions
+    if(TryOpenFileRead("Emotions.csv", &CommonFile) == retvOk) {
+        emoTable.init(&CommonFile, &csvTable);
+        CloseFile(&CommonFile);
+    }
+    else chSysHalt("No Emotions");
+
+    // Open Influence
+    if(TryOpenFileRead("Reasons.csv", &CommonFile) == retvOk) {
+        infTable.init(&CommonFile, &csvTable, &emoTable);
+        CloseFile(&CommonFile);
+    }
+    else chSysHalt("No Reasons");
+
+    // Get Person name
+    char CharName[] = "mr First"; // XXX
+
+    // Character table
+    if(TryOpenFileRead("Characters.csv", &CommonFile) == retvOk) {
+        charTable.init(&CommonFile, &csvTable, CharName, &localChar);
+        CloseFile(&CommonFile);
+    }
+    else chSysHalt("No Characters");
+
+    // === Load localChar ===
+    // Load State: Dogan, Dead, Corrupted
+    // Load KatetLinks
+    // Load counters
+
+    dispatcher.init(&infTable, &emoTable, &charTable, &localChar);
+#endif
     // ==== Main cycle ====
     ITask();
 }
@@ -103,16 +157,9 @@ void ITask() {
                 ((Shell_t*)Msg.Ptr)->SignalCmdProcessed();
                 break;
 
-            case evtIdBtnA:
-            case evtIdBtnB:
-            case evtIdBtnC:
-            case evtIdBtnL:
-            case evtIdBtnE:
-            case evtIdBtnR:
-            case evtIdBtnX:
-            case evtIdBtnY:
-            case evtIdBtnZ:
-                Printf("Btn: %u\r", (Msg.ID - evtIdBtnA));
+            case evtIdButtons:
+                Printf("Btn: %u %u\r", Msg.BtnEvtInfo.BtnID, Msg.BtnEvtInfo.Type);
+                dispatcher.handle_button(Msg.BtnEvtInfo.BtnID, (Msg.BtnEvtInfo.Type == beLongPress));
                 break;
 
             case evtIdEverySecond:
@@ -181,3 +228,32 @@ void OnCmd(Shell_t *PShell) {
 }
 #endif
 
+#if 1 // ========================== Callbacks ==================================
+size_t TellCallback(void *file_context) {
+    FIL *pFile = (FIL*)file_context;
+    return pFile->fptr;
+}
+
+bool SeekCallback(void *file_context, size_t offset) {
+    FIL *pFile = (FIL*)file_context;
+    FRESULT rslt = f_lseek(pFile, offset);
+    if(rslt == FR_OK) return true;
+    else {
+        Printf("SeekErr %u\r", rslt);
+        return false;
+    }
+}
+
+size_t ReadCallback(void *file_context, uint8_t *buffer, size_t length) {
+    FIL *pFile = (FIL*)file_context;
+    uint32_t ReadSz=0;
+    FRESULT rslt = f_read(pFile, buffer, length, &ReadSz);
+    if(rslt == FR_OK) {
+        return ReadSz;
+    }
+    else {
+//        Printf("ReadErr %u\r", rslt);
+        return 0;
+    }
+}
+#endif
