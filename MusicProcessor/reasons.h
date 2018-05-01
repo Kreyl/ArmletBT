@@ -8,7 +8,7 @@
  *
  * !!! DO NOT EDIT !!!
  *
- * Generated at 2018-04-04 15:46:18
+ * Generated at 2018-05-01 18:48:33
  */
 #ifndef REASONS_H
 #define REASONS_H
@@ -17,6 +17,7 @@
 extern "C" {
 #endif
 
+extern int ARRIVING_ID;
 extern int BEAM_ID;
 extern int BEAM_CLOSE_ID;
 extern int BECOME_CORRUPTED_ID;
@@ -28,9 +29,12 @@ extern int BECOME_WHITE_ID;
 extern int BECOME_WHITE_MESSENGER_ID;
 extern int BECOME_WHITISH_ID;
 extern int BLESSED_PLACE_ID;
+extern int BOOT_ID;
+extern int CRIMSON_ANGER_ID;
 extern int CRIMSON_BROADCAST1_ID;
 extern int CRIMSON_BROADCAST2_ID;
 extern int CRIMSON_BROADCAST3_ID;
+extern int CRIMSON_BROADCAST4_ID;
 extern int CRIMSON_FEELING_ID;
 extern int CRIMSON_GRIEVE_ID;
 extern int CRIMSON_KING_SONG_ID;
@@ -38,22 +42,26 @@ extern int CRIMSON_LAUGH_ID;
 extern int CRIMSON_PLACE_ID;
 extern int CRIMSON_SERVANT_ID;
 extern int CRIMSON_SERVANT_FEELING_ID;
+extern int CURSE_ID;
+extern int DAEMON_ID;
 extern int DEATH_ID;
 extern int DESTROY_KATET_ID;
-extern int DOOR_ACTIVATED_ID;
+extern int DOOR_ID;
 extern int DOOR_FAR_ID;
 extern int DOOR_FAR_MANNI_ID;
-extern int DOOR_LEFT_ID;
 extern int DOOR_NEAR_ID;
 extern int DOOR_NEAR_MANNI_ID;
+extern int DOOR_VOICE_ID;
 extern int EAGLE_ID;
 extern int FEAR_ID;
 extern int FEAR_PLACE_ID;
 extern int FORM_KATET_ID;
 extern int GERRARO_ID;
 extern int GUNSLINGER_FEELING_ID;
+extern int HEAL_ID;
+extern int HEAL_LONG_ID;
+extern int HOPE_ID;
 extern int HYPNOSIS_ID;
-extern int INFLUENCE_AT_DOGAN_ID;
 extern int INN_ID;
 extern int KATET_NEAR_ID;
 extern int LION_ID;
@@ -70,23 +78,15 @@ extern int REBOOT_ID;
 extern int RESET_ID;
 extern int ROSE_ID;
 extern int SHOW_DOGAN_STATE_ID;
-extern int SQUARE_ID;
 extern int THINNY_ID;
 extern int TIMELINE_GATHERING_ID;
 extern int TIMELINE_TRAIN_ID;
 extern int TIMELINE_TRAIN_ARRIVING_ID;
-extern int TOWNHOUSE_ID;
+extern int WHITE_BELIEVE_ID;
 extern int WHITE_FEELING_ID;
 extern int WHITE_JOY_ID;
 extern int WHITE_MESSENGER_ID;
 extern int WHITE_SORROW_ID;
-extern int PLACEHOLDER_63_ID;
-extern int PLACEHOLDER_64_ID;
-extern int PLACEHOLDER_65_ID;
-extern int PLACEHOLDER_66_ID;
-extern int PLACEHOLDER_67_ID;
-extern int PLACEHOLDER_68_ID;
-extern int PLACEHOLDER_69_ID;
 extern int PLACEHOLDER_70_ID;
 extern int PLACEHOLDER_71_ID;
 extern int PLACEHOLDER_72_ID;
@@ -149,6 +149,7 @@ extern int JRight_ID;
 extern int CRandall_ID;
 extern int RDias_ID;
 extern int DRice_ID;
+extern int Brody_ID;
 extern int AFlores_ID;
 extern int Isaak_ID;
 extern int Cordelia_ID;
@@ -159,6 +160,7 @@ extern int KMurray_ID;
 extern int PSayer_ID;
 extern int JKuroki_ID;
 extern int RRobin_ID;
+extern int LMally_ID;
 extern int ALaiden_ID;
 extern int CBendetsen_ID;
 extern int BKuroki_ID;
@@ -180,8 +182,6 @@ extern int LMorano_ID;
 extern int EMorano_ID;
 extern int AMorano_ID;
 extern int CMorano_ID;
-extern int AlMorano_ID;
-extern int Rob_ID;
 extern int DJamison_ID;
 extern int SJamison_ID;
 extern int ESatton_ID;
@@ -199,6 +199,7 @@ extern int SKing_ID;
 extern int MParker_ID;
 extern int Samantha_ID;
 extern int RMcCoy_ID;
+extern int JPiters_ID;
 
 #ifdef __cplusplus
 }

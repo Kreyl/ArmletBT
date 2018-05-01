@@ -76,7 +76,7 @@ class GoogleTableEntry(CSVable):
             self.timeout = int(self.timeout or 0)
         except ValueError:
             assert False, "Timeout is not a number for reason %s: %r" % (self.rName, self.timeout)
-        assert 0 <= self.timeout <= 600 or self.timeout == -1, "Bad timeout for reason %s: %r" % (self.rName, self.timeout)
+        assert 0 <= self.timeout <= 999 or self.timeout == -1, "Bad timeout for reason %s: %r" % (self.rName, self.timeout)
         # doganAmount
         try:
             self.doganAmount = int(self.doganAmount or 0)
