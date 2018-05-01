@@ -15,6 +15,6 @@
 
 {%static const int %(rName)s_ID = %(rID)d;}
 
- #endif // ifdef REASONS_H
+#endif // ifdef REASONS_H
 
 // End of reasons.h
