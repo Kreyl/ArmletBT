@@ -11,23 +11,48 @@
 #include "localcharacter.h"
 
 // General
-void Vibro(uint32_t Duration_ms) {}
-void PowerOff() {}
+void Vibro(uint32_t Duration_ms) {
+    Printf("%S\r", __FUNCTION__);
+}
+void PowerOff() {
+    Printf("%S\r", __FUNCTION__);
+}
 
-void SleepEnable() {}
-void SleepDisable() {}
+void SleepEnable() {
+    Printf("%S\r", __FUNCTION__);
+}
+void SleepDisable() {
+    Printf("%S\r", __FUNCTION__);
+}
 
 // Sound
-void PlayerVolumeUp() {}
-void PlayerVolumeDown() {}
+void PlayerVolumeUp() {
+    Printf("%S\r", __FUNCTION__);
+}
+void PlayerVolumeDown() {
+    Printf("%S\r", __FUNCTION__);
+}
 
 // Screen
-void ScreenHighlight(uint32_t Value_percent) {}
-void ScreenAddBMPToQueue(const char* AFilename) {}
-void ScreenShowNextBMP() {}
-void ScreenShowActualBMP() {}
-uint32_t GetBMPQueueLength() { return 0; }
-void ScreenShowPicture(const char* AFilename) {}
+void ScreenHighlight(uint32_t Value_percent) {
+    Printf("%S %u\r", __FUNCTION__, Value_percent);
+}
+void ScreenAddBMPToQueue(const char* AFilename) {
+    Printf("%S %S\r", __FUNCTION__, AFilename);
+}
+void ScreenShowNextBMP() {
+    Printf("%S\r", __FUNCTION__);
+}
+void ScreenShowActualBMP() {
+    Printf("%S\r", __FUNCTION__);
+}
+uint32_t GetBMPQueueLength() {
+    Printf("%S\r", __FUNCTION__);
+    return 0;
+}
+void ScreenShowPicture(const char* AFilename) {
+    Printf("%S %S\r", __FUNCTION__, AFilename);
+}
 
 // Character
 void SaveState(int Dogan, bool Dead, bool Corrupted) {
@@ -52,7 +77,7 @@ void SaveCounters(const KaTetCounters *counters) {
     Printf("%S\r", __FUNCTION__);
     if(TryOpenFileRewrite("Counters.csv", &CommonFile) == retvOk) {
         for(uint32_t i=0; i<counters->SIZE; i++) {
-            f_printf(&CommonFile, "%u = %u\r\n", i, counters[i]);
+            f_printf(&CommonFile, "%u = %u\r\n", i, (*counters)[i]);
         }
         CloseFile(&CommonFile);
     }

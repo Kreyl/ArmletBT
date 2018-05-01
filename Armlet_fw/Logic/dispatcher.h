@@ -7,6 +7,7 @@
 #include "emotiontable.h"
 #include "charactertable.h"
 #include "localcharacter.h"
+#include "ringbuffer.h"
 
 #include "character.h"
 #include "kaCounter.h"
@@ -41,6 +42,19 @@ public:
         int16_t remaining_time;
     };
 
+    struct QueueEntry
+    {
+        enum class Action
+        {
+            Begin,
+            End
+        };
+
+        size_t id;
+        Action action;
+        uint8_t parameter;
+    };
+
 public:
     Dispatcher();
 
@@ -67,6 +81,9 @@ public:
     void tick();
 
 private:
+    void process_queue();
+
+private:
     InfluenceState influence_states_[InfluenceTable::MAX_INFLUENCE_COUNT];
 
     const InfluenceTable *influence_table_;
@@ -74,6 +91,8 @@ private:
     const CharacterTable *character_table_;
 
     LocalCharacter *local_character_;
+
+    RingBuffer<QueueEntry, 32> queue_;
 
     Character character_sm_;
     KaCounter ka_counter_sm_;
