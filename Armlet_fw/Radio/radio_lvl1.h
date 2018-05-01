@@ -93,8 +93,76 @@ union rPkt_t  {
 #define TIMESLOT_DURATION_ST    20
 #define MIN_SLEEP_DURATION_MS   18
 #define SCYCLES_TO_KEEP_TIMESRC 4   // After that amount of supercycles, TimeSrcID become self ID
+#endif
+
+#if 1 // ============================= RX Table ================================
+#define RXTABLE_SZ              4
+#define RXT_PKT_REQUIRED        FALSE
+class RxTable_t {
+private:
+#if RXT_PKT_REQUIRED
+    rPkt_t IBuf[RXTABLE_SZ];
+#else
+    uint8_t IdBuf[RXTABLE_SZ];
+#endif
+    uint32_t Cnt = 0;
+public:
+#if RXT_PKT_REQUIRED
+    void AddOrReplaceExistingPkt(rPkt_t &APkt) {
+        if(Cnt >= RXTABLE_SZ) return;   // Buffer is full, nothing to do here
+        for(uint32_t i=0; i<Cnt; i++) {
+            if(IBuf[i].ID == APkt.ID) {
+                IBuf[i] = APkt; // Replace with newer pkt
+                return;
+            }
+        }
+        IBuf[Cnt] = APkt;
+        Cnt++;
+    }
+
+    uint8_t GetPktByID(uint8_t ID, rPkt_t **ptr) {
+        for(uint32_t i=0; i<Cnt; i++) {
+            if(IBuf[i].ID == ID) {
+                *ptr = &IBuf[i];
+                return OK;
+            }
+        }
+        return FAILURE;
+    }
+
+    bool IDPresents(uint8_t ID) {
+        for(uint32_t i=0; i<Cnt; i++) {
+            if(IBuf[i].ID == ID) return true;
+        }
+        return false;
+    }
+#else
+    void AddId(uint8_t ID) {
+        if(Cnt >= RXTABLE_SZ) return;   // Buffer is full, nothing to do here
+        for(uint32_t i=0; i<Cnt; i++) {
+            if(IdBuf[i] == ID) return;
+        }
+        IdBuf[Cnt] = ID;
+        Cnt++;
+    }
 
 #endif
+    uint32_t GetCount() { return Cnt; }
+    void Clear() { Cnt = 0; }
+
+    void Print() {
+        Printf("RxTable Cnt: %u\r", Cnt);
+        for(uint32_t i=0; i<Cnt; i++) {
+#if RXT_PKT_REQUIRED
+            Printf("ID: %u; State: %u\r", IBuf[i].ID, IBuf[i].State);
+#else
+            Printf("ID: %u\r", IdBuf[i]);
+#endif
+        }
+    }
+};
+#endif
+
 
 // Message queue
 #define R_MSGQ_LEN      9

@@ -39,7 +39,8 @@ enum EvtMsgId_t {
 
     // App specific
     evtIdAdcRslt,
-
-    evtIdTimeslot,
+    // Pill
+    evtIdPillConnected,
+    evtIdPillDisconnected,
 
 };

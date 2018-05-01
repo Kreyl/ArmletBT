@@ -19,6 +19,9 @@
 #include "vibro.h"
 #include "sound.h"
 #include "kl_adc.h"
+#include "pill.h"
+#include "pill_mgr.h"
+
 
 // Forever
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
@@ -72,6 +75,9 @@ int main() {
     SimpleSensors::Init();
     Power.Init();
 
+    i2c2.Init();
+    PillMgr.Init();
+
 //    Beeper.Init();
 //    Beeper.StartOrRestart(bsqBeepBeep);
 //    Vibro.Init(VIBRO_TIM_FREQ);
@@ -116,6 +122,15 @@ void ITask() {
 //                Printf("Adc: %u; ExtPwr: %u; Charging: %u\r", Msg.Value, Power.ExternalPwrOn(), Power.IsCharging());
                 // TODO: send to statemachine
                 break;
+
+#if 1 // ======= Pill ======
+            case evtIdPillConnected:
+                Printf("Pill: %d\r", ((Pill_t*)Msg.Ptr)->TypeInt32);
+                break;
+            case evtIdPillDisconnected:
+                Printf("Pill Discon\r");
+                break;
+#endif
 
 #if 1 // ======= USB =======
             case evtIdUsbConnect:

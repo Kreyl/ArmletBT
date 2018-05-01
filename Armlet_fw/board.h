@@ -25,8 +25,9 @@
 #define SYS_TIM_CLK             (Clk.APB1FreqHz)    // Timer 5 is clocked by APB1
 
 //  Periphery
+#define PILL_ENABLED            TRUE
 #define I2C1_ENABLED            FALSE
-#define I2C2_ENABLED            FALSE
+#define I2C2_ENABLED            PILL_ENABLED
 #define I2C3_ENABLED            FALSE
 #define SIMPLESENSORS_ENABLED   TRUE
 #define BUTTONS_ENABLED         TRUE
@@ -72,14 +73,10 @@
 #define I2C1_GPIO       GPIOB
 #define I2C1_SCL        6
 #define I2C1_SDA        7
-#define I2C1_AF         AF4 // I2C @ GPIOB
-#define I2C1_BAUDRATE   400000
 
 #define I2C2_GPIO       GPIOB
 #define I2C2_SCL        10
 #define I2C2_SDA        11
-#define I2C2_AF         AF4 // I2C @ GPIOB
-#define I2C2_BAUDRATE   100000
 
 // Radio: SPI, PGpio, Sck, Miso, Mosi, Cs, Gdo0
 #define CC_Setup0       SPI1, GPIOA, 5,6,7, 10, 4
@@ -87,6 +84,8 @@
 // KL NFC
 #define KLNFC_TX_PIN    { GPIOA, 2, TIM2, 3, invNotInverted, omPushPull, 1 }
 
+// Pill power
+#define PILL_PWR_PIN    { GPIOB, 12, omPushPull }
 
 // SD
 #define SD_PWR_PIN      GPIOC, 4
@@ -105,7 +104,11 @@
 #define CMD_UART        USART2
 #define UART_USE_INDEPENDENT_CLK    TRUE
 #define UART_TXBUF_SZ   1024
+#endif
 
+#if I2C2_ENABLED // ====================== I2C ================================
+#define I2C2_BAUDRATE   400000
+#define I2C_PILL        i2c2
 #endif
 
 #if ADC_REQUIRED // ======================= Inner ADC ==========================
