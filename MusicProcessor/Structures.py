@@ -81,8 +81,8 @@ class Reason(CSVdumpable):
     H_TARGET = 'reasons.h'
     H_TEMPLATE = 'reasons_h.tpl'
 
-    C_TARGET = 'reasons.cpp'
-    C_TEMPLATE = 'reasons_cpp.tpl'
+    #C_TARGET = 'reasons.cpp'
+    #C_TEMPLATE = 'reasons_cpp.tpl'
 
     INSTANCES = OrderedDict()
     TITLE = 'Reasons'
@@ -141,7 +141,7 @@ class Reason(CSVdumpable):
     def dumpCPP(cls):
         params = {'currentTime': currentTime()}
         cls.fillTemplate(cls.H_TEMPLATE, cls.H_TARGET, params)
-        cls.fillTemplate(cls.C_TEMPLATE, cls.C_TARGET, params)
+        #cls.fillTemplate(cls.C_TEMPLATE, cls.C_TARGET, params)
 
 class Emotion(CSVdumpable):
     CSV_FIELDS = ('eID', 'eName', 'eType', 'ePriority', 'isPlayer')
