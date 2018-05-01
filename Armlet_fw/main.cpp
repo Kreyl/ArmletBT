@@ -31,6 +31,7 @@ void ITask();
 
 uint8_t Status;
 uint16_t ID = 7;
+uint8_t Influence = ID + 128;
 
 Beeper_t Beeper(BEEPER_PIN);
 Vibro_t Vibro(VIBRO_PIN);
@@ -121,6 +122,10 @@ void ITask() {
             case evtIdAdcRslt:
 //                Printf("Adc: %u; ExtPwr: %u; Charging: %u\r", Msg.Value, Power.ExternalPwrOn(), Power.IsCharging());
                 // TODO: send to statemachine
+                break;
+
+            case evtIdNewRPkt:
+                Printf("RPkt: Inf=%u; Par=%u\r", Msg.ValueID, Msg.Value);
                 break;
 
 #if 1 // ======= Pill ======

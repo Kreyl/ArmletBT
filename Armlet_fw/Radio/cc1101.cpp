@@ -238,10 +238,10 @@ uint8_t cc1101_t::ReadFIFO(void *Ptr, int8_t *PRssi, uint8_t Len) {
     uint8_t b, *p = (uint8_t*)Ptr;
      // Check if received successfully
      if(ReadRegister(CC_PKTSTATUS, &b) != retvOk) return retvFail;
-     //    Uart.Printf("St: %X  ", b);
+     //    Printf("St: %X  ", b);
      if(b & 0x80) {  // CRC OK
          // Read FIFO
-         CsLo();                // Start transmission
+         CsLo();                    // Start transmission
          if(BusyWait() != retvOk) { // Wait for chip to become ready
              CsHi();
              return retvFail;

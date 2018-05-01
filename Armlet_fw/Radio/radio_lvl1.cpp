@@ -14,6 +14,7 @@
 
 cc1101_t CC(CC_Setup0);
 extern uint16_t ID;
+extern uint8_t Influence;
 
 #define DBG_PINS
 
@@ -35,7 +36,6 @@ rLevel1_t Radio;
 void TmrTimeslotCallback(void *p);
 static volatile enum CCState_t {ccstIdle, ccstRx, ccstTx} CCState = ccstIdle;
 
-__unused static systime_t FTStart = 0;
 
 static class RadioTime_t {
 private:
@@ -53,8 +53,6 @@ public:
             CycleN++;
             if(CycleN >= CYCLE_CNT) {
                 CycleN = 0;
-//                PrintfI("Ccl dur: %u\r", ST2MS(chVTTimeElapsedSinceX(FTStart)));
-//                FTStart = chVTGetSystemTimeX();
                 // Check TimeSrc timeout
                 if(TimeSrcTimeout >= SCYCLES_TO_KEEP_TIMESRC) TimeSrcId = ID;
                 else TimeSrcTimeout++;
@@ -72,7 +70,7 @@ public:
             TimeSrcTimeout = 0; // Reset Time Src Timeout
             IOnNewTimeslot();
             chSysUnlock();
-            Printf("New time: ccl %u; slot %u; Src %u\r", CycleN, TimeSlot, TimeSrcId);
+//            Printf("New time: ccl %u; slot %u; Src %u\r", CycleN, TimeSlot, TimeSrcId);
         }
     }
 
@@ -121,6 +119,7 @@ void rLevel1_t::ITask() {
                 PktTx.ID = ID;
                 PktTx.Cycle = RadioTime.CycleN;
                 PktTx.TimeSrcID = RadioTime.TimeSrcId;
+                PktTx.Influence = Influence;
 //                PktTx.Print();
                 DBG1_SET();
                 CC.Recalibrate(); // Recalibrate before every TX, do not calibrate before RX
@@ -140,10 +139,12 @@ void rLevel1_t::ITask() {
 
             case rmsgPktRx:
                 CCState = ccstIdle;
-                CC.ReadFIFO(&PktRx, &Rssi, RPKT_LEN);
-                Printf("Rssi %d; ", Rssi);
-                PktRx.Print();
-                RadioTime.Adjust();
+                if(CC.ReadFIFO(&PktRx, &Rssi, RPKT_LEN)) {  // if pkt successfully received
+                    Printf("Rssi %d; ", Rssi);
+                    PktRx.Print();
+                    RadioTime.Adjust();
+                    EvtQMain.SendNowOrExit(EvtMsg_t(evtIdNewRPkt, PktRx.Influence, PktRx.Param));
+                }
                 break;
 
             case rmsgSetPwr: CC.SetTxPower(msg.Value); break;

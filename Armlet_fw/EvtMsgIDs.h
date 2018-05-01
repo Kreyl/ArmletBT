@@ -42,5 +42,7 @@ enum EvtMsgId_t {
     // Pill
     evtIdPillConnected,
     evtIdPillDisconnected,
+    // Radio
+    evtIdNewRPkt,
 
 };
