@@ -115,6 +115,7 @@ class Reason(CSVdumpable):
 
     @classmethod
     def addReason(cls, reason):
+        assert reason.rName not in cls.INSTANCES, "Duplicate rName: %s" % reason.rName
         cls.INSTANCES[reason.rName] = reason
         return reason
 
