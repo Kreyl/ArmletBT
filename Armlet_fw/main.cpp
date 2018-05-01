@@ -7,7 +7,6 @@
 #include "hal.h"
 #include "MsgQ.h"
 #include "kl_lib.h"
-#include "led.h"
 #include "Sequences.h"
 #include "shell.h"
 #include "radio_lvl1.h"
@@ -22,6 +21,9 @@
 #include "pill.h"
 #include "pill_mgr.h"
 #include "dispatcher.h"
+#include "bsp.h"
+
+#define LOGIC_EN
 
 #if 1 // =============== Low level ================
 // Forever
@@ -35,7 +37,7 @@ uint16_t ID = 7;
 uint8_t Influence = ID + 128;
 
 Beeper_t Beeper(BEEPER_PIN);
-Vibro_t Vibro(VIBRO_PIN);
+Vibro_t Vibra(VIBRO_PIN);
 
 static TmrKL_t TmrOneSecond {MS2ST(999), evtIdEverySecond, tktPeriodic}; // Measure battery periodically
 
@@ -59,8 +61,6 @@ static Power_t Power;
 size_t TellCallback(void *file_context);
 bool SeekCallback(void *file_context, size_t offset);
 size_t ReadCallback(void *file_context, uint8_t *buffer, size_t length);
-
-
 
 Dispatcher dispatcher;
 CsvTable csvTable {ReadCallback};
@@ -102,8 +102,8 @@ int main() {
 
 //    Beeper.Init();
 //    Beeper.StartOrRestart(bsqBeepBeep);
-//    Vibro.Init(VIBRO_TIM_FREQ);
-//    Vibro.StartOrRestart(vsqBrrBrr);
+//    Vibra.Init(VIBRO_TIM_FREQ);
+//    Vibra.StartOrRestart(vsqBrrBrr);
 
 //    Sound.Init();
 
@@ -112,11 +112,12 @@ int main() {
     Radio.Init();
 #endif
 
-#if 1 // ==== Logic init ====
+#ifdef LOGIC_EN // ==== Logic init ====
     // Open Emotions
     if(TryOpenFileRead("Emotions.csv", &CommonFile) == retvOk) {
         emoTable.init(&CommonFile, &csvTable);
         CloseFile(&CommonFile);
+        Printf("Emo loaded\r");
     }
     else chSysHalt("No Emotions");
 
@@ -124,10 +125,11 @@ int main() {
     if(TryOpenFileRead("Reasons.csv", &CommonFile) == retvOk) {
         infTable.init(&CommonFile, &csvTable, &emoTable);
         CloseFile(&CommonFile);
+        Printf("Reasons loaded\r");
     }
     else chSysHalt("No Reasons");
 
-    // Get Person name
+    // Get Self name
     if(csv::OpenFile("SelfName.csv") == retvOk) {
         if(csv::ReadNextLine() != retvOk) chSysHalt("Bad Name File1");
         char *Name;
@@ -142,20 +144,51 @@ int main() {
     if(TryOpenFileRead("Characters.csv", &CommonFile) == retvOk) {
         charTable.init(&CommonFile, &csvTable, SelfName, &localChar);
         CloseFile(&CommonFile);
+        Printf("Characters loaded\r");
     }
     else chSysHalt("No Characters");
 
-    // === Load localChar ===
     // Load State: Dogan, Dead, Corrupted
+    if(csv::OpenFile("State.csv") == retvOk) {
+        while(csv::ReadNextLine() == retvOk) {
+            char *Name;
+            if(csv::GetNextToken(&Name) != retvOk) continue;
+            csv::TryLoadParam<int>(Name, "Dogan", &localChar.dogan);
+            csv::TryLoadParam<bool>(Name, "Dead", &localChar.dead);
+            //csv::TryLoadParam<bool>(Name, "Corrupted", &localChar.);
+        }
+        csv::CloseFile();
+        Printf("Dogan: %d; Dead: %u; Corrupted: %u\r", localChar.dogan, localChar.dead, 0);
+    }
+
     // Load KatetLinks
+    if(csv::OpenFile("KatetLinks.csv") == retvOk) {
+        Printf("KatetLinks.csv\r");
+        while(csv::ReadNextLine() == retvOk) {
+            char *Name, *p;
+            bool Value;
+            if(csv::GetNextToken(&Name) != retvOk) continue;
+            uint32_t i = strtoul(Name, &p, 0);
+            if(*p == '\0') {    // Conversion to number succeded, get value
+                if(csv::GetNextCell<bool>(&Value) == retvOk) {
+                    localChar.ka_tet_links.set(i, Value);
+                    Printf("%u = %u\r", i, Value);
+                }
+            }
+        } // while
+        csv::CloseFile();
+    }
+
     // Load counters
 
-    dispatcher.init(&infTable, &emoTable, &charTable, &localChar);
+//    dispatcher.init(&infTable, &emoTable, &charTable, &localChar);
+//    Printf("Dispatcher initialized\r");
 #endif
     // ==== Main cycle ====
     ITask();
 }
 
+#undef LOGIC_EN
 __noreturn
 void ITask() {
     while(true) {
@@ -168,11 +201,16 @@ void ITask() {
 
             case evtIdButtons:
                 Printf("Btn: %u %u\r", Msg.BtnEvtInfo.BtnID, Msg.BtnEvtInfo.Type);
+#ifdef LOGIC_EN
                 dispatcher.handle_button(Msg.BtnEvtInfo.BtnID, (Msg.BtnEvtInfo.Type == beLongPress));
+#endif
                 break;
 
             case evtIdEverySecond:
 //                Printf("Second\r");
+#ifdef LOGIC_EN
+                dispatcher.tick();
+#endif
                 break;
 
             case evtIdAdcRslt:
@@ -182,13 +220,17 @@ void ITask() {
 
             case evtIdNewRPkt:
                 Printf("RPkt: Inf=%u; Par=%u; RSSI=%d\r", Msg.b[0], Msg.b[1], (int8_t)Msg.b[2]);
+#ifdef LOGIC_EN
                 dispatcher.handle_radio_packet(Msg.b[0], Msg.b[1], (int8_t)Msg.b[2]);
+#endif
                 break;
 
 #if 1 // ======= Pill ======
             case evtIdPillConnected:
                 Printf("Pill: %d\r", ((Pill_t*)Msg.Ptr)->TypeInt32);
+#ifdef LOGIC_EN
                 dispatcher.handle_nfc_packet((uint8_t)((Pill_t*)Msg.Ptr)->TypeInt32);
+#endif
                 break;
             case evtIdPillDisconnected:
                 Printf("Pill Discon\r");
@@ -228,12 +270,9 @@ void OnCmd(Shell_t *PShell) {
 
 //    else if(PCmd->NameIs("GetBat")) { PShell->Printf("Battery: %u\r", Audio.GetBatteryVmv()); }
 
-    else if(PCmd->NameIs("R")) Lcd.Cls(clRed);
-    else if(PCmd->NameIs("G")) Lcd.Cls(clGreen);
-    else if(PCmd->NameIs("B")) Lcd.Cls(clBlue);
-    else if(PCmd->NameIs("p")) DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
-    else if(PCmd->NameIs("S")) Lcd.SetBounds(0,160, 0, 128);
-
+    else if(PCmd->NameIs("SS")) { SaveState(-4, true, false); PShell->Ack(retvOk); }
+    else if(PCmd->NameIs("SK")) { SaveKatet(&localChar.ka_tet_links); PShell->Ack(retvOk); }
+    else if(PCmd->NameIs("SC")) { SaveCounters(&localChar.ka_tet_counters); PShell->Ack(retvOk); }
 
     else PShell->Ack(retvCmdUnknown);
 }

@@ -216,4 +216,15 @@ static uint8_t GetNextCell(T *POutput) {
 
 uint8_t GetNextCell(float *POutput);
 
+template <typename T>
+static void TryLoadParam(char* Token, const char* Name, T *Ptr) {
+    if(strcasecmp(Token, Name) == 0) {
+        if(csv::GetNextCell<T>(Ptr) == retvOk) {
+//            if(*Ptr > MaxValue) *Ptr = MaxValue;
+//            Printf("  %S: %u\r", Name, *Ptr);
+        }
+        else Printf("%S load fail\r", Name);
+    }
+}
+
 } // namespace

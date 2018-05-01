@@ -7,6 +7,8 @@
 
 #include "bsp.h"
 #include "kl_fs_utils.h"
+#include "shell.h"
+#include "localcharacter.h"
 
 // General
 void Vibro(uint32_t Duration_ms) {}
@@ -29,11 +31,29 @@ void ScreenShowPicture(const char* AFilename) {}
 
 // Character
 void SaveState(int Dogan, bool Dead, bool Corrupted) {
+    Printf("%S\r", __FUNCTION__);
     if(TryOpenFileRewrite("State.csv", &CommonFile) == retvOk) {
+        f_printf(&CommonFile, "Dogan = %d\r\n", Dogan);
+        f_printf(&CommonFile, "Dead = %d\r\n", Dead);
+        f_printf(&CommonFile, "Corrupted = %d\r\n", Corrupted);
         CloseFile(&CommonFile);
     }
 }
-void SaveKatet(const KaTetLinks *links) {}
-void SaveCounters(const KaTetCounters *counters) {}
-
-
+void SaveKatet(const KaTetLinks *links) {
+    Printf("%S\r", __FUNCTION__);
+    if(TryOpenFileRewrite("KatetLinks.csv", &CommonFile) == retvOk) {
+        for(uint32_t i=0; i<links->SIZE; i++) {
+            f_printf(&CommonFile, "%u = %d\r\n", i, links->get(i));
+        }
+        CloseFile(&CommonFile);
+    }
+}
+void SaveCounters(const KaTetCounters *counters) {
+    Printf("%S\r", __FUNCTION__);
+    if(TryOpenFileRewrite("Counters.csv", &CommonFile) == retvOk) {
+        for(uint32_t i=0; i<counters->SIZE; i++) {
+            f_printf(&CommonFile, "%u = %u\r\n", i, counters[i]);
+        }
+        CloseFile(&CommonFile);
+    }
+}

@@ -267,6 +267,9 @@ void CloseFile() {
     f_close(&CommonFile);
 }
 
+/* Skips empty and comment lines (starting with #).
+ * Returns retvOk if not-a-comment line read, retvEndOfFile if eof
+ */
 uint8_t ReadNextLine() {
     // Move through file until comments end
     while(true) {
