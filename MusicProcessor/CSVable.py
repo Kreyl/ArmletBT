@@ -28,7 +28,7 @@ class CSVable(object):
 
     def _getFields(self): # generator
         if self.CSV_FIELDS is None:
-            return (field for field in self.__dict__ if field[0].islower() and not hasattr(field, '__call__') or field == self.READ_REST_KEY)
+            return (field for field in self.__dict__ if field[0].islower() and not hasattr(getattr(self, field), '__call__') or field == self.READ_REST_KEY)
         if isinstance(self.CSV_FIELDS, dict):
             return self.CSV_FIELDS.itervalues()
         return self.CSV_FIELDS # CSV_FIELDS is plane iterable
@@ -161,7 +161,7 @@ class CSVableParser(object):
             self._fieldNames = tuple(self._fieldNames) # pylint: disable=E0012,R0204
 
     def initFromObject(self, obj):
-        fields = tuple(sorted(field for field in obj.__dict__ if field[0].islower() and not hasattr(field, '__call__')))
+        fields = tuple(sorted(field for field in obj.__dict__ if field[0].islower() and not hasattr(getattr(obj, field), '__call__')))
         self.fieldsDict = dict(zip(fields, fields)) or None
         self._fieldNames = fields or None
 
