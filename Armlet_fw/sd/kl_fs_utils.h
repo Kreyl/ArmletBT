@@ -187,7 +187,7 @@ namespace csv { // =================== csv file operations =====================
  *
  * # this is comment
  * 14, 0x38, "DirName1"
- * 15, 0, "DirName2"
+ * Name = "Mr. First"
  * ...
  */
 
@@ -195,7 +195,7 @@ uint8_t OpenFile(const char *AFileName);
 void CloseFile();
 void RewindFile();
 uint8_t ReadNextLine();
-void GetNextCellString(char* POutput);
+uint8_t GetNextCellString(char* POutput);
 uint8_t GetNextToken(char** POutput);
 
 // Finds first cell with given name and puts pointer to next cell

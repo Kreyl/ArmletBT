@@ -290,7 +290,7 @@ uint8_t GetNextToken(char** POutput) {
     return (*POutput == '\0')? retvEmpty : retvOk;
 }
 
-void GetNextCellString(char* POutput) {
+uint8_t GetNextCellString(char* POutput) {
     char *Token;
     if(GetNextToken(&Token) == retvOk) {
         // Skip leading quotes
@@ -301,7 +301,9 @@ void GetNextCellString(char* POutput) {
         int32_t Len = EndP - StartP + 1;
         if(Len > 0) strncpy(POutput, StartP, Len);
         else *POutput = '\0';
+        return retvOk;
     }
+    else return retvFail;
 }
 
 uint8_t FindFirstCell(const char* Name) {

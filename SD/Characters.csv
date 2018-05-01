@@ -1,0 +1,67 @@
+#
+# Characters.csv for "Dark Tower: All Hail" LARP.
+#
+# Characters table for ArmLet initialization.
+#
+# Generated, updated from JoinRPG and used by CharacterProcessor.py
+# to track persistent unique character Reason IDs.
+#
+# !!! DO NOT EDIT !!!
+#
+# Generated at 2018-04-02 00:34:09
+#
+rID,shortName,isNY,isManni,dogan,kaTet,nAction,hasMusic
+128,JRight,0,0,2,,0,0
+129,CRandall,0,0,-2,,0,0
+130,RDias,0,0,-1,,0,0
+131,DRice,0,0,-2,,0,0
+132,AFlores,0,1,0,,0,0
+133,Isaak,0,0,0,Cordelia:Isaak:Ruth,0,0
+134,Cordelia,0,0,1,Cordelia:Isaak:Ruth,0,0
+135,SJames,1,0,0,,0,1
+136,FPibody,0,0,0,,0,0
+137,RHarris,0,0,0,,0,0
+138,KMurray,0,0,0,,0,0
+139,PSayer,0,0,-2,,0,0
+140,JKuroki,0,0,0,,0,0
+141,RRobin,0,0,2,,0,0
+142,ALaiden,0,0,0,,0,0
+143,CBendetsen,0,0,0,,0,0
+144,BKuroki,0,0,0,,0,0
+145,AHarmett,0,0,0,,0,0
+146,ASExupery,0,0,1,,0,0
+147,RParkinson1,0,0,0,,0,0
+148,JMcArthur,0,0,2,,0,0
+149,CTramunti,0,0,0,,0,0
+150,LEsposito,0,0,0,,0,0
+151,SCaracapa,0,0,-1,,0,0
+152,SKuroki,0,0,0,,0,0
+153,SGerraro,0,0,-1,,0,0
+154,MGerraro,0,0,1,,0,0
+155,RGerraro,0,0,0,,0,0
+156,EGerraro,0,0,0,,0,0
+157,GGerraro,0,0,0,,0,0
+158,GMorano,0,0,0,,0,0
+159,LMorano,0,0,-1,,0,0
+160,EMorano,0,0,0,,0,0
+161,AMorano,0,0,0,,0,0
+162,CMorano,0,0,0,,0,0
+163,AlMorano,0,0,1,,0,0
+164,Rob,0,0,-2,,0,0
+165,DJamison,0,0,0,,0,0
+166,SJamison,0,0,1,,0,0
+167,ESatton,0,0,0,,0,0
+168,DSatton,0,0,0,,0,0
+169,LSatton,0,0,0,,0,0
+170,RParkinson,0,0,1,,0,0
+171,WBray,0,0,0,,0,0
+172,HBray,0,0,0,,0,0
+173,BCassidy,0,0,0,BCassidy:SKing,0,0
+174,SWinch,0,0,1,DWinch:MParker:SWinch:Seven,0,0
+175,DWinch,0,0,1,DWinch:MParker:SWinch:Seven,0,0
+176,Ruth,0,1,1,Cordelia:Isaak:Ruth,0,0
+177,Seven,0,0,1,DWinch:MParker:SWinch:Seven,0,0
+178,SKing,0,0,1,BCassidy:SKing,0,1
+179,MParker,0,0,1,DWinch:MParker:SWinch:Seven,0,0
+180,Samantha,0,0,1,,0,0
+181,RMcCoy,0,0,1,,0,0

@@ -68,6 +68,7 @@ EmotionTable emoTable;
 InfluenceTable infTable;
 CharacterTable charTable;
 LocalCharacter localChar;
+char SelfName[36];
 
 #endif
 
@@ -111,7 +112,7 @@ int main() {
     Radio.Init();
 #endif
 
-#if 0 // ==== Logic init ====
+#if 1 // ==== Logic init ====
     // Open Emotions
     if(TryOpenFileRead("Emotions.csv", &CommonFile) == retvOk) {
         emoTable.init(&CommonFile, &csvTable);
@@ -127,11 +128,19 @@ int main() {
     else chSysHalt("No Reasons");
 
     // Get Person name
-    char CharName[] = "mr First"; // XXX
+    if(csv::OpenFile("SelfName.csv") == retvOk) {
+        if(csv::ReadNextLine() != retvOk) chSysHalt("Bad Name File1");
+        char *Name;
+        if(csv::GetNextToken(&Name) != retvOk) chSysHalt("Bad Name File2");
+        if(csv::GetNextCellString(SelfName) != retvOk) chSysHalt("Bad Name File3");
+        Printf("Self name: %S\r", SelfName);
+        csv::CloseFile();
+    }
+    else chSysHalt("No Name");
 
     // Character table
     if(TryOpenFileRead("Characters.csv", &CommonFile) == retvOk) {
-        charTable.init(&CommonFile, &csvTable, CharName, &localChar);
+        charTable.init(&CommonFile, &csvTable, SelfName, &localChar);
         CloseFile(&CommonFile);
     }
     else chSysHalt("No Characters");
