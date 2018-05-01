@@ -22,7 +22,7 @@
 // OS timer settings
 #define STM32_ST_IRQ_PRIORITY   2
 #define STM32_ST_USE_TIMER      5
-#define SYS_TIM_CLK             (Clk.APB1FreqHz)    // Timer 5 is clocked by APB1
+#define SYS_TIM_CLK             (Clk.GetTimInputFreq(TIM5))
 
 //  Periphery
 #define PILL_ENABLED            TRUE
@@ -77,6 +77,11 @@
 #define I2C2_GPIO       GPIOB
 #define I2C2_SCL        10
 #define I2C2_SDA        11
+
+// USB
+#define USB_DM          GPIOA, 11
+#define USB_DP          GPIOA, 12
+#define USB_AF          AF10
 
 // Radio: SPI, PGpio, Sck, Miso, Mosi, Cs, Gdo0
 #define CC_Setup0       SPI1, GPIOA, 5,6,7, 10, 4

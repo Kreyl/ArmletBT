@@ -22,8 +22,9 @@
 #include "pill_mgr.h"
 #include "dispatcher.h"
 #include "bsp.h"
+#include "usb_msd.h"
 
-#define LOGIC_EN
+//#define LOGIC_EN
 
 #if 1 // =============== Low level ================
 // Forever
@@ -75,8 +76,10 @@ char SelfName[36];
 int main() {
 #if 1 // Low level init
     // ==== Setup clock ====
+    Clk.UpdateFreqValues();
+//    Clk.SetCoreClk(cclk16MHz);
     Clk.SetCoreClk(cclk24MHz);
-//    Clk.SetCoreClk(cclk48MHz);
+    //Clk.SetCoreClk(cclk48MHz);
 
     // ==== Init OS ====
     halInit();
@@ -106,6 +109,7 @@ int main() {
 //    Vibra.StartOrRestart(vsqBrrBrr);
 
 //    Sound.Init();
+    UsbMsd.Init();
 
     TmrOneSecond.StartOrRestart();
 
@@ -215,6 +219,7 @@ __noreturn
 void ITask() {
     while(true) {
         EvtMsg_t Msg = EvtQMain.Fetch(TIME_INFINITE);
+//        Printf("Msg.ID %u\r", Msg.ID);
         switch(Msg.ID) {
             case evtIdShellCmd:
                 OnCmd((Shell_t*)Msg.Ptr);
@@ -262,10 +267,25 @@ void ITask() {
 #if 1 // ======= USB =======
             case evtIdUsbConnect:
                 Printf("USB connect\r");
+                Clk.SetupFlashLatency(48);
+                Clk.SetupBusDividers(ahbDiv1, apbDiv2, apbDiv2); // 48 MHz AHB, 24 MHz APB1, 24 MHz APB2
+                Clk.UpdateFreqValues();
+                Uart.OnClkChange();
+                Clk.PrintFreqs();
+                chThdSleepMilliseconds(270);
+                UsbMsd.Connect();
                 break;
             case evtIdUsbDisconnect:
+                UsbMsd.Disconnect();
+                Clk.SetupBusDividers(ahbDiv2, apbDiv1, apbDiv1); // 24 MHz AHB, 24 MHz APB1, 24 MHz APB2
+                Clk.UpdateFreqValues();
+//                Clk.SetupFlashLatency(Clk.AHBFreqHz/1000000);
+                Uart.OnClkChange();
                 Printf("USB disconnect\r");
-//                StateMachine(eventDisconnect);
+                Clk.PrintFreqs();
+                break;
+            case evtIdUsbReady:
+                Printf("USB ready\r");
                 break;
 #endif
 
@@ -275,10 +295,8 @@ void ITask() {
 }
 
 void ProcessUsbDetect(PinSnsState_t *PState, uint32_t Len) {
-    EvtMsg_t Msg;
-    if(*PState == pssRising) Msg.ID = evtIdUsbConnect;
-    else if(*PState == pssFalling) Msg.ID = evtIdUsbDisconnect;
-    EvtQMain.SendNowOrExit(Msg);
+    if(*PState == pssRising) EvtQMain.SendNowOrExit(EvtMsg_t(evtIdUsbConnect));
+    else if(*PState == pssFalling) EvtQMain.SendNowOrExit(EvtMsg_t(evtIdUsbDisconnect));
 }
 
 #if 1 // ======================= Command processing ============================

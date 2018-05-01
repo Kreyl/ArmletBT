@@ -1500,28 +1500,16 @@ public:
     void DisableHSI() { RCC->CR &= ~RCC_CR_HSION; }
     void DisablePLL() { RCC->CR &= ~RCC_CR_PLLON; }
     void EnableLsi();
+    bool IsHSEEnabled() { return (RCC->CR & RCC_CR_HSERDY); }
     // Dividers
     void SetupBusDividers(AHBDiv_t AHBDiv, APBDiv_t APB1Div, APBDiv_t APB2Div);
     uint8_t SetupPllMulDiv(uint8_t InputDiv_M, uint16_t Multi_N, PllSysDiv_P_t SysDiv_P, uint8_t UsbDiv_Q);
     void UpdateFreqValues();
     uint8_t SetupFlashLatency(uint8_t AHBClk_MHz, uint16_t Voltage_mV=3300);
+    uint32_t GetTimInputFreq(TIM_TypeDef* ITmr);
     // Disabling the prefetch buffer avoids extra Flash access that consumes 20 mA for 128-bit line fetching.
     void EnablePrefetch()  { FLASH->ACR |=  FLASH_ACR_PRFTEN; }
     void DisablePrefetch() { FLASH->ACR &= ~FLASH_ACR_PRFTEN; }
-    // Special frequencies
-    void SetFreq12Mhz() {
-        if(AHBFreqHz < 12000000) SetupFlashLatency(12); // Rise flash latency now if current freq > required
-        SetupBusDividers(ahbDiv4, apbDiv1, apbDiv1);
-        UpdateFreqValues();
-        SetupFlashLatency(AHBFreqHz/1000000);
-    }
-    void SetFreq48Mhz() {
-        if(AHBFreqHz < 48000000) SetupFlashLatency(48);     // Rise flash latency now if current freq > required
-//        SetupBusDividers(ahbDiv1, apbDiv2, apbDiv1);    // APB1: 30MHz max; APB2: 60MHz max
-        SetupBusDividers(ahbDiv1, apbDiv4, apbDiv4);    // Peripheral freqs stay the same
-        UpdateFreqValues();
-        SetupFlashLatency(AHBFreqHz/1000000);
-    }
 
     void PrintFreqs();
 
