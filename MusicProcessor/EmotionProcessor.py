@@ -18,8 +18,8 @@ from urllib2 import urlopen
 
 from CSVable import CSVable, CSVObjectReader
 from CharacterProcessor import updateCharacters
-from Settings import getFileName, SOURCE_ID_START
-from Structures import Source, Reason, Emotion
+from Settings import getFileName, REASON_ID_START, REASON_ID_END
+from Structures import Reason, Emotion
 
 isWindows = system().lower().startswith('win')
 
@@ -39,7 +39,7 @@ H_TARGET = join(C_PATH, 'emotions.h')
 TEST_COMMAND = 'gcc -I "%s" -o test "%s" test.c && ./test && rm test' % (C_PATH, C_TARGET)
 
 class GoogleTableEntry(CSVable):
-    CSV_FIELDS = ('rName', 'nSources', 'level', 'timeout', 'doganAmount', 'eName', 'eType', 'ePriority', 'contents')
+    CSV_FIELDS = ('rID', 'rName', 'nSources', 'level', 'timeout', 'doganAmount', 'eName', 'eType', 'ePriority', 'contents')
 
     REASON_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*|[A-Z][a-zA-Z]*')
     EMOTION_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*')
@@ -53,6 +53,12 @@ class GoogleTableEntry(CSVable):
         self.rName = self.rName.strip()
         if not self.rName:
             return
+        try:
+            self.rID = int(self.rID)
+        except ValueError:
+            assert False, "rID is not a number for reason %s: %r" % (self.rName, self.rID)
+        assert REASON_ID_START <= self.rID <= REASON_ID_END, "Incorrect rID for reason %s: %r, expected %s <= rID < %d" % (self.rName, self.rID, REASON_ID_START, REASON_ID_END)
+        assert self.rID not in (r.rID for r in Reason.INSTANCES.itervalues()), "Duplicate rID: %s" % self.rID
         try:
             self.rName = self.rName.encode('ascii')
         except UnicodeError:
@@ -76,7 +82,7 @@ class GoogleTableEntry(CSVable):
             self.timeout = int(self.timeout or 0)
         except ValueError:
             assert False, "Timeout is not a number for reason %s: %r" % (self.rName, self.timeout)
-        assert 0 <= self.timeout <= 600 or self.timeout == -1, "Bad timeout for reason %s: %r" % (self.rName, self.timeout)
+        assert 0 <= self.timeout <= 999 or self.timeout == -1, "Bad timeout for reason %s: %r" % (self.rName, self.timeout)
         # doganAmount
         try:
             self.doganAmount = int(self.doganAmount or 0)
@@ -111,7 +117,7 @@ class GoogleTableEntry(CSVable):
             emotion = Emotion.addEmotion(Emotion(self.eName, self.eType, self.ePriority, self.isPlayer))
         else:
             emotion = None
-        Reason.addReason(Reason(self.rName, self.nSources, self.level, self.timeout, self.doganAmount, self.eName))
+        Reason.addReason(Reason(self.rID, self.rName, self.nSources, self.level, self.timeout, self.doganAmount, self.eName))
 
     @classmethod
     def loadFromGoogleDocs(cls, dumpCSV = False, dumpCSV1251 = False):
@@ -147,28 +153,9 @@ class GoogleTableEntry(CSVable):
     @classmethod
     def processEmotions(cls):
         Reason.addCharacters(cls.CHARACTERS.itervalues())
-        Reason.addPlaceholders()
-        Reason.sort()
-        rID = 0
-        for reason in Reason.INSTANCES.itervalues():
-            if reason.rID is None:
-                reason.rID = rID
-                rID += 1
         Reason.sortByIDs()
-        assert tuple(reason.rID for reason in Reason.INSTANCES.itervalues()) == tuple(xrange(len(Reason.INSTANCES))), "Damaged rIDs table: %s" % Reason.INSTANCES
-        nSources = SOURCE_ID_START
-        Source.INSTANCES[:] = []
-        for reason in Reason.INSTANCES.itervalues():
-            newNSources = nSources + reason.nSources
-            for sID in xrange(nSources, newNSources):
-                Source.INSTANCES.append(Source(sID, reason.rName))
-            nSources = newNSources
         for (eID, emotion) in enumerate(Emotion.sort().itervalues()):
             emotion.eID = eID
-        assert len(Source.INSTANCES) == nSources - SOURCE_ID_START, "Reason table length mismatch: %d, expected %d" % (len(Source.INSTANCES), nSources)
-        assert tuple(source.sID for source in Source.INSTANCES) == tuple(xrange(SOURCE_ID_START, nSources)), "Damaged sIDs table: %s" % Source.INSTANCES
-        Source.dumpCSV()
-        print "Sources dumped: %d" % len(Source.INSTANCES)
         Reason.dumpCSV()
         print "Reasons dumped: %d" % len(Reason.INSTANCES)
         Reason.dumpCPP()

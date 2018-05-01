@@ -13,21 +13,10 @@
 #ifndef REASONS_H
 #define REASONS_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-{%extern int %(rName)s_ID;}
-
-#ifdef __cplusplus
-}
-#endif
-
-#ifdef __cplusplus
-#include "influencetable.h"
-
-void prepare_reasons(const InfluenceTable &table);
-#endif
+enum
+{
+{%    %(rName)s_ID = %(rID)d,}
+};
 
 #endif // ifdef REASONS_H
 

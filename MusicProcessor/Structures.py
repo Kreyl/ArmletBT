@@ -6,7 +6,7 @@ from collections import OrderedDict
 from re import compile as reCompile
 
 from CSVable import CSVfileable
-from Settings import currentTime, getFileName, CHARACTER_ID_START
+from Settings import currentTime, getFileName
 
 class CSVdumpable(CSVfileable):
     NEEDS_HEADER = True
@@ -53,36 +53,11 @@ Generated at %s
         with open(getFileName(target), 'wb') as f:
             f.write(result)
 
-class Source(CSVdumpable):
-    CSV_FIELDS = ('sID', 'rName')
-
-    C_NODE = ' /* %s */ { %s, %d, %d, %d },'
-    H_NODE = '#define REASON_%s%s %2d'
-    COMMENT = '/* %s */'
-    COMMENT_OFFSET = 40
-    INDENT = '    '
-
-    INSTANCES = []
-    TITLE = 'Sources'
-    HEADER_TITLE = 'Used to build Sources to Reasons (sID->rID) global map.'
-    GENERATOR = 'EmotionProcessor'
-
-    def __init__(self, sID, rName):
-        CSVdumpable.__init__(self)
-        self.sID = sID
-        self.rName = rName
-
-    def sortKey(self):
-        return self.sID
-
 class Reason(CSVdumpable):
     CSV_FIELDS = ('rID', 'rName', 'level', 'timeout', 'doganAmount', 'eID', 'eName')
 
     H_TARGET = 'reasons.h'
     H_TEMPLATE = 'reasons_h.tpl'
-
-    C_TARGET = 'reasons.cpp'
-    C_TEMPLATE = 'reasons_cpp.tpl'
 
     INSTANCES = OrderedDict()
     TITLE = 'Reasons'
@@ -93,11 +68,9 @@ class Reason(CSVdumpable):
 
     TOP_PRIORITY = 100
 
-    PLACEHOLDER_NAME = 'PLACEHOLDER_%02d'
-
-    def __init__(self, rName, nSources, level, timeout, doganAmount, eName):
+    def __init__(self, rID, rName, nSources, level, timeout, doganAmount, eName):
         CSVdumpable.__init__(self)
-        self.rID = None
+        self.rID = rID
         self.rName = rName
         self.nSources = nSources
         self.level = level
@@ -115,17 +88,9 @@ class Reason(CSVdumpable):
 
     @classmethod
     def addReason(cls, reason):
+        assert reason.rName not in cls.INSTANCES, "Duplicate rName: %s" % reason.rName
         cls.INSTANCES[reason.rName] = reason
         return reason
-
-    @classmethod
-    def addPlaceholders(cls):
-        start = sum(1 for reason in cls.INSTANCES.itervalues() if reason.rID is None)
-        assert start <= CHARACTER_ID_START
-        for rID in xrange(start, CHARACTER_ID_START):
-            reason = Reason(cls.PLACEHOLDER_NAME % rID, 0, 0, 0, 0, None)
-            reason.rID = rID
-            cls.addReason(reason)
 
     @classmethod
     def addCharacters(cls, characters):
@@ -133,15 +98,13 @@ class Reason(CSVdumpable):
             if character.shortName in cls.INSTANCES:
                 cls.INSTANCES[character.shortName].rID = character.rID
             else:
-                reason = Reason(character.shortName, 0, 0, 0, 0, None)
-                reason.rID = character.rID
+                reason = Reason(character.rID, character.shortName, 0, 0, 0, 0, None)
                 cls.addReason(reason)
 
     @classmethod
     def dumpCPP(cls):
         params = {'currentTime': currentTime()}
         cls.fillTemplate(cls.H_TEMPLATE, cls.H_TARGET, params)
-        cls.fillTemplate(cls.C_TEMPLATE, cls.C_TARGET, params)
 
 class Emotion(CSVdumpable):
     CSV_FIELDS = ('eID', 'eName', 'eType', 'ePriority', 'isPlayer')

@@ -8,207 +8,139 @@
  *
  * !!! DO NOT EDIT !!!
  *
- * Generated at 2018-04-04 15:46:18
+ * Generated at 2018-05-01 20:13:52
  */
 #ifndef REASONS_H
 #define REASONS_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-extern int BEAM_ID;
-extern int BEAM_CLOSE_ID;
-extern int BECOME_CORRUPTED_ID;
-extern int BECOME_CRIMSON_ID;
-extern int BECOME_CRIMSONISH_ID;
-extern int BECOME_CRIMSON_SERVANT_ID;
-extern int BECOME_NEUTRAL_ID;
-extern int BECOME_WHITE_ID;
-extern int BECOME_WHITE_MESSENGER_ID;
-extern int BECOME_WHITISH_ID;
-extern int BLESSED_PLACE_ID;
-extern int CRIMSON_BROADCAST1_ID;
-extern int CRIMSON_BROADCAST2_ID;
-extern int CRIMSON_BROADCAST3_ID;
-extern int CRIMSON_FEELING_ID;
-extern int CRIMSON_GRIEVE_ID;
-extern int CRIMSON_KING_SONG_ID;
-extern int CRIMSON_LAUGH_ID;
-extern int CRIMSON_PLACE_ID;
-extern int CRIMSON_SERVANT_ID;
-extern int CRIMSON_SERVANT_FEELING_ID;
-extern int DEATH_ID;
-extern int DESTROY_KATET_ID;
-extern int DOOR_ACTIVATED_ID;
-extern int DOOR_FAR_ID;
-extern int DOOR_FAR_MANNI_ID;
-extern int DOOR_LEFT_ID;
-extern int DOOR_NEAR_ID;
-extern int DOOR_NEAR_MANNI_ID;
-extern int EAGLE_ID;
-extern int FEAR_ID;
-extern int FEAR_PLACE_ID;
-extern int FORM_KATET_ID;
-extern int GERRARO_ID;
-extern int GUNSLINGER_FEELING_ID;
-extern int HYPNOSIS_ID;
-extern int INFLUENCE_AT_DOGAN_ID;
-extern int INN_ID;
-extern int KATET_NEAR_ID;
-extern int LION_ID;
-extern int MANNI_ID;
-extern int MASTERKA_ID;
-extern int MASTER_ALIVE_ID;
-extern int MASTER_CANCEL_CORRUPT_ID;
-extern int MASTER_CRIMSON_ID;
-extern int MASTER_WHITE_ID;
-extern int MORANO_ID;
-extern int NEUTRALIZE_ID;
-extern int PERSON_NEAR_ID;
-extern int REBOOT_ID;
-extern int RESET_ID;
-extern int ROSE_ID;
-extern int SHOW_DOGAN_STATE_ID;
-extern int SQUARE_ID;
-extern int THINNY_ID;
-extern int TIMELINE_GATHERING_ID;
-extern int TIMELINE_TRAIN_ID;
-extern int TIMELINE_TRAIN_ARRIVING_ID;
-extern int TOWNHOUSE_ID;
-extern int WHITE_FEELING_ID;
-extern int WHITE_JOY_ID;
-extern int WHITE_MESSENGER_ID;
-extern int WHITE_SORROW_ID;
-extern int PLACEHOLDER_63_ID;
-extern int PLACEHOLDER_64_ID;
-extern int PLACEHOLDER_65_ID;
-extern int PLACEHOLDER_66_ID;
-extern int PLACEHOLDER_67_ID;
-extern int PLACEHOLDER_68_ID;
-extern int PLACEHOLDER_69_ID;
-extern int PLACEHOLDER_70_ID;
-extern int PLACEHOLDER_71_ID;
-extern int PLACEHOLDER_72_ID;
-extern int PLACEHOLDER_73_ID;
-extern int PLACEHOLDER_74_ID;
-extern int PLACEHOLDER_75_ID;
-extern int PLACEHOLDER_76_ID;
-extern int PLACEHOLDER_77_ID;
-extern int PLACEHOLDER_78_ID;
-extern int PLACEHOLDER_79_ID;
-extern int PLACEHOLDER_80_ID;
-extern int PLACEHOLDER_81_ID;
-extern int PLACEHOLDER_82_ID;
-extern int PLACEHOLDER_83_ID;
-extern int PLACEHOLDER_84_ID;
-extern int PLACEHOLDER_85_ID;
-extern int PLACEHOLDER_86_ID;
-extern int PLACEHOLDER_87_ID;
-extern int PLACEHOLDER_88_ID;
-extern int PLACEHOLDER_89_ID;
-extern int PLACEHOLDER_90_ID;
-extern int PLACEHOLDER_91_ID;
-extern int PLACEHOLDER_92_ID;
-extern int PLACEHOLDER_93_ID;
-extern int PLACEHOLDER_94_ID;
-extern int PLACEHOLDER_95_ID;
-extern int PLACEHOLDER_96_ID;
-extern int PLACEHOLDER_97_ID;
-extern int PLACEHOLDER_98_ID;
-extern int PLACEHOLDER_99_ID;
-extern int PLACEHOLDER_100_ID;
-extern int PLACEHOLDER_101_ID;
-extern int PLACEHOLDER_102_ID;
-extern int PLACEHOLDER_103_ID;
-extern int PLACEHOLDER_104_ID;
-extern int PLACEHOLDER_105_ID;
-extern int PLACEHOLDER_106_ID;
-extern int PLACEHOLDER_107_ID;
-extern int PLACEHOLDER_108_ID;
-extern int PLACEHOLDER_109_ID;
-extern int PLACEHOLDER_110_ID;
-extern int PLACEHOLDER_111_ID;
-extern int PLACEHOLDER_112_ID;
-extern int PLACEHOLDER_113_ID;
-extern int PLACEHOLDER_114_ID;
-extern int PLACEHOLDER_115_ID;
-extern int PLACEHOLDER_116_ID;
-extern int PLACEHOLDER_117_ID;
-extern int PLACEHOLDER_118_ID;
-extern int PLACEHOLDER_119_ID;
-extern int PLACEHOLDER_120_ID;
-extern int PLACEHOLDER_121_ID;
-extern int PLACEHOLDER_122_ID;
-extern int PLACEHOLDER_123_ID;
-extern int PLACEHOLDER_124_ID;
-extern int PLACEHOLDER_125_ID;
-extern int PLACEHOLDER_126_ID;
-extern int PLACEHOLDER_127_ID;
-extern int JRight_ID;
-extern int CRandall_ID;
-extern int RDias_ID;
-extern int DRice_ID;
-extern int AFlores_ID;
-extern int Isaak_ID;
-extern int Cordelia_ID;
-extern int SJames_ID;
-extern int FPibody_ID;
-extern int RHarris_ID;
-extern int KMurray_ID;
-extern int PSayer_ID;
-extern int JKuroki_ID;
-extern int RRobin_ID;
-extern int ALaiden_ID;
-extern int CBendetsen_ID;
-extern int BKuroki_ID;
-extern int AHarmett_ID;
-extern int ASExupery_ID;
-extern int RParkinson1_ID;
-extern int JMcArthur_ID;
-extern int CTramunti_ID;
-extern int LEsposito_ID;
-extern int SCaracapa_ID;
-extern int SKuroki_ID;
-extern int SGerraro_ID;
-extern int MGerraro_ID;
-extern int RGerraro_ID;
-extern int EGerraro_ID;
-extern int GGerraro_ID;
-extern int GMorano_ID;
-extern int LMorano_ID;
-extern int EMorano_ID;
-extern int AMorano_ID;
-extern int CMorano_ID;
-extern int AlMorano_ID;
-extern int Rob_ID;
-extern int DJamison_ID;
-extern int SJamison_ID;
-extern int ESatton_ID;
-extern int DSatton_ID;
-extern int LSatton_ID;
-extern int RParkinson_ID;
-extern int WBray_ID;
-extern int HBray_ID;
-extern int BCassidy_ID;
-extern int SWinch_ID;
-extern int DWinch_ID;
-extern int Ruth_ID;
-extern int Seven_ID;
-extern int SKing_ID;
-extern int MParker_ID;
-extern int Samantha_ID;
-extern int RMcCoy_ID;
-
-#ifdef __cplusplus
-}
-#endif
-
-#ifdef __cplusplus
-#include "influencetable.h"
-
-void prepare_reasons(const InfluenceTable &table);
-#endif
+enum
+{
+    DOOR_ID = 1,
+    DOOR_VOICE_ID = 2,
+    BECOME_CRIMSON_ID = 3,
+    BECOME_CRIMSONISH_ID = 4,
+    BECOME_NEUTRAL_ID = 5,
+    BECOME_WHITISH_ID = 6,
+    BECOME_WHITE_ID = 7,
+    BECOME_CORRUPTED_ID = 8,
+    HYPNOSIS_ID = 9,
+    WHITE_BELIEVE_ID = 10,
+    CRIMSON_ANGER_ID = 11,
+    FORM_KATET_ID = 12,
+    DESTROY_KATET_ID = 13,
+    ARRIVING_ID = 14,
+    KATET_NEAR_ID = 15,
+    WHITE_MESSENGER_ID = 16,
+    ROSE_ID = 17,
+    CRIMSON_KING_SONG_ID = 18,
+    HOPE_ID = 19,
+    CRIMSON_SERVANT_ID = 20,
+    EAGLE_ID = 21,
+    LION_ID = 22,
+    BEAM_CLOSE_ID = 23,
+    BEAM_ID = 24,
+    CURSE_ID = 25,
+    HEAL_ID = 26,
+    HEAL_LONG_ID = 27,
+    CRIMSON_BROADCAST1_ID = 28,
+    CRIMSON_BROADCAST2_ID = 29,
+    CRIMSON_BROADCAST3_ID = 30,
+    CRIMSON_BROADCAST4_ID = 31,
+    TIMELINE_GATHERING_ID = 32,
+    TIMELINE_TRAIN_ARRIVING_ID = 33,
+    TIMELINE_TRAIN_ID = 34,
+    CRIMSON_SERVANT_FEELING_ID = 35,
+    GUNSLINGER_FEELING_ID = 36,
+    CRIMSON_FEELING_ID = 37,
+    CRIMSON_LAUGH_ID = 38,
+    WHITE_SORROW_ID = 39,
+    WHITE_FEELING_ID = 40,
+    WHITE_JOY_ID = 41,
+    CRIMSON_GRIEVE_ID = 42,
+    DOOR_NEAR_ID = 43,
+    DOOR_NEAR_MANNI_ID = 44,
+    DOOR_FAR_ID = 45,
+    DOOR_FAR_MANNI_ID = 46,
+    DAEMON_ID = 47,
+    THINNY_ID = 48,
+    BLESSED_PLACE_ID = 49,
+    FEAR_PLACE_ID = 50,
+    FEAR_ID = 51,
+    CRIMSON_PLACE_ID = 52,
+    INN_ID = 53,
+    MANNI_ID = 54,
+    GERRARO_ID = 55,
+    MORANO_ID = 56,
+    MASTERKA_ID = 57,
+    DEATH_ID = 58,
+    BOOT_ID = 59,
+    REBOOT_ID = 60,
+    RESET_ID = 61,
+    PERSON_NEAR_ID = 62,
+    MASTER_CRIMSON_ID = 63,
+    MASTER_WHITE_ID = 64,
+    MASTER_ALIVE_ID = 65,
+    MASTER_CANCEL_CORRUPT_ID = 66,
+    SHOW_DOGAN_STATE_ID = 67,
+    BECOME_CRIMSON_SERVANT_ID = 68,
+    NEUTRALIZE_ID = 69,
+    BECOME_WHITE_MESSENGER_ID = 70,
+    JRight_ID = 128,
+    CRandall_ID = 129,
+    RDias_ID = 130,
+    DRice_ID = 131,
+    Brody_ID = 132,
+    AFlores_ID = 133,
+    Isaak_ID = 134,
+    Cordelia_ID = 135,
+    SJames_ID = 136,
+    FPibody_ID = 137,
+    RHarris_ID = 138,
+    KMurray_ID = 139,
+    PSayer_ID = 140,
+    JKuroki_ID = 141,
+    RRobin_ID = 142,
+    LMally_ID = 143,
+    ALaiden_ID = 144,
+    CBendetsen_ID = 145,
+    BKuroki_ID = 146,
+    AHarmett_ID = 147,
+    ASExupery_ID = 148,
+    RParkinson1_ID = 149,
+    JMcArthur_ID = 150,
+    CTramunti_ID = 151,
+    LEsposito_ID = 152,
+    SCaracapa_ID = 153,
+    SKuroki_ID = 154,
+    SGerraro_ID = 155,
+    MGerraro_ID = 156,
+    RGerraro_ID = 157,
+    EGerraro_ID = 158,
+    GGerraro_ID = 159,
+    GMorano_ID = 160,
+    LMorano_ID = 161,
+    EMorano_ID = 162,
+    AMorano_ID = 163,
+    CMorano_ID = 164,
+    DJamison_ID = 165,
+    SJamison_ID = 166,
+    ESatton_ID = 167,
+    DSatton_ID = 168,
+    LSatton_ID = 169,
+    RParkinson_ID = 170,
+    WBray_ID = 171,
+    HBray_ID = 172,
+    BCassidy_ID = 173,
+    SWinch_ID = 174,
+    DWinch_ID = 175,
+    Ruth_ID = 176,
+    Seven_ID = 177,
+    SKing_ID = 178,
+    MParker_ID = 179,
+    Samantha_ID = 180,
+    RMcCoy_ID = 181,
+    JPiters_ID = 182,
+};
 
 #endif // ifdef REASONS_H
 

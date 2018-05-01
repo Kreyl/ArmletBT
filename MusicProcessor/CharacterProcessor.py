@@ -42,7 +42,7 @@ class CharacterError(Exception):
     pass
 
 class CharacterCSVable(CSVdumpable):
-    CSV_FIELDS = ('rID', 'shortName', 'isNY', 'isManni', 'dogan', 'kaTet', 'nAction', 'hasMusic')
+    CSV_FIELDS = ('rID', 'shortName', 'isNY', 'isManni', 'dogan', 'kaTet', 'nAction', 'isDead', 'hasMusic')
 
     KEY_FUNCTION = lambda character: character.shortName
 
@@ -52,6 +52,7 @@ class CharacterCSVable(CSVdumpable):
             ('dogan', u'Внутренний Доган'),
             ('kaTet', u'Связи ка-тета'),
             ('nAction', u'Стартовое число очков действия'),
+            ('isDead', u'Мёртв?'),
             ('hasMusic', u'Музыка прислана?')))
 
     DOGAN = OrderedDict(((u'Служба Алому Королю', -2), (u'Алое Колебание', -1), (u'Нейтралитет', 0), (u'Белое Колебание', 1), (u'Путь Белизны', 2)))
@@ -100,6 +101,7 @@ class CharacterCSVable(CSVdumpable):
         assert self.dogan in self.DOGAN.itervalues(), "Bad dogan value: %s, expected %s" % (self.dogan, '/'.join(str(v) for v in self.DOGAN.itervalues()))
         assert not self.kaTet or all(name.isalpha() for name in self.getKaTet()), "Bad ka-tet value: %s" % self.kaTet
         assert self.nAction >= 0, "Bad nAction value: %d" % self.nAction
+        assert self.isDead in (0, 1), "Bas isDead value: %d" % self.isDead
         assert self.hasMusic in self.HAS_MUSIC.itervalues(), "Bad hasMusic value: %s, expected %s" % (self.dogan, '/'.join(str(v) for v in self.HAS_MUSIC.itervalues()))
 
     def validateLinks(self):
@@ -128,6 +130,7 @@ class CharacterCSVable(CSVdumpable):
         self.isNY = int(self.isNY)
         self.dogan = int(self.dogan)
         self.nAction = int(self.nAction)
+        self.isDead = int(self.isDead)
         self.hasMusic = int(self.hasMusic)
         self.validate()
         self.integrate()
@@ -145,6 +148,7 @@ class CharacterCSVable(CSVdumpable):
         self.processNames()
         self.rID = None
         self.isManni = int(bool((self.isManni or '').strip()))
+        self.isDead = int(bool((self.isDead or '').strip()))
         self.isNY = int(u'Нью-Йорк' in jCharacter.groupNames)
         try:
             self.dogan = self.DOGAN[self.dogan.strip()] # pylint: disable=E1101
@@ -218,7 +222,6 @@ class CharacterCSVable(CSVdumpable):
         except Exception, e:
             print format_exc()
             print "ERROR fetching data: %s, using cached version" % unicode(e)
-            return ()
 
     @classmethod
     def update(cls):
