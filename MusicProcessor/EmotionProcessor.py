@@ -153,28 +153,9 @@ class GoogleTableEntry(CSVable):
     @classmethod
     def processEmotions(cls):
         Reason.addCharacters(cls.CHARACTERS.itervalues())
-        #Reason.addPlaceholders()
-        Reason.sort()
-        # rID = 0
-        # for reason in Reason.INSTANCES.itervalues():
-        #     if reason.rID is None:
-        #         reason.rID = rID
-        #         rID += 1
         Reason.sortByIDs()
-        #assert tuple(reason.rID for reason in Reason.INSTANCES.itervalues()) == tuple(xrange(len(Reason.INSTANCES))), "Damaged rIDs table: %s" % Reason.INSTANCES
-        #nSources = 0
-        #Source.INSTANCES[:] = []
-        # for reason in Reason.INSTANCES.itervalues():
-        #     newNSources = nSources + reason.nSources
-        #     for sID in xrange(nSources, newNSources):
-        #         Source.INSTANCES.append(Source(sID, reason.rName))
-        #     nSources = newNSources
         for (eID, emotion) in enumerate(Emotion.sort().itervalues()):
             emotion.eID = eID
-        #assert len(Source.INSTANCES) == nSources - SOURCE_ID_START, "Reason table length mismatch: %d, expected %d" % (len(Source.INSTANCES), nSources)
-        #assert tuple(source.sID for source in Source.INSTANCES) == tuple(xrange(SOURCE_ID_START, nSources)), "Damaged sIDs table: %s" % Source.INSTANCES
-        #Source.dumpCSV()
-        #print "Sources dumped: %d" % len(Source.INSTANCES)
         Reason.dumpCSV()
         print "Reasons dumped: %d" % len(Reason.INSTANCES)
         Reason.dumpCPP()
