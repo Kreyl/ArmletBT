@@ -238,7 +238,7 @@ uint8_t cc1101_t::ReadFIFO(void *Ptr, int8_t *PRssi, uint8_t Len) {
     uint8_t b, *p = (uint8_t*)Ptr;
      // Check if received successfully
      if(ReadRegister(CC_PKTSTATUS, &b) != retvOk) return retvFail;
-     //    Printf("St: %X  ", b);
+//     Printf("St: %X  ", b);
      if(b & 0x80) {  // CRC OK
          // Read FIFO
          CsLo();                    // Start transmission
@@ -250,7 +250,6 @@ uint8_t cc1101_t::ReadFIFO(void *Ptr, int8_t *PRssi, uint8_t Len) {
          for(uint8_t i=0; i<Len; i++) { // Read bytes
              b = ISpi.ReadWriteByte(0);
              *p++ = b;
-             // Uart.Printf(" %X", b);
          }
          // Receive two additional info bytes
          b = ISpi.ReadWriteByte(0); // RSSI
