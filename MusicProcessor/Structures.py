@@ -6,7 +6,7 @@ from collections import OrderedDict
 from re import compile as reCompile
 
 from CSVable import CSVfileable
-from Settings import currentTime, getFileName, CHARACTER_ID_START
+from Settings import currentTime, getFileName
 
 class CSVdumpable(CSVfileable):
     NEEDS_HEADER = True
@@ -93,11 +93,11 @@ class Reason(CSVdumpable):
 
     TOP_PRIORITY = 100
 
-    PLACEHOLDER_NAME = 'PLACEHOLDER_%02d'
+    #PLACEHOLDER_NAME = 'PLACEHOLDER_%02d'
 
-    def __init__(self, rName, nSources, level, timeout, doganAmount, eName):
+    def __init__(self, rID, rName, nSources, level, timeout, doganAmount, eName):
         CSVdumpable.__init__(self)
-        self.rID = None
+        self.rID = rID
         self.rName = rName
         self.nSources = nSources
         self.level = level
@@ -118,14 +118,14 @@ class Reason(CSVdumpable):
         cls.INSTANCES[reason.rName] = reason
         return reason
 
-    @classmethod
-    def addPlaceholders(cls):
-        start = sum(1 for reason in cls.INSTANCES.itervalues() if reason.rID is None)
-        assert start <= CHARACTER_ID_START
-        for rID in xrange(start, CHARACTER_ID_START):
-            reason = Reason(cls.PLACEHOLDER_NAME % rID, 0, 0, 0, 0, None)
-            reason.rID = rID
-            cls.addReason(reason)
+    #@classmethod
+    #def addPlaceholders(cls):
+    #    start = sum(1 for reason in cls.INSTANCES.itervalues() if reason.rID is None)
+    #    assert start <= CHARACTER_ID_START
+    #    for rID in xrange(start, CHARACTER_ID_START):
+    #        reason = Reason(cls.PLACEHOLDER_NAME % rID, 0, 0, 0, 0, None)
+    #        reason.rID = rID
+    #        cls.addReason(reason)
 
     @classmethod
     def addCharacters(cls, characters):
@@ -133,8 +133,7 @@ class Reason(CSVdumpable):
             if character.shortName in cls.INSTANCES:
                 cls.INSTANCES[character.shortName].rID = character.rID
             else:
-                reason = Reason(character.shortName, 0, 0, 0, 0, None)
-                reason.rID = character.rID
+                reason = Reason(character.rID, character.shortName, 0, 0, 0, 0, None)
                 cls.addReason(reason)
 
     @classmethod
