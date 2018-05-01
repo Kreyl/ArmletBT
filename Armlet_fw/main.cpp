@@ -172,12 +172,14 @@ void ITask() {
                 break;
 
             case evtIdNewRPkt:
-                Printf("RPkt: Inf=%u; Par=%u\r", Msg.ValueID, Msg.Value);
+                Printf("RPkt: Inf=%u; Par=%u; RSSI=%d\r", Msg.b[0], Msg.b[1], (int8_t)Msg.b[2]);
+                dispatcher.handle_radio_packet(Msg.b[0], Msg.b[1], (int8_t)Msg.b[2]);
                 break;
 
 #if 1 // ======= Pill ======
             case evtIdPillConnected:
                 Printf("Pill: %d\r", ((Pill_t*)Msg.Ptr)->TypeInt32);
+                dispatcher.handle_nfc_packet((uint8_t)((Pill_t*)Msg.Ptr)->TypeInt32);
                 break;
             case evtIdPillDisconnected:
                 Printf("Pill Discon\r");

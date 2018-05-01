@@ -140,10 +140,14 @@ void rLevel1_t::ITask() {
             case rmsgPktRx:
                 CCState = ccstIdle;
                 if(CC.ReadFIFO(&PktRx, &Rssi, RPKT_LEN) == retvOk) {  // if pkt successfully received
-                    Printf("Rssi %d; ", Rssi);
-                    PktRx.Print();
+//                    Printf("Rssi %d; ", Rssi);
+//                    PktRx.Print();
                     RadioTime.Adjust();
-                    EvtQMain.SendNowOrExit(EvtMsg_t(evtIdNewRPkt, PktRx.Influence, PktRx.Param));
+                    EvtMsg_t Msg(evtIdNewRPkt);
+                    Msg.b[0] = PktRx.Influence;
+                    Msg.b[1] = PktRx.Param;
+                    Msg.b[2] = (uint8_t)Rssi;
+                    EvtQMain.SendNowOrExit(Msg);
                 }
                 break;
 
