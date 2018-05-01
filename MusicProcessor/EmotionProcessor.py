@@ -19,7 +19,7 @@ from urllib2 import urlopen
 from CSVable import CSVable, CSVObjectReader
 from CharacterProcessor import updateCharacters
 from Settings import getFileName, REASON_ID_START, REASON_ID_END
-from Structures import Source, Reason, Emotion
+from Structures import Reason, Emotion
 
 isWindows = system().lower().startswith('win')
 
@@ -58,6 +58,7 @@ class GoogleTableEntry(CSVable):
         except ValueError:
             assert False, "rID is not a number for reason %s: %r" % (self.rName, self.rID)
         assert REASON_ID_START <= self.rID <= REASON_ID_END, "Incorrect rID for reason %s: %r, expected %s <= rID < %d" % (self.rName, self.rID, REASON_ID_START, REASON_ID_END)
+        assert self.rID not in (r.rID for r in Reason.INSTANCES.itervalues()), "Duplicate rID: %s" % self.rID
         try:
             self.rName = self.rName.encode('ascii')
         except UnicodeError:
@@ -154,20 +155,20 @@ class GoogleTableEntry(CSVable):
         Reason.addCharacters(cls.CHARACTERS.itervalues())
         #Reason.addPlaceholders()
         Reason.sort()
-        rID = 0
-        for reason in Reason.INSTANCES.itervalues():
-            if reason.rID is None:
-                reason.rID = rID
-                rID += 1
+        # rID = 0
+        # for reason in Reason.INSTANCES.itervalues():
+        #     if reason.rID is None:
+        #         reason.rID = rID
+        #         rID += 1
         Reason.sortByIDs()
         #assert tuple(reason.rID for reason in Reason.INSTANCES.itervalues()) == tuple(xrange(len(Reason.INSTANCES))), "Damaged rIDs table: %s" % Reason.INSTANCES
-        nSources = 0
+        #nSources = 0
         #Source.INSTANCES[:] = []
-        for reason in Reason.INSTANCES.itervalues():
-            newNSources = nSources + reason.nSources
-            for sID in xrange(nSources, newNSources):
-                Source.INSTANCES.append(Source(sID, reason.rName))
-            nSources = newNSources
+        # for reason in Reason.INSTANCES.itervalues():
+        #     newNSources = nSources + reason.nSources
+        #     for sID in xrange(nSources, newNSources):
+        #         Source.INSTANCES.append(Source(sID, reason.rName))
+        #     nSources = newNSources
         for (eID, emotion) in enumerate(Emotion.sort().itervalues()):
             emotion.eID = eID
         #assert len(Source.INSTANCES) == nSources - SOURCE_ID_START, "Reason table length mismatch: %d, expected %d" % (len(Source.INSTANCES), nSources)
