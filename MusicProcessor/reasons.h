@@ -8,7 +8,7 @@
  *
  * !!! DO NOT EDIT !!!
  *
- * Generated at 2018-05-01 19:10:55
+ * Generated at 2018-05-01 19:46:33
  */
 #ifndef REASONS_H
 #define REASONS_H
@@ -83,64 +83,6 @@ static const int WHITE_FEELING_ID = 66;
 static const int WHITE_JOY_ID = 67;
 static const int WHITE_MESSENGER_ID = 68;
 static const int WHITE_SORROW_ID = 69;
-static const int PLACEHOLDER_70_ID = 70;
-static const int PLACEHOLDER_71_ID = 71;
-static const int PLACEHOLDER_72_ID = 72;
-static const int PLACEHOLDER_73_ID = 73;
-static const int PLACEHOLDER_74_ID = 74;
-static const int PLACEHOLDER_75_ID = 75;
-static const int PLACEHOLDER_76_ID = 76;
-static const int PLACEHOLDER_77_ID = 77;
-static const int PLACEHOLDER_78_ID = 78;
-static const int PLACEHOLDER_79_ID = 79;
-static const int PLACEHOLDER_80_ID = 80;
-static const int PLACEHOLDER_81_ID = 81;
-static const int PLACEHOLDER_82_ID = 82;
-static const int PLACEHOLDER_83_ID = 83;
-static const int PLACEHOLDER_84_ID = 84;
-static const int PLACEHOLDER_85_ID = 85;
-static const int PLACEHOLDER_86_ID = 86;
-static const int PLACEHOLDER_87_ID = 87;
-static const int PLACEHOLDER_88_ID = 88;
-static const int PLACEHOLDER_89_ID = 89;
-static const int PLACEHOLDER_90_ID = 90;
-static const int PLACEHOLDER_91_ID = 91;
-static const int PLACEHOLDER_92_ID = 92;
-static const int PLACEHOLDER_93_ID = 93;
-static const int PLACEHOLDER_94_ID = 94;
-static const int PLACEHOLDER_95_ID = 95;
-static const int PLACEHOLDER_96_ID = 96;
-static const int PLACEHOLDER_97_ID = 97;
-static const int PLACEHOLDER_98_ID = 98;
-static const int PLACEHOLDER_99_ID = 99;
-static const int PLACEHOLDER_100_ID = 100;
-static const int PLACEHOLDER_101_ID = 101;
-static const int PLACEHOLDER_102_ID = 102;
-static const int PLACEHOLDER_103_ID = 103;
-static const int PLACEHOLDER_104_ID = 104;
-static const int PLACEHOLDER_105_ID = 105;
-static const int PLACEHOLDER_106_ID = 106;
-static const int PLACEHOLDER_107_ID = 107;
-static const int PLACEHOLDER_108_ID = 108;
-static const int PLACEHOLDER_109_ID = 109;
-static const int PLACEHOLDER_110_ID = 110;
-static const int PLACEHOLDER_111_ID = 111;
-static const int PLACEHOLDER_112_ID = 112;
-static const int PLACEHOLDER_113_ID = 113;
-static const int PLACEHOLDER_114_ID = 114;
-static const int PLACEHOLDER_115_ID = 115;
-static const int PLACEHOLDER_116_ID = 116;
-static const int PLACEHOLDER_117_ID = 117;
-static const int PLACEHOLDER_118_ID = 118;
-static const int PLACEHOLDER_119_ID = 119;
-static const int PLACEHOLDER_120_ID = 120;
-static const int PLACEHOLDER_121_ID = 121;
-static const int PLACEHOLDER_122_ID = 122;
-static const int PLACEHOLDER_123_ID = 123;
-static const int PLACEHOLDER_124_ID = 124;
-static const int PLACEHOLDER_125_ID = 125;
-static const int PLACEHOLDER_126_ID = 126;
-static const int PLACEHOLDER_127_ID = 127;
 static const int JRight_ID = 128;
 static const int CRandall_ID = 129;
 static const int RDias_ID = 130;

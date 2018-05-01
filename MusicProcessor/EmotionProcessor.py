@@ -147,7 +147,7 @@ class GoogleTableEntry(CSVable):
     @classmethod
     def processEmotions(cls):
         Reason.addCharacters(cls.CHARACTERS.itervalues())
-        Reason.addPlaceholders()
+        #Reason.addPlaceholders()
         Reason.sort()
         rID = 0
         for reason in Reason.INSTANCES.itervalues():
@@ -155,7 +155,7 @@ class GoogleTableEntry(CSVable):
                 reason.rID = rID
                 rID += 1
         Reason.sortByIDs()
-        assert tuple(reason.rID for reason in Reason.INSTANCES.itervalues()) == tuple(xrange(len(Reason.INSTANCES))), "Damaged rIDs table: %s" % Reason.INSTANCES
+        #assert tuple(reason.rID for reason in Reason.INSTANCES.itervalues()) == tuple(xrange(len(Reason.INSTANCES))), "Damaged rIDs table: %s" % Reason.INSTANCES
         nSources = SOURCE_ID_START
         Source.INSTANCES[:] = []
         for reason in Reason.INSTANCES.itervalues():

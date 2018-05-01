@@ -8,12 +8,12 @@
 #
 # !!! DO NOT EDIT !!!
 #
-# Generated at 2018-05-01 18:36:32
+# Generated at 2018-05-01 19:46:09
 #
 rID,shortName,isNY,isManni,dogan,kaTet,nAction,isDead,hasMusic
 128,JRight,0,0,2,,0,0,0
 129,CRandall,0,0,-2,,0,0,0
-130,RDias,0,0,-1,,0,0,0
+130,RDias,0,0,-1,,0,0,1
 131,DRice,0,0,-2,,0,0,0
 132,Brody,0,0,-1,,0,0,1
 133,AFlores,0,1,0,,0,0,0
@@ -38,7 +38,7 @@ rID,shortName,isNY,isManni,dogan,kaTet,nAction,isDead,hasMusic
 152,LEsposito,0,0,0,,0,0,0
 153,SCaracapa,0,0,-1,,0,0,0
 154,SKuroki,0,0,0,,0,0,0
-155,SGerraro,0,0,-1,,0,0,0
+155,SGerraro,0,0,-1,,0,0,1
 156,MGerraro,0,0,-1,,0,0,0
 157,RGerraro,0,0,0,,0,0,0
 158,EGerraro,0,0,0,,0,0,0
@@ -60,7 +60,7 @@ rID,shortName,isNY,isManni,dogan,kaTet,nAction,isDead,hasMusic
 174,SWinch,0,0,1,DWinch:MParker:SWinch:Seven,0,0,0
 175,DWinch,0,0,1,DWinch:MParker:SWinch:Seven,0,0,0
 176,Ruth,0,1,1,Cordelia:Isaak:Ruth,0,0,0
-177,Seven,0,0,1,DWinch:MParker:SWinch:Seven,0,0,0
+177,Seven,0,0,1,DWinch:MParker:SWinch:Seven,0,0,1
 178,SKing,0,0,1,BCassidy:SKing,0,0,1
 179,MParker,0,0,1,DWinch:MParker:SWinch:Seven,0,0,0
 180,Samantha,0,0,1,,0,0,0
