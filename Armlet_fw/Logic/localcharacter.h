@@ -98,6 +98,7 @@ struct LocalCharacter
     KaTetLinks ka_tet_links;
     KaTetCounters ka_tet_counters;
     int dogan;
-    bool manni;
+    bool corrupted;
     bool dead;
+    bool manni;
 };

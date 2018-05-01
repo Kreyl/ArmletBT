@@ -103,7 +103,7 @@
 #define PRINTF_FLOAT_EN FALSE
 #define CMD_UART        USART2
 #define UART_USE_INDEPENDENT_CLK    TRUE
-#define UART_TXBUF_SZ   1024
+#define UART_TXBUF_SZ   2048
 #endif
 
 #if I2C2_ENABLED // ====================== I2C ================================

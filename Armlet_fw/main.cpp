@@ -34,7 +34,7 @@ void ITask();
 
 uint8_t Status;
 uint16_t ID = 7;
-uint8_t Influence = ID + 128;
+uint8_t Influence = 16;//ID + 128;
 
 Beeper_t Beeper(BEEPER_PIN);
 Vibro_t Vibra(VIBRO_PIN);
@@ -148,6 +148,10 @@ int main() {
     }
     else chSysHalt("No Characters");
 
+    // Get ID
+    ID = localChar.id;
+    Influence = localChar.id + CharacterTable::FIRST_CHARACTER;
+
     // Load State: Dogan, Dead, Corrupted
     if(csv::OpenFile("State.csv") == retvOk) {
         while(csv::ReadNextLine() == retvOk) {
@@ -155,7 +159,7 @@ int main() {
             if(csv::GetNextToken(&Name) != retvOk) continue;
             csv::TryLoadParam<int>(Name, "Dogan", &localChar.dogan);
             csv::TryLoadParam<bool>(Name, "Dead", &localChar.dead);
-            //csv::TryLoadParam<bool>(Name, "Corrupted", &localChar.);
+            csv::TryLoadParam<bool>(Name, "Corrupted", &localChar.corrupted);
         }
         csv::CloseFile();
         Printf("Dogan: %d; Dead: %u; Corrupted: %u\r", localChar.dogan, localChar.dead, 0);
@@ -172,23 +176,41 @@ int main() {
             if(*p == '\0') {    // Conversion to number succeded, get value
                 if(csv::GetNextCell<bool>(&Value) == retvOk) {
                     localChar.ka_tet_links.set(i, Value);
-                    Printf("%u = %u\r", i, Value);
+//                    Printf("%u = %u\r", i, Value);
                 }
             }
         } // while
         csv::CloseFile();
+        Printf("KatetLinks loaded\r");
     }
 
     // Load counters
+    if(csv::OpenFile("Counters.csv") == retvOk) {
+        Printf("Counters.csv\r");
+        while(csv::ReadNextLine() == retvOk) {
+            char *Name, *p;
+            uint16_t Value;
+            if(csv::GetNextToken(&Name) != retvOk) continue;
+            uint32_t i = strtoul(Name, &p, 0);
+            if(*p == '\0') {    // Conversion to number succeded, get value
+                if(csv::GetNextCell<uint16_t>(&Value) == retvOk) {
+                    localChar.ka_tet_counters[i] = Value;
+//                    Printf("%u = %u\r", i, Value);
+                }
+            }
+        } // while
+        csv::CloseFile();
+        Printf("Counters loaded\r");
+    }
 
-//    dispatcher.init(&infTable, &emoTable, &charTable, &localChar);
-//    Printf("Dispatcher initialized\r");
+    dispatcher.init(&infTable, &emoTable, &charTable, &localChar);
+    Printf("Dispatcher initialized\r");
 #endif
     // ==== Main cycle ====
     ITask();
 }
 
-#undef LOGIC_EN
+//#undef LOGIC_EN
 __noreturn
 void ITask() {
     while(true) {
@@ -273,6 +295,11 @@ void OnCmd(Shell_t *PShell) {
     else if(PCmd->NameIs("SS")) { SaveState(-4, true, false); PShell->Ack(retvOk); }
     else if(PCmd->NameIs("SK")) { SaveKatet(&localChar.ka_tet_links); PShell->Ack(retvOk); }
     else if(PCmd->NameIs("SC")) { SaveCounters(&localChar.ka_tet_counters); PShell->Ack(retvOk); }
+
+    else if(PCmd->NameIs("GetC")) {
+        for(uint32_t i=0; i<KaTetCounters::SIZE; i++)
+            Printf("cnt %u = %u\r", i, localChar.ka_tet_counters[i]);
+    }
 
     else PShell->Ack(retvCmdUnknown);
 }
