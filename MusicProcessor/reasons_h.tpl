@@ -13,7 +13,10 @@
 #ifndef REASONS_H
 #define REASONS_H
 
-{%static const int %(rName)s_ID = %(rID)d;}
+enum
+{
+{%    %(rName)s_ID = %(rID)d,}
+};
 
 #endif // ifdef REASONS_H
 
