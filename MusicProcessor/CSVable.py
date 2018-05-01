@@ -94,7 +94,7 @@ class CSVfileable(CSVable):
         return tuple(self._getFieldsValues())
 
     @classmethod
-    def loadCSV(cls, fileName = None, useHeader = None, encoding = None, handleComments = None, keyFunction = None, *args, **kwargs):
+    def loadCSV(cls, fileName = None, useHeader = None, encoding = None, handleComments = None, keyFunction = None, *args, **kwargs): # pylint: disable=W1113
         """Loads instances of this class from a CSV file."""
         if fileName is None:
             fileName = cls.getFileName()
@@ -109,7 +109,7 @@ class CSVfileable(CSVable):
         cls.INSTANCES = OrderedDict() if keyFunction else []
         if not isfile(fileName):
             print "No file found"
-            return ()
+            return
         with open(fileName, 'rb') as f:
             for obj in CSVObjectReader(f, cls, useHeader, encoding, handleComments, *args, **kwargs):
                 if isinstance(cls.INSTANCES, list):
@@ -118,7 +118,7 @@ class CSVfileable(CSVable):
                     cls.INSTANCES[keyFunction(obj)] = obj
 
     @classmethod
-    def dumpCSV(cls, instances = None, fileName = None, writeHeader = None, encoding = None, headerComment = None, *args, **kwargs):
+    def dumpCSV(cls, instances = None, fileName = None, writeHeader = None, encoding = None, headerComment = None, *args, **kwargs): # pylint: disable=W1113
         """Dumps instances of this class to a CSV file."""
         if instances is None:
             instances = cls.getInstances()
@@ -188,7 +188,7 @@ class CSVableParser(object):
 class CSVObjectReader(CSVableParser, DictReader):
     """CSV reader that reads rows from a CSV file and returns them as CSVable objects."""
 
-    def __init__(self, csvFile, csvAbleClass = CSVable, useHeader = False, encoding = None, handleComments = False, *args, **kwargs):
+    def __init__(self, csvFile, csvAbleClass = CSVable, useHeader = False, encoding = None, handleComments = False, *args, **kwargs): # pylint: disable=W1113
         CSVableParser.__init__(self, csvAbleClass, encoding)
         if handleComments:
             csvFile = (line for line in csvFile if not line.strip().startswith(self.COMMENT))
@@ -216,13 +216,13 @@ class CSVObjectReader(CSVableParser, DictReader):
                 elif field == self.csvAbleClass.READ_REST_KEY:
                     rest.update(value)
                 else:
-                    rest[csvField] = value
+                    rest[csvField] = value # pylint: disable=E1137
         return ret
 
 class CSVObjectWriter(CSVableParser, DictWriter):
     """CSV writer that can write CSVable objects to a CSV file."""
 
-    def __init__(self, csvFile, csvAbleClass = CSVable, writeHeader = False, encoding = None, headerComment = None, *args, **kwargs):
+    def __init__(self, csvFile, csvAbleClass = CSVable, writeHeader = False, encoding = None, headerComment = None, *args, **kwargs): # pylint: disable=W1113
         CSVableParser.__init__(self, csvAbleClass, encoding)
         if headerComment:
             lines = (line.strip().encode(self.encoding) for line in (headerComment.splitlines() if isinstance(headerComment, str) else headerComment or ())) # pylint: disable=C0325
@@ -336,7 +336,7 @@ def testCSVableParser():
 def testCSVObjectReader():
     class TestCSVable(CSVable):
         pass
-    def checkCSVObjectReader(data, cls = CSVable, useHeader = False, *args, **kwargs):
+    def checkCSVObjectReader(data, cls = CSVable, useHeader = False, *args, **kwargs): # pylint: disable=W1113
         return tuple(CSVObjectReader(data.splitlines(), cls, useHeader, *args, **kwargs))
     result = checkCSVObjectReader('')
     assert result == (), result
@@ -404,7 +404,7 @@ def testCSVObjectWriter():
     from StringIO import StringIO
     class TestCSVable(CSVable):
         pass
-    def checkCSVObjectWriter(objects, cls = CSVable, writeHeader = False, *args, **kwargs):
+    def checkCSVObjectWriter(objects, cls = CSVable, writeHeader = False, *args, **kwargs): # pylint: disable=W1113
         ret = StringIO()
         CSVObjectWriter(ret, cls, writeHeader, *args, **kwargs).writerows(objects)
         return ret.getvalue()

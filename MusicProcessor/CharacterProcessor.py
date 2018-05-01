@@ -222,7 +222,6 @@ class CharacterCSVable(CSVdumpable):
         except Exception, e:
             print format_exc()
             print "ERROR fetching data: %s, using cached version" % unicode(e)
-            return ()
 
     @classmethod
     def update(cls):
