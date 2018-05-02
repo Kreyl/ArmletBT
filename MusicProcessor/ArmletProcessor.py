@@ -14,7 +14,7 @@
 #
 from os import getenv, listdir, makedirs, remove
 from os.path import expanduser, isdir, isfile, join
-from shutil import copy
+from shutil import copy, copytree, rmtree
 from sys import argv, path as sysPath
 from traceback import format_exc
 
@@ -41,11 +41,12 @@ def processCharacter(character, baseDir = '.'):
 
     # Clearing directory contents
     for fileName in listdir(charDir):
-        if isdir(join(charDir, fileName)):
-            print "Found directory", fileName
+        fullName = join(charDir, fileName)
+        #print "Removing", fullName
+        if isdir(fullName):
+            rmtree(fullName)
         else:
-            #print "Removing", fileName
-            remove(join(charDir, fileName))
+            remove(fullName)
 
     # Creating settings.ini
     if character.rID:
@@ -62,8 +63,12 @@ def processCharacter(character, baseDir = '.'):
 
     # Copying generated files
     for fileName in listdir(commonDir):
-        #print "Copying", fileName
-        copy(join(commonDir, fileName), charDir)
+        fullName = join(commonDir, fileName)
+        #print "Copying", fullName
+        if isdir(fullName):
+            copytree(fullName, join(charDir, fileName), symlinks = True)
+        else:
+            copy(fullName, charDir)
 
 def updateMusic(sourceDir = '.'):
     (_emotions, characters) = updateEmotions()
