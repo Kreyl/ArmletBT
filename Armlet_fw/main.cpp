@@ -17,7 +17,7 @@
 #include "kl_fs_utils.h"
 #include "beeper.h"
 #include "vibro.h"
-#include "sound.h"
+#include "SlotPlayer.h"
 #include "kl_adc.h"
 #include "pill.h"
 #include "pill_mgr.h"
@@ -108,7 +108,7 @@ int main() {
 //    Vibra.Init(VIBRO_TIM_FREQ);
 //    Vibra.StartOrRestart(vsqBrrBrr);
 
-//    Sound.Init();
+    SlotPlayer::Init();
     UsbMsdCdc.Init();
 
     TmrOneSecond.StartOrRestart();
