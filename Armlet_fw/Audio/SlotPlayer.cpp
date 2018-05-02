@@ -11,6 +11,7 @@
 #include "shell.h"
 #include "kl_fs_utils.h"
 #include "audiomixer.h"
+#include "vs1011.h"
 
 thread_reference_t ISndThd;
 
@@ -120,6 +121,7 @@ namespace SlotPlayer {
 void Init() {
     MsgQSnd.Init();
     for(uint32_t i=0; i<AudioMixer::TRACKS; i++) Slot[i].Init(i);
+    VS.Init();
     ISndThd = chThdCreateStatic(waSndThread, sizeof(waSndThread), NORMALPRIO, SoundThread, NULL);
 }
 

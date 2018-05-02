@@ -20,6 +20,7 @@
 #define VS_SPI          SPI2
 #define VS_AF           AF5
 #define VS_SPI_RCC_EN() rccEnableSPI2(FALSE)
+#define VS_MAX_SPI_BAUDRATE_HZ  3400000
 // DMA
 #define VS_DMA          STM32_DMA1_STREAM4
 #define VS_DMA_CHNL     0
@@ -49,7 +50,7 @@
 #define VS_REG_AIADDR       0x0A
 #define VS_REG_VOL          0x0B
 
-class Sound_t : public IrqHandler_t {
+class VS1011_t : public IrqHandler_t {
 private:
     Spi_t ISpi{VS_SPI};
     uint32_t ZeroesCount;
@@ -74,4 +75,4 @@ public:
     void IIrqHandler();
 };
 
-extern Sound_t Sound;
+extern VS1011_t VS;

@@ -1,19 +1,20 @@
 #include <string.h>
 #include <vs1011.h>
 
+// Header 44100
 #define HDR_SZ      44
 const unsigned char header[HDR_SZ] = {
     0x52, 0x49, 0x46, 0x46, 0xff, 0xff, 0xff, 0xff,
     0x57, 0x41, 0x56, 0x45, 0x66, 0x6d, 0x74, 0x20,
     0x10, 0x00, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00,
-    0x80, 0xbb, 0x00, 0x00, 0x00, 0xee, 0x02, 0x00,
+    0x44, 0xac, 0x00, 0x00, 0x10, 0xb1, 0x02, 0x00,
     0x04, 0x00, 0x10, 0x00, 0x64, 0x61, 0x74, 0x61,
     0xff, 0xff, 0xff, 0xff
 };
 
 int16_t Saw[48*2];
 
-Sound_t Sound;
+VS1011_t VS;
 
 // Pin operations
 inline void Rst_Lo()   { PinSetLo(VS_GPIO, VS_RST); }
@@ -32,26 +33,25 @@ inline void XDCS_Hi()  { PinSetHi(VS_GPIO, VS_XDCS); }
 
 
 
-// ================================= IRQ =======================================
-void Sound_t::IIrqHandler() {
+#if 1 // ================================= IRQ =================================
+void VS1011_t::IIrqHandler() {
 //    PrintfI("DreqIrq\r");
     ISendNexChunk();
 }
 
-extern "C" {
 // DMA irq
+extern "C"
 void SIrqDmaHandler(void *p, uint32_t flags) {
     chSysLockFromISR();
     dmaStreamDisable(VS_DMA);
-    Sound.IDmaIsIdle = true;
+    VS.IDmaIsIdle = true;
 //    PrintfI("DMAIrq\r");
-    Sound.ISendNexChunk();
+    VS.ISendNexChunk();
     chSysUnlockFromISR();
 }
-} // extern c
+#endif
 
-// =========================== Implementation ==================================
-void Sound_t::Init() {
+void VS1011_t::Init() {
     // ==== GPIO init ====
     PinSetupOut(VS_GPIO, VS_RST, omPushPull);
     PinSetupOut(VS_GPIO, VS_XCS, omPushPull);
@@ -66,7 +66,19 @@ void Sound_t::Init() {
     IDreq.Init(ttRising);
 
     // ==== SPI init ====
-    ISpi.Setup(boMSB, cpolIdleLow, cphaFirstEdge, sclkDiv8);
+    uint32_t div;
+    if(ISpi.PSpi == SPI1) div = Clk.APB2FreqHz / VS_MAX_SPI_BAUDRATE_HZ;
+    else div = Clk.APB1FreqHz / VS_MAX_SPI_BAUDRATE_HZ;
+    SpiClkDivider_t ClkDiv = sclkDiv2;
+    if     (div > 128) ClkDiv = sclkDiv256;
+    else if(div > 64) ClkDiv = sclkDiv128;
+    else if(div > 32) ClkDiv = sclkDiv64;
+    else if(div > 16) ClkDiv = sclkDiv32;
+    else if(div > 8)  ClkDiv = sclkDiv16;
+    else if(div > 4)  ClkDiv = sclkDiv8;
+    else if(div > 2)  ClkDiv = sclkDiv4;
+
+    ISpi.Setup(boMSB, cpolIdleLow, cphaFirstEdge, ClkDiv);
     ISpi.Enable();
     ISpi.EnableTxDma();
 
@@ -104,12 +116,13 @@ void Sound_t::Init() {
 
     while(true) {
         SendBuf((uint8_t*)Saw, 192);
-        while(!BufSent);
+        while(!BufSent) {
+//            chThdSleepMilliseconds(7);
+        }
     }
 }
 
-// ================================ Inner use ==================================
-void Sound_t::SendBuf(uint8_t* ABuf, uint32_t Sz) {
+void VS1011_t::SendBuf(uint8_t* ABuf, uint32_t Sz) {
     while(!IDreq.IsHi());
     uint32_t Sz2Send = MIN_(Sz, 32);
     chSysLock();
@@ -129,7 +142,7 @@ void Sound_t::SendBuf(uint8_t* ABuf, uint32_t Sz) {
     chSysUnlock();
 }
 
-void Sound_t::ISendNexChunk() {
+void VS1011_t::ISendNexChunk() {
     if(IDmaIsIdle and IDreq.IsHi()) {
         dmaStreamDisable(VS_DMA);
         if(RemainedSz > 0) {
@@ -149,7 +162,7 @@ void Sound_t::ISendNexChunk() {
 }
 
 // ==== Commands ====
-uint8_t Sound_t::CmdRead(uint8_t AAddr, uint16_t* AData) {
+uint8_t VS1011_t::CmdRead(uint8_t AAddr, uint16_t* AData) {
 //    uint8_t IReply;
     uint16_t IData;
     // Wait until ready
@@ -164,7 +177,7 @@ uint8_t Sound_t::CmdRead(uint8_t AAddr, uint16_t* AData) {
     XCS_Hi();   // End transmission
     return retvOk;
 }
-uint8_t Sound_t::CmdWrite(uint8_t AAddr, uint16_t AData) {
+uint8_t VS1011_t::CmdWrite(uint8_t AAddr, uint16_t AData) {
 //    uint8_t IReply;
     // Wait until ready
 //    if ((IReply = BusyWait()) != OK) return IReply; // Get out in case of timeout
