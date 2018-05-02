@@ -42,7 +42,7 @@ class CharacterError(Exception):
     pass
 
 class CharacterCSVable(CSVdumpable):
-    CSV_FIELDS = ('rID', 'shortName', 'isNY', 'isManni', 'dogan', 'kaTet', 'nAction', 'isDead', 'hasMusic')
+    CSV_FIELDS = ('rID', 'shortName', 'isManni', 'dogan', 'kaTet', 'isDead', 'hasMusic')
 
     KEY_FUNCTION = lambda character: character.shortName
 
@@ -51,7 +51,6 @@ class CharacterCSVable(CSVdumpable):
             ('isManni', u'Мэнни?'),
             ('dogan', u'Внутренний Доган'),
             ('kaTet', u'Связи ка-тета'),
-            ('nAction', u'Стартовое число очков действия'),
             ('isDead', u'Мёртв?'),
             ('hasMusic', u'Музыка прислана?')))
 
@@ -97,10 +96,8 @@ class CharacterCSVable(CSVdumpable):
     def validate(self):
         """Validate fields other than shortName."""
         assert self.isManni in (0, 1), "Bas isManni value: %d" % self.isManni
-        assert self.isNY in (0, 1), "Bas isNY value: %d" % self.isNY
         assert self.dogan in self.DOGAN.itervalues(), "Bad dogan value: %s, expected %s" % (self.dogan, '/'.join(str(v) for v in self.DOGAN.itervalues()))
         assert not self.kaTet or all(name.isalpha() for name in self.getKaTet()), "Bad ka-tet value: %s" % self.kaTet
-        assert self.nAction >= 0, "Bad nAction value: %d" % self.nAction
         assert self.isDead in (0, 1), "Bas isDead value: %d" % self.isDead
         assert self.hasMusic in self.HAS_MUSIC.itervalues(), "Bad hasMusic value: %s, expected %s" % (self.dogan, '/'.join(str(v) for v in self.HAS_MUSIC.itervalues()))
 
@@ -127,9 +124,7 @@ class CharacterCSVable(CSVdumpable):
         self.processNames()
         self.rID = int(self.rID)
         self.isManni = int(self.isManni)
-        self.isNY = int(self.isNY)
         self.dogan = int(self.dogan)
-        self.nAction = int(self.nAction)
         self.isDead = int(self.isDead)
         self.hasMusic = int(self.hasMusic)
         self.validate()
@@ -149,13 +144,11 @@ class CharacterCSVable(CSVdumpable):
         self.rID = None
         self.isManni = int(bool((self.isManni or '').strip()))
         self.isDead = int(bool((self.isDead or '').strip()))
-        self.isNY = int(u'Нью-Йорк' in jCharacter.groupNames)
         try:
             self.dogan = self.DOGAN[self.dogan.strip()] # pylint: disable=E1101
         except KeyError:
             assert False, "%s: unknown dogan setting: %r" % (self.shortName, self.dogan)
         self.setKaTet(name for name in (name.strip() for name in self.SEPARATORS.split(self.kaTet or '')) if name)
-        self.nAction = int((self.nAction or '').strip() or '0') # pylint: disable=E1101
         try:
             self.hasMusic = self.HAS_MUSIC[self.hasMusic or '']
         except KeyError:
