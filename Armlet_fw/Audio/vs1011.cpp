@@ -12,8 +12,6 @@ const unsigned char header[HDR_SZ] = {
     0xff, 0xff, 0xff, 0xff
 };
 
-int16_t Saw[48*2];
-
 VS1011_t VS;
 
 // Pin operations
@@ -26,12 +24,6 @@ inline void XDCS_Hi()  { PinSetHi(VS_GPIO, VS_XDCS); }
 
 // Mode register
 #define VS_MODE_REG_VALUE   0x0802  // Native SDI mode, Layer I + II enabled
-
-// After file end, send several zeroes
-//#define ZERO_SEQ_LEN        128
-//static const uint8_t SZero = 0;
-
-
 
 #if 1 // ================================= IRQ =================================
 void VS1011_t::IIrqHandler() {
@@ -106,23 +98,9 @@ void VS1011_t::Init() {
         while(!IDreq.IsHi());
         ISpi.ReadWriteByte(*ptr++);
     }
-
-    // Fill Saw
-    int n=0;
-    for(int i=-23000; i<23000; i+=1000) {
-        Saw[n++] = i;
-        Saw[n++] = i;
-    }
-
-    while(true) {
-        SendBuf((uint8_t*)Saw, 192);
-        while(!BufSent) {
-//            chThdSleepMilliseconds(7);
-        }
-    }
 }
 
-void VS1011_t::SendBuf(uint8_t* ABuf, uint32_t Sz) {
+void VS1011_t::SendFirstBuf(uint8_t* ABuf, uint32_t Sz) {
     while(!IDreq.IsHi());
     uint32_t Sz2Send = MIN_(Sz, 32);
     chSysLock();
@@ -134,11 +112,8 @@ void VS1011_t::SendBuf(uint8_t* ABuf, uint32_t Sz) {
     IDmaIsIdle = false;
     RemainedSz = Sz - Sz2Send;
     ptr += Sz2Send;
-    if(RemainedSz > 0) {
-        IDreq.EnableIrq(IRQ_PRIO_MEDIUM);
-        BufSent = false;
-    }
-    else BufSent = true;
+    IDreq.EnableIrq(IRQ_PRIO_MEDIUM);
+    if(RemainedSz == 0) OnBufEndI();
     chSysUnlock();
 }
 
@@ -154,10 +129,7 @@ void VS1011_t::ISendNexChunk() {
             RemainedSz -= Sz2Send;
             ptr += Sz2Send;
         }
-        else {
-            IDreq.DisableIrq();
-            BufSent = true;
-        }
+        if(RemainedSz == 0) OnBufEndI();
     }
 }
 

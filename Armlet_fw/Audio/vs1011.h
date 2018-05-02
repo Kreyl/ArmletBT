@@ -61,12 +61,15 @@ private:
 
     volatile uint8_t *ptr;
     volatile uint32_t RemainedSz;
-    volatile bool BufSent;
-
-    void SendBuf(uint8_t* ABuf, uint32_t Sz);
 public:
     void Init();
     void Shutdown();
+    void SendFirstBuf(uint8_t* ABuf, uint32_t Sz);
+    ftVoidVoid OnBufEndI;
+    void SetNextBuf(uint8_t* ABuf, uint32_t Sz) {
+        ptr = ABuf;
+        RemainedSz = Sz;
+    }
     // Inner use
     thread_reference_t ThdRef;
     bool IDmaIsIdle;
