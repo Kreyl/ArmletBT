@@ -28,7 +28,7 @@ MUSIC_MARK = 'DTAH_Music_Here'
 
 COMMON_DIR = u'_COMMON'
 
-INI_FILE = u'settings.ini'
+INI_FILE = u'SelfName.csv'
 
 INI_CONTENT = open('settings_ini.tpl').read().replace('\r\n', '\n').replace('\n', '\r\n')
 
