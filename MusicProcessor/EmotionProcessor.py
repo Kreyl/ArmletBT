@@ -39,7 +39,7 @@ H_TARGET = join(C_PATH, 'emotions.h')
 TEST_COMMAND = 'gcc -I "%s" -o test "%s" test.c && ./test && rm test' % (C_PATH, C_TARGET)
 
 class GoogleTableEntry(CSVable):
-    CSV_FIELDS = ('rID', 'rName', 'nSources', 'level', 'timeout', 'doganAmount', 'eName', 'eType', 'ePriority', 'contents')
+    CSV_FIELDS = ('rID', 'rName', 'level', 'timeout', 'doganAmount', 'eName', 'eType', 'ePriority', 'contents')
 
     REASON_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*|[A-Z][a-zA-Z]*')
     EMOTION_PATTERN = reCompile(r'[A-Z][A-Z0-9_]*')
@@ -66,12 +66,6 @@ class GoogleTableEntry(CSVable):
         if self.rName != '-':
             assert self.REASON_PATTERN.match(self.rName), "Reason name is not in PROPER_FORMAT_WITH_DIGITS: %s" % self.rName
         assert self.rName not in Reason.INSTANCES, "Duplicate reason name: %s" % self.rName
-        # nSources
-        try:
-            self.nSources = int(self.nSources or 0)
-        except ValueError:
-            assert False, "Number of sources is not a number for reason %s: %r" % (self.rName, self.nSources)
-        assert 0 <= self.nSources <= 30, "Bad number of sources for reason %s: %r" % (self.rName, self.nSources)
         # level
         try:
             self.level = self.LEVELS[self.level.upper()]
@@ -117,7 +111,7 @@ class GoogleTableEntry(CSVable):
             emotion = Emotion.addEmotion(Emotion(self.eName, self.eType, self.ePriority, self.isPlayer))
         else:
             emotion = None
-        Reason.addReason(Reason(self.rID, self.rName, self.nSources, self.level, self.timeout, self.doganAmount, self.eName))
+        Reason.addReason(Reason(self.rID, self.rName, self.level, self.timeout, self.doganAmount, self.eName))
 
     @classmethod
     def loadFromGoogleDocs(cls, dumpCSV = False, dumpCSV1251 = False):

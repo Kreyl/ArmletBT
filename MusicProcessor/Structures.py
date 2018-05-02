@@ -68,11 +68,10 @@ class Reason(CSVdumpable):
 
     TOP_PRIORITY = 100
 
-    def __init__(self, rID, rName, nSources, level, timeout, doganAmount, eName):
+    def __init__(self, rID, rName, level, timeout, doganAmount, eName):
         CSVdumpable.__init__(self)
         self.rID = rID
         self.rName = rName
-        self.nSources = nSources
         self.level = level
         self.timeout = timeout
         self.doganAmount = doganAmount
@@ -98,7 +97,7 @@ class Reason(CSVdumpable):
             if character.shortName in cls.INSTANCES:
                 cls.INSTANCES[character.shortName].rID = character.rID
             else:
-                reason = Reason(character.rID, character.shortName, 0, 0, 0, 0, None)
+                reason = Reason(character.rID, character.shortName, 0, 0, 0, None)
                 cls.addReason(reason)
 
     @classmethod
