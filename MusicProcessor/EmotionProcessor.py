@@ -161,11 +161,14 @@ class GoogleTableEntry(CSVable):
     def update(cls):
         """Update characters, reasons and emotions."""
         cls.CHARACTERS = updateCharacters()
+        print
+        print "Running DTAH EmotionProcessor"
+        print
         cls.loadFromGoogleDocs(True, True)
         print "Processing emotions..."
         cls.processEmotions()
         if True: #isWindows: # pylint: disable=W0125
-            print "Not running test on Windows\nDone"
+            pass #print "Not running test on Windows\nDone"
         else:
             print "Running test: %s" % TEST_COMMAND
             subprocess = Popen(TEST_COMMAND, shell = True, stdout = PIPE, stderr = STDOUT)
