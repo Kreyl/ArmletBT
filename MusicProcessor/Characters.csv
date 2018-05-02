@@ -8,17 +8,17 @@
 #
 # !!! DO NOT EDIT !!!
 #
-# Generated at 2018-05-02 23:47:54
+# Generated at 2018-05-02 23:55:20
 #
 rID,shortName,isManni,dogan,kaTet,isDead,hasMusic
-128,JRight,0,2,,0,0
+128,JRight,0,2,,1,0
 129,CRandall,0,-2,,0,0
 130,RDias,0,-1,,0,1
 131,DRice,0,-2,,0,0
 132,Brody,0,-1,,0,1
 133,AFlores,1,0,,0,0
 134,Isaak,0,0,Cordelia:Isaak:Ruth,0,0
-135,Cordelia,0,1,Cordelia:Isaak:Ruth,0,0
+135,Cordelia,1,1,Cordelia:Isaak:Ruth,0,0
 136,ETodd,0,0,,0,0
 137,FPibody,0,0,,0,0
 138,RHarris,0,0,,0,0
