@@ -5,8 +5,8 @@
  *      Author: Kreyl
  */
 
-#include <descriptors_msd.h>
-#include <usb_msd.h>
+#include <descriptors_msdcdc.h>
+#include <usb_msdcdc.h>
 #include "hal_usb.h"
 #include "board.h"
 #include "kl_lib.h"
@@ -14,8 +14,11 @@
 #include "kl_usb_defins.h"
 #include "MsgQ.h"
 #include "EvtMsgIDs.h"
+#include "hal_serial_usb.h"
 
-UsbMsd_t UsbMsd;
+UsbMsdCdc_t UsbMsdCdc;
+SerialUSBDriver SDU1;
+
 #define USBDrv          USBD1   // USB driver to use
 
 #define EVT_USB_READY           EVENT_MASK(10)
@@ -27,10 +30,12 @@ UsbMsd_t UsbMsd;
 #define EVT_USB_OUT_DONE        EVENT_MASK(16)
 
 static uint8_t SByte;
+static bool ISayIsReady = true;
+static thread_t *PMsdThd, *PCdcThd;
 
 static bool OnSetupPkt(USBDriver *usbp);
-static void OnDataInCompleted(USBDriver *usbp, usbep_t ep);
-static void OnDataOutCompleted(USBDriver *usbp, usbep_t ep);
+static void OnMSDDataIn(USBDriver *usbp, usbep_t ep);
+static void OnMSDDataOut(USBDriver *usbp, usbep_t ep);
 
 #if 1 // ========================== Endpoints ==================================
 // ==== EP1 ====
@@ -41,8 +46,8 @@ static USBOutEndpointState ep1outstate;
 static const USBEndpointConfig ep1config = {
     USB_EP_MODE_TYPE_BULK,
     NULL,                   // setup_cb
-    OnDataInCompleted,      // in_cb
-    OnDataOutCompleted,     // out_cb
+    sduDataTransmitted,     // in_cb
+    sduDataReceived,        // out_cb
     64,                     // in_maxsize
     64,                     // out_maxsize
     &ep1instate,            // in_state
@@ -50,9 +55,50 @@ static const USBEndpointConfig ep1config = {
     2,                      // in_multiplier: Determines the space allocated for the TXFIFO as multiples of the packet size
     NULL                    // setup_buf: Pointer to a buffer for setup packets. Set this field to NULL for non-control endpoints
 };
+
+// ==== EP2 ====
+static USBInEndpointState ep2instate;
+
+// EP2 initialization structure (IN only).
+static const USBEndpointConfig ep2config = {
+    USB_EP_MODE_TYPE_INTR,
+    NULL,
+    sduInterruptTransmitted,
+    NULL,
+    16,
+    0,
+    &ep2instate,
+    NULL,
+    1,
+    NULL
+};
+
+// ==== EP3 ====
+static USBInEndpointState ep3instate;
+static USBOutEndpointState ep3outstate;
+
+// EP1 initialization structure (both IN and OUT).
+static const USBEndpointConfig ep3config = {
+    USB_EP_MODE_TYPE_BULK,
+    NULL,                   // setup_cb
+    OnMSDDataIn,            // in_cb
+    OnMSDDataOut,           // out_cb
+    64,                     // in_maxsize
+    64,                     // out_maxsize
+    &ep3instate,            // in_state
+    &ep3outstate,           // out_state
+    2,                      // in_multiplier: Determines the space allocated for the TXFIFO as multiples of the packet size
+    NULL                    // setup_buf: Pointer to a buffer for setup packets. Set this field to NULL for non-control endpoints
+};
 #endif
 
 #if 1 // ============================ Events ===================================
+static void SOFHandler(USBDriver *usbp) {
+  osalSysLockFromISR();
+  sduSOFHookI(&SDU1);
+  osalSysUnlockFromISR();
+}
+
 static void usb_event(USBDriver *usbp, usbevent_t event) {
     switch (event) {
         case USB_EVENT_RESET:
@@ -65,12 +111,17 @@ static void usb_event(USBDriver *usbp, usbevent_t event) {
             chSysLockFromISR();
             /* Enable the endpoints specified in the configuration.
             Note, this callback is invoked from an ISR so I-Class functions must be used.*/
-            usbInitEndpointI(usbp, EP_DATA_IN_ID,  &ep1config);
-            usbInitEndpointI(usbp, EP_DATA_OUT_ID, &ep1config);
-            UsbMsd.ISayIsReady = true;
+            // CDC
+            usbInitEndpointI(usbp, EP_CDC_DATA_IN,   &ep1config); // Single ep used for both IN and OUT
+            usbInitEndpointI(usbp, EP_CDC_INTERRUPT, &ep2config);
+            sduConfigureHookI(&SDU1);   // Resetting the state of the CDC subsystem
+            // MSD
+            usbInitEndpointI(usbp, EP_MSD_IN_ID,  &ep3config); // Single ep used for both IN and OUT
+
+            ISayIsReady = true;
             EvtMsg_t Msg(evtIdUsbReady);
             EvtQMain.SendNowOrExitI(Msg);    // Signal to main thread
-            chEvtSignalI(UsbMsd.PThread, EVT_USB_READY);
+            chEvtSignalI(PMsdThd, EVT_USB_READY);
             chSysUnlockFromISR();
             return;
         } break;
@@ -81,6 +132,57 @@ static void usb_event(USBDriver *usbp, usbevent_t event) {
             return;
     } // switch
 }
+
+/* ==== Setup Packet handler ====
+ * true         Message handled internally.
+ * false        Message not handled. */
+bool OnSetupPkt(USBDriver *usbp) {
+    SetupPkt_t *Setup = (SetupPkt_t*)usbp->setup;
+//    PrintfI("%X %X %X %X %X\r", Setup->bmRequestType, Setup->bRequest, Setup->wValue, Setup->wIndex, Setup->wLength);
+
+    if(Setup->ReqType.Type == TYPE_CLASS) {
+        // === CDC handler ===
+        if(Setup->wIndex == 1) {
+            if(sduRequestsHook(usbp) == true) return true;
+        }
+        // === MSD handler ===
+        else {
+            // GetMaxLun
+            if(Setup->ReqType.Direction == DIR_DEV2HOST and
+               Setup->bRequest == MS_REQ_GetMaxLUN and
+               Setup->wLength == 1)
+            {
+//                PrintfI("MS_REQ_GetMaxLUN\r");
+                SByte = 0;  // Maximum LUN ID
+                usbSetupTransfer(usbp, &SByte, 1, NULL);
+                return true;
+            }
+            // Reset
+            if(Setup->ReqType.Direction == DIR_HOST2DEV and
+               Setup->bRequest == MS_REQ_MassStorageReset and
+               Setup->wLength == 0)
+            {
+//                PrintfI("MS_REQ_MassStorageReset\r");
+                // TODO: remove Stall condition
+                return true; // Acknowledge reception
+            }
+        } // if MSD
+    } // if class
+    return false;
+}
+
+void OnMSDDataIn(USBDriver *usbp, usbep_t ep) {
+    chSysLockFromISR();
+    chEvtSignalI(PMsdThd, EVT_USB_IN_DONE);
+    chSysUnlockFromISR();
+}
+
+void OnMSDDataOut(USBDriver *usbp, usbep_t ep) {
+    chSysLockFromISR();
+    chEvtSignalI(PMsdThd, EVT_USB_OUT_DONE);
+    chSysUnlockFromISR();
+}
+
 #endif
 
 #if 1  // ==== USB driver configuration ====
@@ -88,73 +190,53 @@ const USBConfig UsbCfg = {
     usb_event,          // This callback is invoked when an USB driver event is registered
     GetDescriptor,      // Device GET_DESCRIPTOR request callback
     OnSetupPkt,         // This hook allows to be notified of standard requests or to handle non standard requests
-    NULL                // Start Of Frame callback
+    SOFHandler          // Start Of Frame callback
+};
+
+// Serial over USB driver configuration
+const SerialUSBConfig SerUsbCfg = {
+    &USBD1,             // USB driver to use
+    EP_CDC_DATA_IN,     // Bulk IN endpoint used for outgoing data transfer
+    EP_CDC_DATA_OUT,    // Bulk OUT endpoint used for incoming data transfer
+    EP_CDC_INTERRUPT    // Interrupt IN endpoint used for notifications
 };
 #endif
 
-/* ==== Setup Packet handler ====
- * true         Message handled internally.
- * false        Message not handled. */
-bool OnSetupPkt(USBDriver *usbp) {
-    SetupPkt_t *Setup = (SetupPkt_t*)usbp->setup;
-//    Uart.PrintfI("%X %X %X %X %X\r", Setup->bmRequestType, Setup->bRequest, Setup->wValue, Setup->wIndex, Setup->wLength);
-//    Uart.PrintfI("RT.Dir: %X; RT.Type: %X; RT.Rec: %X\r", Setup->ReqType.Direction, Setup->ReqType.Type, Setup->ReqType.Recipient);
-    if(Setup->ReqType.Direction == DIR_DEV2HOST and
-       Setup->ReqType.Type == TYPE_CLASS and
-       Setup->ReqType.Recipient == RCPT_INTERFACE and
-       Setup->bRequest == MS_REQ_GetMaxLUN and
-       Setup->wLength == 1)
-    {
-//        Uart.PrintfI("MS_REQ_GetMaxLUN\r");
-        SByte = 0;  // Maximum LUN ID
-        usbSetupTransfer(usbp, &SByte, 1, NULL);
-        return true;
-    }
-
-    if(Setup->ReqType.Direction == DIR_HOST2DEV and
-       Setup->ReqType.Type == TYPE_CLASS and
-       Setup->ReqType.Recipient == RCPT_INTERFACE and
-       Setup->bRequest == MS_REQ_MassStorageReset and
-       Setup->wLength == 0)
-    {
-//        Uart.PrintfI("MS_REQ_MassStorageReset\r");
-        // TODO: remove Stall condition
-        return true; // Acknowledge reception
-    }
-
-    return false;
-}
-
-void OnDataInCompleted(USBDriver *usbp, usbep_t ep) {
-    chSysLockFromISR();
-//    Uart.PrintfI("inDone\r");
-    chEvtSignalI(UsbMsd.PThread, EVT_USB_IN_DONE);
-    chSysUnlockFromISR();
-}
-
-void OnDataOutCompleted(USBDriver *usbp, usbep_t ep) {
-    chSysLockFromISR();
-//    Uart.PrintfI("OutDone\r");
-    chEvtSignalI(UsbMsd.PThread, EVT_USB_OUT_DONE);
-    chSysUnlockFromISR();
-}
-
-
 #if 1 // ========================== MSD Thread =================================
+static MS_CommandBlockWrapper_t CmdBlock;
+static MS_CommandStatusWrapper_t CmdStatus;
+static SCSI_RequestSenseResponse_t SenseData;
+static SCSI_ReadCapacity10Response_t ReadCapacity10Response;
+static SCSI_ReadFormatCapacitiesResponse_t ReadFormatCapacitiesResponse;
+static uint8_t Buf[MSD_DATABUF_SZ];
+
+static void SCSICmdHandler();
+// Scsi commands
+static void CmdTestReady();
+static uint8_t CmdStartStopUnit();
+static uint8_t CmdInquiry();
+static uint8_t CmdRequestSense();
+static uint8_t CmdReadCapacity10();
+static uint8_t CmdSendDiagnostic();
+static uint8_t CmdReadFormatCapacities();
+static uint8_t CmdRead10();
+static uint8_t CmdWrite10();
+static uint8_t CmdModeSense6();
+static uint8_t ReadWriteCommon(uint32_t *PAddr, uint16_t *PLen);
+static void BusyWaitIN();
+static uint8_t BusyWaitOUT();
+static void TransmitBuf(uint8_t *Ptr, uint32_t Len);
+static uint8_t ReceiveToBuf(uint8_t *Ptr, uint32_t Len);
+
 static THD_WORKING_AREA(waUsbThd, 128);
 static THD_FUNCTION(UsbThd, arg) {
     chRegSetThreadName("Usb");
-    UsbMsd.Task();
-}
-
-__noreturn
-void UsbMsd_t::Task() {
     while(true) {
         uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
         if(EvtMsk & EVT_USB_READY) {
             // Receive header
             chSysLock();
-            usbStartReceiveI(&USBDrv, EP_DATA_OUT_ID, (uint8_t*)&CmdBlock, MS_CMD_SZ);
+            usbStartReceiveI(&USBDrv, EP_MSD_OUT_ID, (uint8_t*)&CmdBlock, MS_CMD_SZ);
             chSysUnlock();
         }
 
@@ -162,14 +244,49 @@ void UsbMsd_t::Task() {
             SCSICmdHandler();
             // Receive header again
             chSysLock();
-            usbStartReceiveI(&USBDrv, EP_DATA_OUT_ID, (uint8_t*)&CmdBlock, MS_CMD_SZ);
+            usbStartReceiveI(&USBDrv, EP_MSD_OUT_ID, (uint8_t*)&CmdBlock, MS_CMD_SZ);
             chSysUnlock();
         }
     } // while true
 }
+
 #endif
 
-void UsbMsd_t::Init() {
+#if 1 // ========================== RX Thread ==================================
+static inline bool IsCdcActive() { return (SDU1.config->usbp->state == USB_ACTIVE); }
+
+static THD_WORKING_AREA(waThdCDCRX, 128);
+static THD_FUNCTION(ThdCDCRX, arg) {
+    chRegSetThreadName("CDCRX");
+    while(true) {
+        if(IsCdcActive()) {
+            msg_t m = SDU1.vmt->get(&SDU1);
+            if(m > 0) {
+//                SDU1.vmt->put(&SDU1, (uint8_t)m);   // repeat what was sent
+                if(UsbMsdCdc.Cmd.PutChar((char)m) == pdrNewCmd) {
+                    chSysLock();
+                    EvtQMain.SendNowOrExitI(EvtMsg_t(evtIdShellCmd, (Shell_t*)&UsbMsdCdc));
+                    chSchGoSleepS(CH_STATE_SUSPENDED); // Wait until cmd processed
+                    chSysUnlock();  // Will be here when application signals that cmd processed
+                }
+            } // if >0
+        } // if active
+        else chThdSleepMilliseconds(540);
+    } // while true
+}
+
+uint8_t UsbMsdCdc_t::IPutChar(char c) {
+    return (SDU1.vmt->put(&SDU1, (uint8_t)c) == MSG_OK)? retvOk : retvFail;
+}
+
+void UsbMsdCdc_t::SignalCmdProcessed() {
+    chSysLock();
+    if(PCdcThd->state == CH_STATE_SUSPENDED) chSchReadyI(PCdcThd);
+    chSysUnlock();
+}
+#endif
+
+void UsbMsdCdc_t::Init() {
 #if defined STM32L4XX
     PinSetupAlterFunc(USB_DM, omPushPull, pudNone, USB_AF, psVeryHigh);
     PinSetupAlterFunc(USB_DP, omPushPull, pudNone, USB_AF, psVeryHigh);
@@ -181,7 +298,6 @@ void UsbMsd_t::Init() {
 #elif defined STM32F2XX
     PinSetupAlterFunc(USB_DM, omPushPull, pudNone, USB_AF, psHigh);
     PinSetupAlterFunc(USB_DP, omPushPull, pudNone, USB_AF, psHigh);
-
 #else
     PinSetupAnalog(GPIOA, 11);
     PinSetupAnalog(GPIOA, 12);
@@ -189,55 +305,59 @@ void UsbMsd_t::Init() {
     // Variables
     SenseData.ResponseCode = 0x70;
     SenseData.AddSenseLen = 0x0A;
-    // Thread
-    PThread = chThdCreateStatic(waUsbThd, sizeof(waUsbThd), NORMALPRIO, (tfunc_t)UsbThd, NULL);
+    // MSD Thread
+    PMsdThd = chThdCreateStatic(waUsbThd, sizeof(waUsbThd), NORMALPRIO, (tfunc_t)UsbThd, NULL);
     usbInit();
+    sduObjectInit(&SDU1);
+    sduStart(&SDU1, &SerUsbCfg);
+    // CDC thread
+    PCdcThd = chThdCreateStatic(waThdCDCRX, sizeof(waThdCDCRX), NORMALPRIO, ThdCDCRX, NULL);
 }
 
-void UsbMsd_t::Reset() {
+void UsbMsdCdc_t::Reset() {
     // Wake thread if sleeping
     chSysLock();
-    if(PThread->state == CH_STATE_SUSPENDED) chSchReadyI(PThread);
+    if(PMsdThd->state == CH_STATE_SUSPENDED) chSchReadyI(PMsdThd);
     chSysUnlock();
 }
 
-void UsbMsd_t::Connect() {
+void UsbMsdCdc_t::Connect() {
     usbDisconnectBus(&USBDrv);
     chThdSleepMilliseconds(500);
     usbStart(&USBDrv, &UsbCfg);
     usbConnectBus(&USBDrv);
 }
-void UsbMsd_t::Disconnect() {
+void UsbMsdCdc_t::Disconnect() {
     usbDisconnectBus(&USBDrv);
     usbStop(&USBDrv);
 }
 
-void UsbMsd_t::TransmitBuf(uint8_t *Ptr, uint32_t Len) {
+void TransmitBuf(uint8_t *Ptr, uint32_t Len) {
     chSysLock();
-    usbStartTransmitI(&USBDrv, EP_DATA_IN_ID, Ptr, Len);
+    usbStartTransmitI(&USBDrv, EP_MSD_IN_ID, Ptr, Len);
     chSysUnlock();
     BusyWaitIN();
 }
 
-uint8_t UsbMsd_t::ReceiveToBuf(uint8_t *Ptr, uint32_t Len) {
+uint8_t ReceiveToBuf(uint8_t *Ptr, uint32_t Len) {
     chSysLock();
-    usbStartReceiveI(&USBDrv, EP_DATA_OUT_ID, Ptr, Len);
+    usbStartReceiveI(&USBDrv, EP_MSD_IN_ID, Ptr, Len);
     chSysUnlock();
     return BusyWaitOUT();
 }
 
-void UsbMsd_t::BusyWaitIN() {
+void BusyWaitIN() {
     chEvtWaitAny(ALL_EVENTS);
 }
 
-uint8_t UsbMsd_t::BusyWaitOUT() {
+uint8_t BusyWaitOUT() {
     eventmask_t evt = chEvtWaitAnyTimeout(EVT_USB_OUT_DONE, MS2ST(MSD_TIMEOUT_MS));
     return (evt == 0)? retvTimeout : retvOk;
 }
 
 #if 1 // =========================== SCSI ======================================
 //#define DBG_PRINT_CMD   TRUE
-void UsbMsd_t::SCSICmdHandler() {
+void SCSICmdHandler() {
 //    Uart.Printf("Sgn=%X; Tag=%X; Len=%u; Flags=%X; LUN=%u; SLen=%u; SCmd=%A\r", CmdBlock.Signature, CmdBlock.Tag, CmdBlock.DataTransferLen, CmdBlock.Flags, CmdBlock.LUN, CmdBlock.SCSICmdLen, CmdBlock.SCSICmdData, CmdBlock.SCSICmdLen, ' ');
 //    Printf("SCmd=%A\r", CmdBlock.SCSICmdData, CmdBlock.SCSICmdLen, ' ');
     uint8_t CmdRslt = retvFail;
@@ -299,7 +419,7 @@ void UsbMsd_t::SCSICmdHandler() {
 //    }
 }
 
-void UsbMsd_t::CmdTestReady() {
+void CmdTestReady() {
 #if DBG_PRINT_CMD
     Printf("CmdTestReady (Rdy: %u)\r", ISayIsReady);
 #endif
@@ -324,7 +444,7 @@ void UsbMsd_t::CmdTestReady() {
     TransmitBuf((uint8_t*)&CmdStatus, sizeof(MS_CommandStatusWrapper_t));
 }
 
-uint8_t UsbMsd_t::CmdStartStopUnit() {
+uint8_t CmdStartStopUnit() {
 #if DBG_PRINT_CMD
     Printf("CmdStartStopUnit [4]=%02X\r", CmdBlock.SCSICmdData[4]);
 #endif
@@ -337,7 +457,7 @@ uint8_t UsbMsd_t::CmdStartStopUnit() {
     return retvOk;
 }
 
-uint8_t UsbMsd_t::CmdInquiry() {
+uint8_t CmdInquiry() {
 #if DBG_PRINT_CMD
     Printf("CmdInquiry %u\r", CmdBlock.SCSICmdData[1] & 0x01);
 #endif
@@ -356,7 +476,7 @@ uint8_t UsbMsd_t::CmdInquiry() {
     CmdBlock.DataTransferLen -= BytesToTransfer;
     return retvOk;
 }
-uint8_t UsbMsd_t::CmdRequestSense() {
+uint8_t CmdRequestSense() {
 #if DBG_PRINT_CMD
     Printf("CmdRequestSense\r");
 #endif
@@ -368,7 +488,7 @@ uint8_t UsbMsd_t::CmdRequestSense() {
     CmdBlock.DataTransferLen -= BytesToTransfer;
     return retvOk;
 }
-uint8_t UsbMsd_t::CmdReadCapacity10() {
+uint8_t CmdReadCapacity10() {
 #if DBG_PRINT_CMD
     Printf("CmdReadCapacity10\r");
 #endif
@@ -380,11 +500,11 @@ uint8_t UsbMsd_t::CmdReadCapacity10() {
     CmdBlock.DataTransferLen -= sizeof(ReadCapacity10Response);
     return retvOk;
 }
-uint8_t UsbMsd_t::CmdSendDiagnostic() {
+uint8_t CmdSendDiagnostic() {
     Printf("CmdSendDiagnostic\r");
     return retvCmdUnknown;
 }
-uint8_t UsbMsd_t::CmdReadFormatCapacities() {
+uint8_t CmdReadFormatCapacities() {
 #if DBG_PRINT_CMD
     Printf("CmdReadFormatCapacities\r");
 #endif
@@ -404,7 +524,7 @@ uint8_t UsbMsd_t::CmdReadFormatCapacities() {
     return retvOk;
 }
 
-uint8_t UsbMsd_t::ReadWriteCommon(uint32_t *PAddr, uint16_t *PLen) {
+uint8_t ReadWriteCommon(uint32_t *PAddr, uint16_t *PLen) {
     *PAddr = Convert::BuildUint32(CmdBlock.SCSICmdData[5], CmdBlock.SCSICmdData[4], CmdBlock.SCSICmdData[3], CmdBlock.SCSICmdData[2]);
     *PLen  = Convert::BuildUint16(CmdBlock.SCSICmdData[8], CmdBlock.SCSICmdData[7]);
 //    Uart.Printf("Addr=%u; Len=%u\r", *PAddr, *PLen);
@@ -427,7 +547,7 @@ uint8_t UsbMsd_t::ReadWriteCommon(uint32_t *PAddr, uint16_t *PLen) {
     return retvOk;
 }
 
-uint8_t UsbMsd_t::CmdRead10() {
+uint8_t CmdRead10() {
 #if DBG_PRINT_CMD
     Printf("CmdRead10\r");
 #endif
@@ -457,7 +577,7 @@ uint8_t UsbMsd_t::CmdRead10() {
     return retvOk;
 }
 
-uint8_t UsbMsd_t::CmdWrite10() {
+uint8_t CmdWrite10() {
 #if DBG_PRINT_CMD
     Printf("CmdWrite10\r");
 #endif
@@ -509,7 +629,7 @@ uint8_t UsbMsd_t::CmdWrite10() {
 #endif
 }
 
-uint8_t UsbMsd_t::CmdModeSense6() {
+uint8_t CmdModeSense6() {
 #if DBG_PRINT_CMD
     Printf("CmdModeSense6\r");
 #endif

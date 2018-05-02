@@ -22,7 +22,6 @@ enum EvtMsgId_t {
     evtIdUsbConnect,
     evtIdUsbDisconnect,
     evtIdUsbReady,
-    evtIdUsbNewCmd,
     evtIdUsbInDone,
     evtIdUsbOutDone,
 

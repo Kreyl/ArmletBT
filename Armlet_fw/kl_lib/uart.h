@@ -108,6 +108,7 @@ public:
     CmdUart_t(const UartParams_t *APParams) : BaseUart_t(APParams) {}
     void Init(uint32_t ABaudrate);
     void IRxTask();
+    void SignalCmdProcessed();
 };
 
 #define BYTE_UART_EN    FALSE

@@ -4,6 +4,7 @@
  * Created on May 27, 2016, 6:37 PM
  */
 
+#include <usb_msdcdc.h>
 #include "hal.h"
 #include "MsgQ.h"
 #include "kl_lib.h"
@@ -22,7 +23,6 @@
 #include "pill_mgr.h"
 #include "dispatcher.h"
 #include "bsp.h"
-#include "usb_msd.h"
 
 //#define LOGIC_EN
 
@@ -109,7 +109,7 @@ int main() {
 //    Vibra.StartOrRestart(vsqBrrBrr);
 
 //    Sound.Init();
-    UsbMsd.Init();
+    UsbMsdCdc.Init();
 
     TmrOneSecond.StartOrRestart();
 
@@ -273,10 +273,10 @@ void ITask() {
                 Uart.OnClkChange();
                 Clk.PrintFreqs();
                 chThdSleepMilliseconds(270);
-                UsbMsd.Connect();
+                UsbMsdCdc.Connect();
                 break;
             case evtIdUsbDisconnect:
-                UsbMsd.Disconnect();
+                UsbMsdCdc.Disconnect();
                 Clk.SetupBusDividers(ahbDiv2, apbDiv1, apbDiv1); // 24 MHz AHB, 24 MHz APB1, 24 MHz APB2
                 Clk.UpdateFreqValues();
 //                Clk.SetupFlashLatency(Clk.AHBFreqHz/1000000);
@@ -302,8 +302,8 @@ void ProcessUsbDetect(PinSnsState_t *PState, uint32_t Len) {
 #if 1 // ======================= Command processing ============================
 void OnCmd(Shell_t *PShell) {
     Cmd_t *PCmd = &PShell->Cmd;
-//    __unused int32_t dw32 = 0;  // May be unused in some configurations
 //    Printf("%S  ", PCmd->Name);
+
     // Handle command
     if(PCmd->NameIs("Ping")) PShell->Ack(retvOk);
     else if(PCmd->NameIs("Version")) PShell->Printf("%S %S\r", APP_NAME, BUILD_TIME);

@@ -431,15 +431,24 @@ static void UartRxThread(void *arg) {
 }
 
 void CmdUart_t::IRxTask() {
-    if(CmdProcessInProgress) return;    // Busy processing cmd
     // Iterate received bytes
     uint8_t b;
     while(GetByte(&b) == retvOk) {
         if(Cmd.PutChar(b) == pdrNewCmd) {
+            chSysLock();
             EvtMsg_t Msg(evtIdShellCmd, (Shell_t*)this);
-            CmdProcessInProgress = (EvtQMain.SendNowOrExit(Msg) == retvOk);
-        }
-    }
+            if(EvtQMain.SendNowOrExitI(Msg) == retvOk) {
+                chSchGoSleepS(CH_STATE_SUSPENDED); // Wait until cmd processed
+            }
+            chSysUnlock();  // Will be here when application signals that cmd processed
+        } // if new cmd
+    } // whilw get byte
+}
+
+void CmdUart_t::SignalCmdProcessed() {
+    chSysLock();
+    if(IRxThd->state == CH_STATE_SUSPENDED) chSchReadyI(IRxThd);
+    chSysUnlock();
 }
 #endif
 

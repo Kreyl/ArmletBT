@@ -9,6 +9,7 @@
 
 #include "hal.h"
 #include "scsi.h"
+#include "shell.h"
 
 /*
  * Beware! 24MHz core clock is not enough for USB to be happy!
@@ -47,42 +48,22 @@ struct MS_CommandStatusWrapper_t {
 #define MSD_TIMEOUT_MS   2700
 #define MSD_DATABUF_SZ   4096
 
-class UsbMsd_t {
+class UsbMsdCdc_t : public PrintfHelper_t, public Shell_t {
 private:
-    MS_CommandBlockWrapper_t CmdBlock;
-    MS_CommandStatusWrapper_t CmdStatus;
-    SCSI_RequestSenseResponse_t SenseData;
-    SCSI_ReadCapacity10Response_t ReadCapacity10Response;
-    SCSI_ReadFormatCapacitiesResponse_t ReadFormatCapacitiesResponse;
-    void SCSICmdHandler();
-    // Scsi commands
-    void CmdTestReady();
-    uint8_t CmdStartStopUnit();
-    uint8_t CmdInquiry();
-    uint8_t CmdRequestSense();
-    uint8_t CmdReadCapacity10();
-    uint8_t CmdSendDiagnostic();
-    uint8_t CmdReadFormatCapacities();
-    uint8_t CmdRead10();
-    uint8_t CmdWrite10();
-    uint8_t CmdModeSense6();
-    uint8_t ReadWriteCommon(uint32_t *PAddr, uint16_t *PLen);
-    struct {
-        uint8_t Buf[MSD_DATABUF_SZ];
-    } __attribute__((aligned(MSD_DATABUF_SZ / 4)));
-    void BusyWaitIN();
-    uint8_t BusyWaitOUT();
-    void TransmitBuf(uint8_t *Ptr, uint32_t Len);
-    uint8_t ReceiveToBuf(uint8_t *Ptr, uint32_t Len);
+    void IStartTransmissionIfNotYet() {} // Dummy
+    uint8_t IPutChar(char c);
 public:
     void Init();
     void Reset();
     void Connect();
     void Disconnect();
-    // Inner use
-    void Task();
-    thread_t *PThread;
-    bool ISayIsReady = true;
+    void Printf(const char *format, ...) {
+        va_list args;
+        va_start(args, format);
+        IVsPrintf(format, args);
+        va_end(args);
+    }
+    void SignalCmdProcessed();
 };
 
-extern UsbMsd_t UsbMsd;
+extern UsbMsdCdc_t UsbMsdCdc;
