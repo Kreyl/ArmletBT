@@ -319,6 +319,36 @@ void OnCmd(Shell_t *PShell) {
             Printf("cnt %u = %u\r", i, localChar.ka_tet_counters[i]);
     }
 
+#if PILL_ENABLED // ==== Pills ====
+    else if(PCmd->NameIs("PillRead32")) {
+        int32_t Cnt = 0, dw32;
+        if(PCmd->GetNext<int32_t>(&Cnt) != retvOk) { PShell->Ack(retvCmdError); return; }
+        uint8_t MemAddr = 0, b = retvOk;
+        PShell->Printf("PillData32 ");
+        for(int32_t i=0; i<Cnt; i++) {
+            b = PillMgr.Read(MemAddr, &dw32, 4);
+            if(b != retvOk) break;
+            PShell->Printf("%d ", dw32);
+            MemAddr += 4;
+        }
+        PShell->Printf("\r\n");
+        PShell->Ack(b);
+    }
+
+    else if(PCmd->NameIs("PillWrite32")) {
+        uint8_t b = retvCmdError;
+        uint8_t MemAddr = 0;
+        int32_t dw32;
+        while(true) {
+            if(PCmd->GetNext<int32_t>(&dw32) != retvOk) break;
+            b = PillMgr.Write(MemAddr, &dw32, 4);
+            if(b != retvOk) break;
+            MemAddr += 4;
+        } // while
+        PShell->Ack(b);
+    }
+#endif
+
     else PShell->Ack(retvCmdUnknown);
 }
 #endif
