@@ -58,9 +58,7 @@ static Power_t Power;
 #endif
 
 #if 1 // ===================== Logic ======================
-// Callbacks. Returns true if OK
-size_t TellCallback(void *file_context);
-bool SeekCallback(void *file_context, size_t offset);
+// For csv parser
 size_t ReadCallback(void *file_context, uint8_t *buffer, size_t length);
 
 Dispatcher dispatcher;
@@ -310,9 +308,27 @@ void OnCmd(Shell_t *PShell) {
 
 //    else if(PCmd->NameIs("GetBat")) { PShell->Printf("Battery: %u\r", Audio.GetBatteryVmv()); }
 
-    else if(PCmd->NameIs("SS")) { SaveState(-4, true, false); PShell->Ack(retvOk); }
-    else if(PCmd->NameIs("SK")) { SaveKatet(&localChar.ka_tet_links); PShell->Ack(retvOk); }
-    else if(PCmd->NameIs("SC")) { SaveCounters(&localChar.ka_tet_counters); PShell->Ack(retvOk); }
+    else if(PCmd->NameIs("Start")) {
+        uint8_t Slot;
+        uint16_t Volume;
+        char *S;
+        if(PCmd->GetNext<uint8_t>(&Slot) != retvOk)    { PShell->Ack(retvCmdError); return; }
+        if(PCmd->GetNext<uint16_t>(&Volume) != retvOk) { PShell->Ack(retvCmdError); return; }
+        if(PCmd->GetNextString(&S) != retvOk) { PShell->Ack(retvCmdError); return; }
+        SlotPlayer::Start(Slot, Volume, S, false);
+    }
+    else if(PCmd->NameIs("Vol")) {
+        uint8_t Slot;
+        uint16_t Volume;
+        if(PCmd->GetNext<uint8_t>(&Slot) != retvOk)    { PShell->Ack(retvCmdError); return; }
+        if(PCmd->GetNext<uint16_t>(&Volume) != retvOk) { PShell->Ack(retvCmdError); return; }
+        SlotPlayer::SetVolume(Slot, Volume);
+    }
+    else if(PCmd->NameIs("Stop")) {
+        uint8_t Slot;
+        if(PCmd->GetNext<uint8_t>(&Slot) != retvOk)    { PShell->Ack(retvCmdError); return; }
+        SlotPlayer::Stop(Slot);
+    }
 
     else if(PCmd->NameIs("GetC")) {
         for(uint32_t i=0; i<KaTetCounters::SIZE; i++)
@@ -350,35 +366,5 @@ void OnCmd(Shell_t *PShell) {
 #endif
 
     else PShell->Ack(retvCmdUnknown);
-}
-#endif
-
-#if 1 // ========================== Callbacks ==================================
-size_t TellCallback(void *file_context) {
-    FIL *pFile = (FIL*)file_context;
-    return pFile->fptr;
-}
-
-bool SeekCallback(void *file_context, size_t offset) {
-    FIL *pFile = (FIL*)file_context;
-    FRESULT rslt = f_lseek(pFile, offset);
-    if(rslt == FR_OK) return true;
-    else {
-        Printf("SeekErr %u\r", rslt);
-        return false;
-    }
-}
-
-size_t ReadCallback(void *file_context, uint8_t *buffer, size_t length) {
-    FIL *pFile = (FIL*)file_context;
-    uint32_t ReadSz=0;
-    FRESULT rslt = f_read(pFile, buffer, length, &ReadSz);
-    if(rslt == FR_OK) {
-        return ReadSz;
-    }
-    else {
-//        Printf("ReadErr %u\r", rslt);
-        return 0;
-    }
 }
 #endif

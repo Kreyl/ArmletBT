@@ -83,10 +83,10 @@ union rPkt_t  {
 
 #if 1 // ======================= Channels & cycles =============================
 #define RCHNL               7
-#define CYCLE_CNT           4
+#define RCYCLE_CNT          4
 #define ARMLET_CNT          80
 #define LUSTRA_CNT          200
-#define SLOT_CNT            (ARMLET_CNT + LUSTRA_CNT)
+#define RSLOT_CNT           (ARMLET_CNT + LUSTRA_CNT)
 #endif
 
 #if 1 // =========================== Timings ===================================

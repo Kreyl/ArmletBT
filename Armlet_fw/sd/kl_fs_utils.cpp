@@ -17,7 +17,7 @@ char IStr[SD_STRING_SZ];
 
 #if 1 // ============================== Common =================================
 uint8_t TryOpenFileRead(const char *Filename, FIL *PFile) {
-//    Printf("%S: %S\r", __FUNCTION__, Filename);
+//    Printf("%S: %S; %X\r", __FUNCTION__, Filename, PFile);
     FRESULT rslt = f_open(PFile, Filename, FA_READ);
     if(rslt == FR_OK) {
         // Check if zero file

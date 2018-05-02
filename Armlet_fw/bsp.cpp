@@ -82,3 +82,33 @@ void SaveCounters(const KaTetCounters *counters) {
         CloseFile(&CommonFile);
     }
 }
+
+#if 1 // ========================== Callbacks ==================================
+size_t TellCallback(void *file_context) {
+    FIL *pFile = (FIL*)file_context;
+    return pFile->fptr;
+}
+
+bool SeekCallback(void *file_context, size_t offset) {
+    FIL *pFile = (FIL*)file_context;
+    FRESULT rslt = f_lseek(pFile, offset);
+    if(rslt == FR_OK) return true;
+    else {
+        Printf("SeekErr %u\r", rslt);
+        return false;
+    }
+}
+
+size_t ReadCallback(void *file_context, uint8_t *buffer, size_t length) {
+    FIL *pFile = (FIL*)file_context;
+    uint32_t ReadSz=0;
+    FRESULT rslt = f_read(pFile, buffer, length, &ReadSz);
+    if(rslt == FR_OK) {
+        return ReadSz;
+    }
+    else {
+//        Printf("ReadErr %u\r", rslt);
+        return 0;
+    }
+}
+#endif

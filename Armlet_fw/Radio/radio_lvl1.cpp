@@ -48,10 +48,10 @@ public:
     void StartTimerI() { chVTSetI(&TmrTimeslot, TIMESLOT_DURATION_ST, TmrTimeslotCallback, nullptr); }
     void IncTimeSlot() {
         TimeSlot++;
-        if(TimeSlot >= SLOT_CNT) {
+        if(TimeSlot >= RSLOT_CNT) {
             TimeSlot = 0;
             CycleN++;
-            if(CycleN >= CYCLE_CNT) {
+            if(CycleN >= RCYCLE_CNT) {
                 CycleN = 0;
                 // Check TimeSrc timeout
                 if(TimeSrcTimeout >= SCYCLES_TO_KEEP_TIMESRC) TimeSrcId = ID;

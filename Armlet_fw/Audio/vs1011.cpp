@@ -1,5 +1,5 @@
-#include "sound.h"
 #include <string.h>
+#include <vs1011.h>
 
 #define HDR_SZ      44
 const unsigned char header[HDR_SZ] = {
@@ -51,19 +51,6 @@ void SIrqDmaHandler(void *p, uint32_t flags) {
 } // extern c
 
 // =========================== Implementation ==================================
-//static THD_WORKING_AREA(waSoundThread, 512);
-//__noreturn
-//static void SoundThread(void *arg) {
-//    chRegSetThreadName("Sound");
-//    Sound.ITask();
-//}
-
-__noreturn
-void Sound_t::ITask() {
-    while(true) {
-    } // while true
-}
-
 void Sound_t::Init() {
     // ==== GPIO init ====
     PinSetupOut(VS_GPIO, VS_RST, omPushPull);
@@ -119,9 +106,6 @@ void Sound_t::Init() {
         SendBuf((uint8_t*)Saw, 192);
         while(!BufSent);
     }
-
-    // ==== Thread ====
-//    ThdRef = chThdCreateStatic(waSoundThread, sizeof(waSoundThread), NORMALPRIO, (tfunc_t)SoundThread, NULL);
 }
 
 // ================================ Inner use ==================================
