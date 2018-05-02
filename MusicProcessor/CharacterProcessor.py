@@ -237,6 +237,9 @@ class CharacterCSVable(CSVdumpable):
         return cls.INSTANCES
 
 def updateCharacters():
+    print
+    print "Running DTAH CharacterProcessor"
+    print
     return CharacterCSVable.update()
 
 def main():
