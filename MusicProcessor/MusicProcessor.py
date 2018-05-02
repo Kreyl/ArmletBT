@@ -200,7 +200,7 @@ def checkResultMark(targetDir):
     okText = ''
     if okDate:
         with open(okMark) as f:
-            okText = tuple(int(i) for i in f.read().split(',')) # pylint: disable=R0204
+            okText = tuple(int(i) for i in f.read().split(','))
             okNum = okText[0]
             okSize = okText[1] if len(okText) > 1 else 0
     else:
@@ -359,7 +359,7 @@ def processCharacter(character, emotions, baseDir = '.', verifyFiles = False):
                 if newFullName:
                     e = processFile(fullName, newFullName)
                 else:
-                    e = True # pylint: disable=R0204
+                    e = True
                 if e:
                     if e != True:
                         log(True, fileName, "Error processing: %s" % e)
