@@ -81,7 +81,6 @@ public:
     void Start(uint16_t Volume, bool ARepeat) {
         Printf("%S: %S %u %u\r", __FUNCTION__, IFName, Volume, ARepeat);
         if(TryOpenFileRead(IFName, &IFile) == retvOk) {
-            Printf("Sz: %u\r", IFile.obj.objsize);
             mixer.start(
                     Indx, &IFile,
                     (ARepeat? AudioMixer::Mode::Continuous : AudioMixer::Mode::Single),
