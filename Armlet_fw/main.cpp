@@ -250,6 +250,10 @@ void ITask() {
 #endif
                 break;
 
+            case evtIdSoundFileEnd:
+                Printf("SoundFile end: %u\r", Msg.Value);
+                break;
+
 #if 1 // ======= Pill ======
             case evtIdPillConnected:
                 Printf("Pill: %d\r", ((Pill_t*)Msg.Ptr)->TypeInt32);

@@ -14,6 +14,9 @@ void SleepDisable();
 // Sound
 void PlayerVolumeUp();
 void PlayerVolumeDown();
+void PlayerStart(uint8_t SlotN, uint16_t Volume, const char* Emo, bool Repeat);
+void PlayerSetVolume(uint8_t SlotN, uint16_t Volume);
+void PlayerStop(uint8_t SlotN);
 
 // Screen
 void ScreenHighlight(uint32_t Value_percent);

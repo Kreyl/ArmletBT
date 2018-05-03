@@ -15,7 +15,6 @@ enum EvtMsgId_t {
     evtIdEverySecond,
 
     // Audio
-    evtIdSoundPlayStop,
     evtIdSoundFileEnd,
 
     // Usb

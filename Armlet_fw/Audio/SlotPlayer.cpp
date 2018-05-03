@@ -48,7 +48,7 @@ static char IFName[MAX_NAME_LEN]; // Static buffer for file names
 size_t TellCallback(void *file_context);
 bool SeekCallback(void *file_context, size_t offset);
 size_t ReadCallback(void *file_context, uint8_t *buffer, size_t length);
-void TrackEndCallback(int);
+void TrackEndCallback(int SlotN);
 
 static AudioMixer mixer {TellCallback, SeekCallback, ReadCallback, TrackEndCallback, 44100, 2};
 
@@ -138,11 +138,6 @@ static void SoundThread(void *arg) {
 
             case sndcmdPrepareNextBuf:
                 ReadToBuf(PNextBuf);
-//                for(uint32_t i=0; i<BUF_SZ_FRAME; i++) {
-//                    uint32_t k = i* 10;
-//                    PNextBuf->Buf[i] = k + (k<<16);
-//                }
-//                PNextBuf->Sz = BUF_SZ_FRAME;
                 break;
 
             case sndcmdNone: break;
@@ -150,9 +145,10 @@ static void SoundThread(void *arg) {
     } // while true
 }
 
-void TrackEndCallback(int SlotEnd) {
-    Printf("TrackEnd: %u\r", SlotEnd);
-    // XXX Close file here
+void TrackEndCallback(int SlotN) {
+//    Printf("TrackEnd: %u\r", SlotN);
+    Slot[SlotN].Stop(); // Close file
+    EvtQMain.SendNowOrExit(EvtMsg_t(evtIdSoundFileEnd, SlotN));
 }
 
 #endif
