@@ -281,7 +281,7 @@ void ITask() {
                 UsbMsdCdc.Connect();
                 break;
             case evtIdUsbDisconnect:
-//                UsbMsdCdc.Disconnect();
+                UsbMsdCdc.Disconnect();
                 Clk.SetupBusDividers(ahbDiv2, apbDiv1, apbDiv1); // 24 MHz AHB, 24 MHz APB1, 24 MHz APB2
                 Clk.UpdateFreqValues();
                 Clk.SetupFlashLatency(Clk.AHBFreqHz/1000000);
