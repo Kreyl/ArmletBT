@@ -12,6 +12,8 @@
 class AudioMixer
 {
 public:
+    typedef void (*TrackEndCallback)(int track);
+
     typedef AudioTrack::Mode Mode;
 
     typedef AudioTrack Track;
@@ -26,6 +28,7 @@ public:
     AudioMixer(WavReader::TellCallback tell_callback,
                WavReader::SeekCallback seek_callback,
                WavReader::ReadCallback read_callback,
+               TrackEndCallback track_end_callback,
                unsigned long sampling_rate,
                unsigned int channels);
 
@@ -68,10 +71,12 @@ public:
     }
 
 private:
-    unsigned long sampling_rate_;
-    unsigned int channels_;
+    int32_t sample_buffer_[AUDIOMIXER_BUFFER_LENGTH];
 
     Track tracks_[TRACKS];
 
-    int32_t sample_buffer_[AUDIOMIXER_BUFFER_LENGTH];
+    TrackEndCallback track_end_callback_;
+
+    unsigned long sampling_rate_;
+    unsigned int channels_;
 };
