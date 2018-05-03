@@ -24,6 +24,8 @@ void CharacterTable::init(void *file_context,
 
     memset(local_character, 0, sizeof(LocalCharacter));
 
+    char ka_tet_list[MAX_KA_TET_LIST_LENGTH + 1] = {};
+
     while (table->parse_line()) {
         size_t id;
         const char *name;
@@ -54,8 +56,6 @@ void CharacterTable::init(void *file_context,
         if (strcmp(name, local_character_name) == 0) {
             local_character->id = id;
 
-            local_character->corrupted = false;
-
             const char *dogan_field = table->field("dogan");
             if (dogan_field) {
                 int dogan_value = atoi(dogan_field);
@@ -68,11 +68,25 @@ void CharacterTable::init(void *file_context,
                 local_character->dogan = dogan_value;
             }
 
+            local_character->corrupted = false;
+
+            const char *dead_field = table->field("isDead");
+            if (dead_field) {
+                int dead_value = atoi(dead_field);
+
+                local_character->dead = dead_value != 0;
+            }
+
             const char *manni_field = table->field("isManni");
             if (manni_field) {
                 int manni_value = atoi(manni_field);
 
                 local_character->manni = manni_value != 0;
+            }
+
+            const char *ka_tet_field = table->field("kaTet");
+            if (ka_tet_field) {
+                strncpy(ka_tet_list, ka_tet_field, MAX_KA_TET_LIST_LENGTH);
             }
         }
 
@@ -84,7 +98,27 @@ void CharacterTable::init(void *file_context,
         }
     }
 
-    //TODO: ka-tet linking
+    char *handle = ka_tet_list;
+
+    while (true) {
+        char *name = strtok(handle, ":");
+        handle = nullptr;
+        if (!name) {
+            break;
+        }
+        if (name[0] == '\0') {
+            continue;
+        }
+
+        if (strcmp(name, local_character_name) != 0) {
+            size_t id = find(name);
+            if (id == INVALID_CHARACTER) {
+                continue;
+            }
+
+            local_character->ka_tet_links.set(id, true);
+        }
+    }
 
     table->close();
 }

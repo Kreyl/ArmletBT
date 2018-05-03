@@ -47,9 +47,16 @@ public:
                Fade fade_mode = Fade::None,
                uint16_t fade_length_ms = 0);
 
+    void fade(uint16_t level,
+              Fade fade_mode = Fade::None,
+              uint16_t fade_length_ms = 0);
+
     void fade(int track,
               uint16_t level,
               Fade fade_mode = Fade::None,
+              uint16_t fade_length_ms = 0);
+
+    void stop(Fade fade_mode = Fade::None,
               uint16_t fade_length_ms = 0);
 
     void stop(int track,

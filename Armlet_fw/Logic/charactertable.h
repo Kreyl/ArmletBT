@@ -15,6 +15,7 @@ public:
     static const uint8_t INVALID_CHARACTER = 255;
 
     static const size_t MAX_CHARACTER_NAME_LENGTH = 31;
+    static const size_t MAX_KA_TET_LIST_LENGTH = 127;
 
     struct Character
     {

@@ -252,6 +252,9 @@ void ITask() {
 
             case evtIdSoundFileEnd:
                 Printf("SoundFile end: %u\r", Msg.Value);
+#ifdef LOGIC_EN
+                dispatcher.handle_track_end(Msg.Value);
+#endif
                 break;
 
 #if 1 // ======= Pill ======
@@ -278,10 +281,10 @@ void ITask() {
                 UsbMsdCdc.Connect();
                 break;
             case evtIdUsbDisconnect:
-                UsbMsdCdc.Disconnect();
+//                UsbMsdCdc.Disconnect();
                 Clk.SetupBusDividers(ahbDiv2, apbDiv1, apbDiv1); // 24 MHz AHB, 24 MHz APB1, 24 MHz APB2
                 Clk.UpdateFreqValues();
-//                Clk.SetupFlashLatency(Clk.AHBFreqHz/1000000);
+                Clk.SetupFlashLatency(Clk.AHBFreqHz/1000000);
                 Uart.OnClkChange();
                 Printf("USB disconnect\r");
                 Clk.PrintFreqs();

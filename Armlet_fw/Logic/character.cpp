@@ -98,6 +98,7 @@ void Character_ctor(
     QHsm_ctor(&me->super, Q_STATE_CAST(&Character_initial));
 }
 
+
 /*${SMs::Character} ........................................................*/
 /*${SMs::Character::SM} ....................................................*/
 QState Character_initial(Character * const me, QEvt const * const e) {
@@ -231,7 +232,7 @@ QState Character_neutral(Character * const me, QEvt const * const e) {
         /* ${SMs::Character::SM::global::character::alive::neutral} */
         case Q_ENTRY_SIG: {
             Vibro(LONG_VIBRO);
-                DISPATCH_ONESHOT( BECOME_NEUTRAL);
+                DISPATCH_ONESHOT(BECOME_NEUTRAL);
                 ScreenAddBMPToQueue("Neutral.bmp");
                 SaveState(NEUTRAL, false, false);
             status_ = Q_HANDLED();
@@ -255,8 +256,8 @@ QState Character_neutral(Character * const me, QEvt const * const e) {
         }
         /* ${SMs::Character::SM::global::character::alive::neutral::INFLUENCE_AT_DOGAN} */
         case INFLUENCE_AT_DOGAN_SIG: {
-            /* ${SMs::Character::SM::global::character::alive::neutral::INFLUENCE_AT_DOG~::[me->DoganScale>=WHITE_THRESHOLD~} */
             me->DoganScale += ((const CharacterQEvt*)e)->amount;
+            /* ${SMs::Character::SM::global::character::alive::neutral::INFLUENCE_AT_DOG~::[me->DoganScale>=WHITE_THRESHOLD~} */
             if (me->DoganScale>=WHITE_THRESHOLD) {
                 status_ = Q_TRAN(&Character_whitish);
             }
@@ -269,8 +270,8 @@ QState Character_neutral(Character * const me, QEvt const * const e) {
             }
             break;
         }
-        /* ${SMs::Character::SM::global::character::alive::neutral::BEGIN(DEAD)+BASE} */
-        case BEGIN(DEAD)+BASE_SIG: {
+        /* ${SMs::Character::SM::global::character::alive::neutral::BEGIN(DEATH)+BASE} */
+        case BEGIN(DEATH)+BASE_SIG: {
             status_ = Q_TRAN(&Character_neutral_dead);
             break;
         }
@@ -297,8 +298,8 @@ QState Character_whiten(Character * const me, QEvt const * const e) {
             status_ = Q_HANDLED();
             break;
         }
-        /* ${SMs::Character::SM::global::character::alive::whiten::BEGIN(DEAD)+BASE} */
-        case BEGIN(DEAD)+BASE_SIG: {
+        /* ${SMs::Character::SM::global::character::alive::whiten::BEGIN(DEATH)+BASE} */
+        case BEGIN(DEATH)+BASE_SIG: {
             status_ = Q_TRAN(&Character_white_dead);
             break;
         }
@@ -440,8 +441,8 @@ QState Character_red(Character * const me, QEvt const * const e) {
             status_ = Q_HANDLED();
             break;
         }
-        /* ${SMs::Character::SM::global::character::alive::red::BEGIN(DEAD)+BASE} */
-        case BEGIN(DEAD)+BASE_SIG: {
+        /* ${SMs::Character::SM::global::character::alive::red::BEGIN(DEATH)+BASE} */
+        case BEGIN(DEATH)+BASE_SIG: {
             status_ = Q_TRAN(&Character_crimson_dead);
             break;
         }
@@ -677,7 +678,7 @@ QState Character_crimson_dead(Character * const me, QEvt const * const e) {
         }
         /* ${SMs::Character::SM::global::character::dead::crimson_dead::BEGIN(SHOW_DOGAN_STATE)+BASE} */
         case BEGIN(SHOW_DOGAN_STATE)+BASE_SIG: {
-            ScreenShowPicture("Crimsoni.bmp");
+            ScreenShowPicture("Crimson.bmp");
             status_ = Q_HANDLED();
             break;
         }

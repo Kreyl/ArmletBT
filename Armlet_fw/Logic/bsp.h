@@ -2,8 +2,11 @@
 
 #include <cstdint>
 
-class KaTetLinks;
-class KaTetCounters;
+class Flags;
+typedef Flags KaTetLinks;
+
+class Counters;
+typedef Counters KaTetCounters;
 
 // General
 void Vibro(uint32_t Duration_ms);

@@ -86,6 +86,15 @@ bool AudioMixer::start(int track,
     return true;
 }
 
+void AudioMixer::fade(uint16_t level,
+                      AudioMixer::Fade fade_mode,
+                      uint16_t fade_length_ms)
+{
+    for (int track = 0; track < TRACKS; track++) {
+        fade(track, level, fade_mode, fade_length_ms);
+    }
+}
+
 void AudioMixer::fade(int track,
                       uint16_t level,
                       AudioMixer::Fade fade_mode,
@@ -97,6 +106,14 @@ void AudioMixer::fade(int track,
 
     if (tracks_[track].running()) {
         tracks_[track].fade(level, fade_mode, fade_length_ms);
+    }
+}
+
+void AudioMixer::stop(Fade fade_mode,
+                      uint16_t fade_length_ms)
+{
+    for (int track = 0; track < TRACKS; track++) {
+        stop(track, fade_mode, fade_length_ms);
     }
 }
 
@@ -115,11 +132,7 @@ void AudioMixer::stop(int track,
 
 void AudioMixer::clear()
 {
-    for (int track = 0; track < TRACKS; track++) {
-        if (tracks_[track].running()) {
-            tracks_[track].stop();
-        }
-    }
+    stop();
 }
 
 size_t AudioMixer::play(int16_t *buffer, size_t frames)
