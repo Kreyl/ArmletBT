@@ -40,16 +40,26 @@ extern RTCDriver RTCD1;
 
 extern void SDSignalError();
 
+semaphore_t SemSD;
+
 bool SDRead(uint32_t startblk, uint8_t *buffer, uint32_t n) {
 //    PrintfC("%S\r", __FUNCTION__);
-    bool Rslt = sdcRead(&SDCD1, startblk, buffer, n);
-    if(Rslt == HAL_FAILED) SDSignalError();
+    bool Rslt = false;
+    if(chSemWait(&SemSD) == MSG_OK) {
+        Rslt = sdcRead(&SDCD1, startblk, buffer, n);
+        if(Rslt == HAL_FAILED) SDSignalError();
+        chSemSignal(&SemSD);
+    }
     return Rslt;
 }
 
 bool SDWrite(uint32_t startblk, const uint8_t *buffer, uint32_t n) {
-    bool Rslt = sdcWrite(&SDCD1, startblk, buffer, n);
-    if(Rslt == HAL_FAILED) SDSignalError();
+    bool Rslt = false;
+    if(chSemWait(&SemSD) == MSG_OK) {
+        Rslt = sdcWrite(&SDCD1, startblk, buffer, n);
+        if(Rslt == HAL_FAILED) SDSignalError();
+        chSemSignal(&SemSD);
+    }
     return Rslt;
 }
 
@@ -62,6 +72,7 @@ DSTATUS disk_initialize (
 {
   DSTATUS stat;
 //  PrintfC("SD init\r");
+  chSemObjectInit(&SemSD, 1);
     stat = 0;
     /* It is initialized externally, just reads the status.*/
     if (blkGetDriverState(&SDCD1) != BLK_READY)

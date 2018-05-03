@@ -38,10 +38,12 @@ void KaCounter_ctor(
     KaCounter* me,
     Dispatcher* dispatcher,
     KaTetCounters* KaTetTimers,
-    KaTetLinks* KaTets)
+    KaTetLinks* KaTets,
+    NearCharacters* Characters)
 {
     me->KaTetTimers = KaTetTimers;
     me->KaTets = KaTets;
+    me->Characters = Characters;
     me->dispatcher = dispatcher;
     QHsm_ctor(&me->super, Q_STATE_CAST(&KaCounter_initial));
 }
@@ -95,8 +97,21 @@ QState KaCounter_idle(KaCounter * const me, QEvt const * const e) {
     switch (e->sig) {
         /* ${SMs::KaCounter::SM::global::ka_tet_counter::idle::BEGIN(PERSON_NEAR)+BASE} */
         case BEGIN(PERSON_NEAR)+BASE_SIG: {
-            /* ${SMs::KaCounter::SM::global::ka_tet_counter::idle::BEGIN(PERSON_NEA~::[((me->KaTets)->get(((constKaCou~} */
-            if (((me->KaTets)->get(((const KaCounterQEvt*)e)->id)) == false) {
+            /* ${SMs::KaCounter::SM::global::ka_tet_counter::idle::BEGIN(PERSON_NEA~::[(((me->KaTets)->get(((constKaCo~} */
+            if ((((me->KaTets)->get(((const KaCounterQEvt*)e)->id)) == false) && (me->Characters->count_ones() == 1)) {
+                me->CurrentId = ((const KaCounterQEvt*)e)->id;
+                status_ = Q_TRAN(&KaCounter_ka_tet_forming);
+            }
+            else {
+                status_ = Q_UNHANDLED();
+            }
+            break;
+        }
+        /* ${SMs::KaCounter::SM::global::ka_tet_counter::idle::END(PERSON_NEAR)+BASE} */
+        case END(PERSON_NEAR)+BASE_SIG: {
+            /* ${SMs::KaCounter::SM::global::ka_tet_counter::idle::END(PERSON_NEAR)~::[(me->Characters->count_ones()==~} */
+            if ((me->Characters->count_ones() == 1)) {
+                me->CurrentId = me->Characters->find_first_one();
                 status_ = Q_TRAN(&KaCounter_ka_tet_forming);
             }
             else {
@@ -115,12 +130,6 @@ QState KaCounter_idle(KaCounter * const me, QEvt const * const e) {
 QState KaCounter_ka_tet_forming(KaCounter * const me, QEvt const * const e) {
     QState status_;
     switch (e->sig) {
-        /* ${SMs::KaCounter::SM::global::ka_tet_counter::ka_tet_forming} */
-        case Q_ENTRY_SIG: {
-            me->CurrentId = ((const KaCounterQEvt*)e)->id;
-            status_ = Q_HANDLED();
-            break;
-        }
         /* ${SMs::KaCounter::SM::global::ka_tet_counter::ka_tet_forming::END(PERSON_NEAR)+BASE} */
         case END(PERSON_NEAR)+BASE_SIG: {
             /* ${SMs::KaCounter::SM::global::ka_tet_counter::ka_tet_forming::END(PERSON_NEAR)~::[((constKaCounterQEvt*)e)->id==m~} */

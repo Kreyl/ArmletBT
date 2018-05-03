@@ -71,6 +71,8 @@ public:
 
     void handle_nfc_packet(uint8_t influence_id);
 
+    void handle_track_end(int track);
+
     void begin_influence(size_t id,
                          uint8_t parameter = 0,
                          int16_t timeout = -1);
@@ -94,10 +96,10 @@ private:
 
     RingBuffer<QueueEntry, 32> queue_;
 
+    Screen screen_sm_;
     Character character_sm_;
     KaCounter ka_counter_sm_;
     KaTet ka_tet_sm_;
-    Screen screen_sm_;
 
     int ticks_;
 };

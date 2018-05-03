@@ -9,13 +9,13 @@
 static const int MIN_DOGAN = -2;
 static const int MAX_DOGAN = 2;
 
-class KaTetLinks
+class Flags
 {
 public:
     static const size_t SIZE = CharacterTable::MAX_CHARACTER_COUNT;
 
 public:
-    KaTetLinks()
+    Flags()
         : data_{}
     {
     }
@@ -55,6 +55,30 @@ public:
         return accum == 0;
     }
 
+    size_t count_ones() const
+    {
+        size_t count = 0;
+
+        for (size_t i = 0; i < sizeof(data_) / 4; i++) {
+            count += static_cast<size_t>(__builtin_popcountl(data_[i]));
+        }
+
+        return count;
+    }
+
+    size_t find_first_one() const
+    {
+        for (size_t i = 0; i < sizeof(data_) / 4; i++) {
+            int ffs = __builtin_ffsl(data_[i]);
+
+            if (ffs != 0) {
+                return i * 32 + static_cast<size_t>(ffs) - 1;
+            }
+        }
+
+        return SIZE;
+    }
+
     void clear()
     {
         memset(data_, 0, sizeof(data_));
@@ -64,12 +88,20 @@ private:
     uint32_t data_[(SIZE + 31) / 32];
 };
 
-class KaTetCounters
+typedef Flags KaTetLinks;
+typedef Flags NearCharacters;
+
+class Counters
 {
 public:
     static const size_t SIZE = CharacterTable::MAX_CHARACTER_COUNT;
 
 public:
+    Counters()
+        : counters_{}
+    {
+    }
+
     uint16_t &operator[](size_t index)
     {
         if (index >= SIZE) {
@@ -92,11 +124,14 @@ private:
     uint16_t counters_[SIZE + 1];
 };
 
+typedef Counters KaTetCounters;
+
 struct LocalCharacter
 {
     size_t id;
     KaTetLinks ka_tet_links;
     KaTetCounters ka_tet_counters;
+    NearCharacters near_characters;
     int dogan;
     bool corrupted;
     bool dead;

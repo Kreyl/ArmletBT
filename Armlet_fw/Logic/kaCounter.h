@@ -29,6 +29,7 @@ extern "C" {
 
 class Dispatcher;
 
+
 /*${SMs::KaCounter} ........................................................*/
 typedef struct {
 /* protected: */
@@ -38,6 +39,7 @@ typedef struct {
     Dispatcher* dispatcher;
     KaTetCounters* KaTetTimers;
     KaTetLinks* KaTets;
+    NearCharacters* Characters;
     size_t CurrentId;
 } KaCounter;
 
@@ -67,7 +69,8 @@ void KaCounter_ctor(
     KaCounter* me,
     Dispatcher* dispatcher,
     KaTetCounters* KaTetTimers,
-    KaTetLinks* KaTets);
+    KaTetLinks* KaTets,
+    NearCharacters* Characters);
 
 #ifdef __cplusplus
 }

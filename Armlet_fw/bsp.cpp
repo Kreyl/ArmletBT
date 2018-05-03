@@ -10,53 +10,68 @@
 #include "shell.h"
 #include "localcharacter.h"
 
+#define PRINT_FUNC()  Printf("%S\r", __FUNCTION__)
+
 // General
 void Vibro(uint32_t Duration_ms) {
-    Printf("%S\r", __FUNCTION__);
+    PRINT_FUNC();
 }
 void PowerOff() {
-    Printf("%S\r", __FUNCTION__);
+    PRINT_FUNC();
 }
 
 void SleepEnable() {
-    Printf("%S\r", __FUNCTION__);
+    PRINT_FUNC();
 }
 void SleepDisable() {
-    Printf("%S\r", __FUNCTION__);
+    PRINT_FUNC();
 }
 
-// Sound
+#if 1 // Sound
 void PlayerVolumeUp() {
-    Printf("%S\r", __FUNCTION__);
+    PRINT_FUNC();
 }
 void PlayerVolumeDown() {
-    Printf("%S\r", __FUNCTION__);
+    PRINT_FUNC();
 }
+void PlayerStart(uint8_t SlotN, uint16_t Volume, const char* Emo, bool Repeat) {
+    PRINT_FUNC();
+
+}
+void PlayerSetVolume(uint8_t SlotN, uint16_t Volume) {
+    PRINT_FUNC();
+
+}
+void PlayerStop(uint8_t SlotN) {
+    PRINT_FUNC();
+
+}
+#endif
 
 // Screen
 void ScreenHighlight(uint32_t Value_percent) {
-    Printf("%S %u\r", __FUNCTION__, Value_percent);
+    PRINT_FUNC();
 }
 void ScreenAddBMPToQueue(const char* AFilename) {
-    Printf("%S %S\r", __FUNCTION__, AFilename);
+    PRINT_FUNC();
 }
 void ScreenShowNextBMP() {
-    Printf("%S\r", __FUNCTION__);
+    PRINT_FUNC();
 }
 void ScreenShowActualBMP() {
-    Printf("%S\r", __FUNCTION__);
+    PRINT_FUNC();
 }
 uint32_t GetBMPQueueLength() {
-    Printf("%S\r", __FUNCTION__);
+    PRINT_FUNC();
     return 0;
 }
 void ScreenShowPicture(const char* AFilename) {
-    Printf("%S %S\r", __FUNCTION__, AFilename);
+    PRINT_FUNC();
 }
 
 // Character
 void SaveState(int Dogan, bool Dead, bool Corrupted) {
-    Printf("%S\r", __FUNCTION__);
+    PRINT_FUNC();
     if(TryOpenFileRewrite("State.csv", &CommonFile) == retvOk) {
         f_printf(&CommonFile, "Dogan = %d\r\n", Dogan);
         f_printf(&CommonFile, "Dead = %d\r\n", Dead);
@@ -65,7 +80,7 @@ void SaveState(int Dogan, bool Dead, bool Corrupted) {
     }
 }
 void SaveKatet(const KaTetLinks *links) {
-    Printf("%S\r", __FUNCTION__);
+    PRINT_FUNC();
     if(TryOpenFileRewrite("KatetLinks.csv", &CommonFile) == retvOk) {
         for(uint32_t i=0; i<links->SIZE; i++) {
             f_printf(&CommonFile, "%u = %d\r\n", i, links->get(i));
@@ -74,7 +89,7 @@ void SaveKatet(const KaTetLinks *links) {
     }
 }
 void SaveCounters(const KaTetCounters *counters) {
-    Printf("%S\r", __FUNCTION__);
+    PRINT_FUNC();
     if(TryOpenFileRewrite("Counters.csv", &CommonFile) == retvOk) {
         for(uint32_t i=0; i<counters->SIZE; i++) {
             f_printf(&CommonFile, "%u = %u\r\n", i, (*counters)[i]);

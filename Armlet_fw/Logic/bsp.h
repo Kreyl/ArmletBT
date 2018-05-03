@@ -2,8 +2,11 @@
 
 #include <cstdint>
 
-class KaTetLinks;
-class KaTetCounters;
+class Flags;
+typedef Flags KaTetLinks;
+
+class Counters;
+typedef Counters KaTetCounters;
 
 // General
 void Vibro(uint32_t Duration_ms);
@@ -14,6 +17,9 @@ void SleepDisable();
 // Sound
 void PlayerVolumeUp();
 void PlayerVolumeDown();
+void PlayerStart(uint8_t SlotN, uint16_t Volume, const char* Emo, bool Repeat);
+void PlayerSetVolume(uint8_t SlotN, uint16_t Volume);
+void PlayerStop(uint8_t SlotN);
 
 // Screen
 void ScreenHighlight(uint32_t Value_percent);

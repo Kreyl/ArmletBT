@@ -41,6 +41,7 @@ void Screen_ctor(Screen* me, Dispatcher* dispatcher) {
     QHsm_ctor(&me->super, Q_STATE_CAST(&Screen_initial));
 }
 
+
 /*${SMs::Screen} ...........................................................*/
 /*${SMs::Screen::SM} .......................................................*/
 QState Screen_initial(Screen * const me, QEvt const * const e) {
@@ -109,7 +110,7 @@ QState Screen_ScreenButtons(Screen * const me, QEvt const * const e) {
                         } else {
                             ScreenShowPicture("NotCharging.bmp");
                        }
-                    }
+                   }
                 }
             status_ = Q_HANDLED();
             break;
@@ -122,6 +123,18 @@ QState Screen_ScreenButtons(Screen * const me, QEvt const * const e) {
                 if (me->ChargePercent <= 20) {
                     ScreenShowPicture("BatteryLow.bmp");
                 }
+            status_ = Q_HANDLED();
+            break;
+        }
+        /* ${SMs::Screen::SM::global::ScreenButtons::BTN_DOWN} */
+        case BTN_DOWN_SIG: {
+            PlayerVolumeDown();
+            status_ = Q_HANDLED();
+            break;
+        }
+        /* ${SMs::Screen::SM::global::ScreenButtons::BTN_UP} */
+        case BTN_UP_SIG: {
+            PlayerVolumeUp();
             status_ = Q_HANDLED();
             break;
         }
@@ -143,18 +156,6 @@ QState Screen_active(Screen * const me, QEvt const * const e) {
             status_ = Q_HANDLED();
             break;
         }
-        /* ${SMs::Screen::SM::global::ScreenButtons::active::BTN_DOWN} */
-        case BTN_DOWN_SIG: {
-            PlayerVolumeDown();
-            status_ = Q_HANDLED();
-            break;
-        }
-        /* ${SMs::Screen::SM::global::ScreenButtons::active::BTN_UP} */
-        case BTN_UP_SIG: {
-            PlayerVolumeUp();
-            status_ = Q_HANDLED();
-            break;
-        }
         /* ${SMs::Screen::SM::global::ScreenButtons::active::BTN_NEXT_PICTURE} */
         case BTN_NEXT_PICTURE_SIG: {
             ScreenShowNextBMP();
@@ -169,7 +170,7 @@ QState Screen_active(Screen * const me, QEvt const * const e) {
         }
         /* ${SMs::Screen::SM::global::ScreenButtons::active::BTN_DEATH_LONG} */
         case BTN_DEATH_LONG_SIG: {
-            DISPATCH_ONESHOT(DEAD);
+            DISPATCH_ONESHOT(DEATH);
             status_ = Q_HANDLED();
             break;
         }

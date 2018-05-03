@@ -78,14 +78,13 @@ bool CsvTable::parse_line()
 
         while (field_count_ < MAX_FIELD_COUNT) {
             char *field = strtok(handle, ",");
+            handle = nullptr;
             if (!field) {
                 break;
             }
 
             fields_[field_count_] = field;
             field_count_++;
-
-            handle = nullptr;
         }
     }
 

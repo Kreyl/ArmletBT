@@ -25,11 +25,14 @@ static inline int16_t saturate(int32_t value)
 AudioMixer::AudioMixer(WavReader::TellCallback tell_callback,
                        WavReader::SeekCallback seek_callback,
                        WavReader::ReadCallback read_callback,
+                       TrackEndCallback track_end_callback,
                        unsigned long sampling_rate,
                        unsigned int channels)
-    : sampling_rate_(sampling_rate),
-      channels_(channels),
-      tracks_()
+    : tracks_(),
+      track_end_callback_(track_end_callback),
+      sampling_rate_(sampling_rate),
+      channels_(channels)
+
 {
     for (int track = 0; track < TRACKS; track++) {
         tracks_[track].init(tell_callback,
@@ -83,6 +86,15 @@ bool AudioMixer::start(int track,
     return true;
 }
 
+void AudioMixer::fade(uint16_t level,
+                      AudioMixer::Fade fade_mode,
+                      uint16_t fade_length_ms)
+{
+    for (int track = 0; track < TRACKS; track++) {
+        fade(track, level, fade_mode, fade_length_ms);
+    }
+}
+
 void AudioMixer::fade(int track,
                       uint16_t level,
                       AudioMixer::Fade fade_mode,
@@ -93,7 +105,15 @@ void AudioMixer::fade(int track,
     }
 
     if (tracks_[track].running()) {
-        tracks_[track].fade(level, fade_mode, fade_length_ms);\
+        tracks_[track].fade(level, fade_mode, fade_length_ms);
+    }
+}
+
+void AudioMixer::stop(Fade fade_mode,
+                      uint16_t fade_length_ms)
+{
+    for (int track = 0; track < TRACKS; track++) {
+        stop(track, fade_mode, fade_length_ms);
     }
 }
 
@@ -106,17 +126,13 @@ void AudioMixer::stop(int track,
     }
 
     if (tracks_[track].running()) {
-        tracks_[track].stop(fade_mode, fade_length_ms);\
+        tracks_[track].stop(fade_mode, fade_length_ms);
     }
 }
 
 void AudioMixer::clear()
 {
-    for (int track = 0; track < TRACKS; track++) {
-        if (tracks_[track].running()) {
-            tracks_[track].stop();
-        }
-    }
+    stop();
 }
 
 size_t AudioMixer::play(int16_t *buffer, size_t frames)
@@ -141,7 +157,7 @@ size_t AudioMixer::play(int16_t *buffer, size_t frames)
                 size_t track_frames = tracks_[track].play(buffer, batch_frames);
                 if (track_frames < 1) {
                     tracks_[track].stop();
-                    //TODO: call stop callback
+                    track_end_callback_(track);
                     continue;
                 }
 

@@ -93,7 +93,7 @@ int main() {
     Lcd.Init();
     SD.Init();
 //    Printf("ID = %u\r", ID);
-    DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
+//    DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
 
     SimpleSensors::Init();
     Power.Init();
@@ -250,6 +250,13 @@ void ITask() {
 #endif
                 break;
 
+            case evtIdSoundFileEnd:
+                Printf("SoundFile end: %u\r", Msg.Value);
+#ifdef LOGIC_EN
+                dispatcher.handle_track_end(Msg.Value);
+#endif
+                break;
+
 #if 1 // ======= Pill ======
             case evtIdPillConnected:
                 Printf("Pill: %d\r", ((Pill_t*)Msg.Ptr)->TypeInt32);
@@ -274,10 +281,10 @@ void ITask() {
                 UsbMsdCdc.Connect();
                 break;
             case evtIdUsbDisconnect:
-                UsbMsdCdc.Disconnect();
+//                UsbMsdCdc.Disconnect();
                 Clk.SetupBusDividers(ahbDiv2, apbDiv1, apbDiv1); // 24 MHz AHB, 24 MHz APB1, 24 MHz APB2
                 Clk.UpdateFreqValues();
-//                Clk.SetupFlashLatency(Clk.AHBFreqHz/1000000);
+                Clk.SetupFlashLatency(Clk.AHBFreqHz/1000000);
                 Uart.OnClkChange();
                 Printf("USB disconnect\r");
                 Clk.PrintFreqs();

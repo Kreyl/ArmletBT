@@ -32,6 +32,8 @@ void Dispatcher::init(const InfluenceTable *influence_table,
 
     local_character_ = local_character;
 
+    Screen_ctor(&screen_sm_,
+                this);
     Character_ctor(&character_sm_,
                    this,
                    local_character_->dogan,
@@ -41,19 +43,18 @@ void Dispatcher::init(const InfluenceTable *influence_table,
     KaCounter_ctor(&ka_counter_sm_,
                    this,
                    &(local_character_->ka_tet_counters),
-                   &(local_character_->ka_tet_links));
+                   &(local_character_->ka_tet_links),
+                   &(local_character_->near_characters));
     KaTet_ctor(&ka_tet_sm_,
                this,
                &(local_character_->ka_tet_links));
-    Screen_ctor(&screen_sm_,
-                this);
 
     QEvt init_event = {Q_INIT_SIG};
 
+    QMSM_INIT(&(screen_sm_.super), &init_event);
     QMSM_INIT(&(character_sm_.super), &init_event);
     QMSM_INIT(&(ka_counter_sm_.super), &init_event);
     QMSM_INIT(&(ka_tet_sm_.super), &init_event);
-    QMSM_INIT(&(screen_sm_.super), &init_event);
 
     process_queue();
 
@@ -69,15 +70,14 @@ void Dispatcher::handle_button(int id, bool long_press)
 
     switch (id) {
     case Buttons::A:
-        break;
-    case Buttons::B:
         if (long_press) {
             screen_event = {{BTN_DEATH_LONG_SIG}, 0, false, false};
             QMSM_DISPATCH(&(screen_sm_.super), &(screen_event.super));
-        } else {
-            screen_event = {{BTN_NEXT_PICTURE_SIG}, 0, false, false};
-            QMSM_DISPATCH(&(screen_sm_.super), &(screen_event.super));
         }
+        break;
+    case Buttons::B:
+        screen_event = {{BTN_NEXT_PICTURE_SIG}, 0, false, false};
+        QMSM_DISPATCH(&(screen_sm_.super), &(screen_event.super));
         break;
     case Buttons::C:
         if (long_press) {
@@ -148,6 +148,11 @@ void Dispatcher::handle_nfc_packet(uint8_t influence_id)
     process_queue();
 }
 
+void Dispatcher::handle_track_end(int track)
+{
+    (void)track;
+}
+
 void Dispatcher::begin_influence(size_t id,
                                  uint8_t parameter,
                                  int16_t timeout)
@@ -178,12 +183,11 @@ bool Dispatcher::influence_active(size_t id)
 
 void Dispatcher::tick()
 {
-    const size_t influence_count = influence_table_->influence_count();
-
-    int dogan_effect = 0;
+    static const int DEFAULT_DOGAN_EFFECT = -1;
+    int dogan_effect = DEFAULT_DOGAN_EFFECT;
 
     for (size_t influence_id = 0;
-         influence_id < influence_count;
+         influence_id < influence_table_->influence_count();
          influence_id++) {
         if (influence_states_[influence_id].remaining_time != 0) {
             const InfluenceTable::Influence *influence;
@@ -201,25 +205,25 @@ void Dispatcher::tick()
         }
     }
 
+    ScreenQEvt screen_event = {{TIME_TICK_1S_SIG}, 0, false, false};
+    QMSM_DISPATCH(&(screen_sm_.super), &(screen_event.super));
+
     CharacterQEvt character_event = {{INFLUENCE_AT_DOGAN_SIG}, dogan_effect};
     QMSM_DISPATCH(&(character_sm_.super), &(character_event.super));
 
     KaCounterQEvt ka_counter_event = {{TIME_TICK_1S_SIG}, 0};
     QMSM_DISPATCH(&(ka_counter_sm_.super), &(ka_counter_event.super));
 
-    ScreenQEvt screen_event = {{TIME_TICK_1S_SIG}, 0, false, false};
-    QMSM_DISPATCH(&(screen_sm_.super), &(screen_event.super));
-
     ticks_++;
 
     if (ticks_ >= 60) {
         ticks_ = 0;
 
-        ka_counter_event = {{TIME_TICK_1M_SIG}, 0};
-        QMSM_DISPATCH(&(ka_counter_sm_.super), &(ka_counter_event.super));
-
         screen_event = {{TIME_TICK_1M_SIG}, 0, false, false};
         QMSM_DISPATCH(&(screen_sm_.super), &(screen_event.super));
+
+        ka_counter_event = {{TIME_TICK_1M_SIG}, 0};
+        QMSM_DISPATCH(&(ka_counter_sm_.super), &(ka_counter_event.super));
     }
 
     process_queue();
@@ -243,9 +247,11 @@ void Dispatcher::process_queue()
         switch (entry.action) {
         case QueueEntry::Action::Begin:
             signal += static_cast<QSignal>(BEGIN_BY_ID(logical_id));
+            local_character_->near_characters.set(character_id, true);
             break;
         case QueueEntry::Action::End:
             signal += static_cast<QSignal>(END_BY_ID(logical_id));
+            local_character_->near_characters.set(character_id, false);
             break;
         }
 
