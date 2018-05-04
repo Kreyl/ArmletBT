@@ -8,7 +8,7 @@ from getpass import getpass
 from json import loads as jsonLoads, JSONEncoder
 from os import getcwd
 from os.path import dirname, isfile, join, realpath
-from sys import argv, stdout
+from sys import argv, platform, stdout
 
 # Requests HTTP library
 try:
@@ -23,6 +23,11 @@ API_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
 CACHE_FILE_NAME = 'joinrpg-%d.json'
 DEBUG_DUMP_FILE_NAME = 'joinrpg-%d-debug.json'
+
+isWindows = platform.lower().startswith('win')
+CONSOLE_ENCODING = stdout.encoding or ('cp866' if isWindows else 'UTF-8')
+def encodeForConsole(s):
+    return s.encode(CONSOLE_ENCODING, 'replace')
 
 def getWorkingDir():
     if argv[0].endswith('.py'):
@@ -176,7 +181,7 @@ class JoinRPG(JSONable):
             else:
                 print "Aborting"
                 raise
-        print "Project name is: %s" % (metadata or self.metadata)['ProjectName']
+        print "Project name is: %s" % encodeForConsole((metadata or self.metadata)['ProjectName'])
         if metadata:
             if metadata == self.metadata:
                 print "Metadata unchanged, updating cache"
