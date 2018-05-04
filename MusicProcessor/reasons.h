@@ -8,7 +8,7 @@
  *
  * !!! DO NOT EDIT !!!
  *
- * Generated at 2018-05-02 17:25:44
+ * Generated at 2018-05-04 15:54:21
  */
 #ifndef REASONS_H
 #define REASONS_H
@@ -152,6 +152,11 @@ enum
     SuManson_ID = 192,
     SiManson_ID = 193,
     SaManson_ID = 194,
+    SManson_ID = 195,
+    MAndersen_ID = 196,
+    RParkinson2_ID = 197,
+    EPeirce_ID = 198,
+    RKuroki_ID = 199,
 };
 
 #endif // ifdef REASONS_H

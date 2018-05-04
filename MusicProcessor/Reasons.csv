@@ -7,7 +7,7 @@
 #
 # !!! DO NOT EDIT !!!
 #
-# Generated at 2018-05-02 19:11:33
+# Generated at 2018-05-04 15:54:21
 #
 rID,rName,level,timeout,doganAmount,eID,eName
 1,DOOR,0,0,0,,
@@ -147,3 +147,8 @@ rID,rName,level,timeout,doganAmount,eID,eName
 192,SuManson,0,0,0,,
 193,SiManson,0,0,0,,
 194,SaManson,0,0,0,,
+195,SManson,0,0,0,,
+196,MAndersen,0,0,0,,
+197,RParkinson2,0,0,0,,
+198,EPeirce,0,0,0,,
+199,RKuroki,0,0,0,,
