@@ -72,6 +72,7 @@ static const mVPercent_t mVPercentTableLiIon[] = {
 };
 #define mVPercentTableLiIonSz    countof(mVPercentTableLiIon)
 
+__unused
 static uint8_t mV2PercentLiIon(uint16_t mV) {
     for(uint8_t i=0; i<mVPercentTableLiIonSz; i++)
         if(mV >= mVPercentTableLiIon[i].mV) return mVPercentTableLiIon[i].Percent;

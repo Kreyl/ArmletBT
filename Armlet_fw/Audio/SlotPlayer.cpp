@@ -14,6 +14,7 @@
 #include "vs1011.h"
 
 thread_reference_t ISndThd;
+DirList_t DirList;
 
 enum SndCmd_t {sndcmdNone, sndcmdStart, sndCmdVolume, sndcmdStop, sndcmdPrepareNextBuf};
 
@@ -99,9 +100,11 @@ static Slot_t Slot[AudioMixer::TRACKS];
 #endif
 
 uint8_t EmoToFName(const char* Emo) {
-    strcpy(IFName, Emo);
-    Printf("%S: %S\r", __FUNCTION__, IFName);
-    return retvOk;
+    if(DirList.GetRandomFnameFromDir(Emo, IFName) == retvOk) {
+//        Printf("%S: %S\r", __FUNCTION__, IFName);
+        return retvOk;
+    }
+    else return retvFail;
 }
 
 #if 1 // ============================== Thread =================================
