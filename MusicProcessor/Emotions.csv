@@ -7,7 +7,7 @@
 #
 # !!! DO NOT EDIT !!!
 #
-# Generated at 2018-05-02 19:11:33
+# Generated at 2018-05-10 02:33:03
 #
 eID,eName,eType,ePriority,isPlayer
 0,ARRIVING,0,2,0
@@ -43,7 +43,7 @@ eID,eName,eType,ePriority,isPlayer
 30,GUNSLINGER_FEELING,0,7,0
 31,HEAL,0,2,0
 32,HEAL_LONG,0,2,0
-33,HEART,1,0,0
+33,HEART,1,-1,0
 34,HOPE,0,3,0
 35,HYPNOSIS,0,1,0
 36,INN,1,8,0
