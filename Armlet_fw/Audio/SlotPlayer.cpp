@@ -179,7 +179,7 @@ void SetVolume(uint8_t SlotN, uint16_t Volume) {
     MsgQSnd.SendNowOrExit(SndMsg_t(sndCmdVolume, SlotN, Volume));
 }
 
-void SetVolume(uint16_t Volume) {
+void SetVolumeForAll(uint16_t Volume) {
     MsgQSnd.SendNowOrExit(SndMsg_t(sndCmdVolume, ALL_SLOTS, Volume));
 }
 

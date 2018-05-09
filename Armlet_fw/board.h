@@ -47,15 +47,17 @@
 #define BAT_MEAS_PIN    GPIOC, 0
 
 // Buttons
-#define BTNA_PIN        GPIOD, 0, pudPullUp
-#define BTNB_PIN        GPIOD, 1, pudPullUp
-#define BTNC_PIN        GPIOD, 3, pudPullUp
-#define BTNL_PIN        GPIOD, 4, pudPullUp
-#define BTNE_PIN        GPIOD, 7, pudPullUp
-#define BTNR_PIN        GPIOD, 8, pudPullUp
-#define BTNX_PIN        GPIOD, 9, pudPullUp
-#define BTNY_PIN        GPIOD, 10, pudPullUp
-#define BTNZ_PIN        GPIOD, 11, pudPullUp
+#define BTNA_PIN        GPIOD, 0
+#define BTNB_PIN        GPIOD, 1
+#define BTNC_PIN        GPIOD, 3
+#define BTNL_PIN        GPIOD, 4
+#define BTNE_PIN        GPIOD, 7
+#define BTNR_PIN        GPIOD, 8
+#define BTNX_PIN        GPIOD, 9
+#define BTNY_PIN        GPIOD, 10
+#define BTNZ_PIN        GPIOD, 11
+
+#define BTN_PWRON       BTNC_PIN
 
 // Usb detect & charging
 #define USB_DETECT_PIN  GPIOA, 9

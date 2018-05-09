@@ -70,18 +70,38 @@ LocalCharacter localChar;
 char SelfName[36];
 #endif
 
+#define BTN_TIMER_REG_NUM   1
+
 int main() {
+    // Check if IWDG reset occured => power-off occured
+    if(Iwdg::ResetOccured()) {
+        PinSetupInput(BTN_PWRON, pudPullUp);    // Setup key input
+        BackupSpc::EnableAccess();
+        if(PinIsHi(BTN_PWRON)) {    // if btn is not pressed, go back to sleep
+            BackupSpc::WriteRegister(BTN_TIMER_REG_NUM, 0); // Reset timer
+            PowerOff();
+        }
+        else { // Btn is pressed, check timeout
+            uint32_t cnt = BackupSpc::ReadRegister(BTN_TIMER_REG_NUM);
+            if(cnt < 2) {
+                cnt++;
+                BackupSpc::WriteRegister(BTN_TIMER_REG_NUM, cnt);
+                PowerOff();
+            }
+        }
+        // Time to wakeup
+        BackupSpc::WriteRegister(BTN_TIMER_REG_NUM, 0); // Reset timer
+        BackupSpc::DisableAccess();
+    }
+
 #if 1 // Low level init
     // ==== Setup clock ====
-    Clk.UpdateFreqValues();
-//    Clk.SetCoreClk(cclk16MHz);
     Clk.SetCoreClk(cclk24MHz);
-    //Clk.SetCoreClk(cclk48MHz);
+    Clk.UpdateFreqValues();
 
     // ==== Init OS ====
     halInit();
     chSysInit();
-    Clk.UpdateFreqValues(); // Do it after halInit to update system timer using correct prescaler
 
     // ==== Init Hard & Soft ====
     EvtQMain.Init();
@@ -103,7 +123,7 @@ int main() {
 //    Beeper.Init();
 //    Beeper.StartOrRestart(bsqBeepBeep);
     Vibra.Init(VIBRO_TIM_FREQ);
-//    Vibra.StartOrRestart(vsqBrrBrr);
+    Vibra.StartOrRestart(vsqBrrBrr);
 
     SlotPlayer::Init();
     UsbMsdCdc.Init();
@@ -225,9 +245,9 @@ void ITask() {
 
             case evtIdButtons:
                 Printf("Btn: %u %u\r", Msg.BtnEvtInfo.BtnID, Msg.BtnEvtInfo.Type);
-                if(Msg.BtnEvtInfo.BtnID == 0) DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
-                if(Msg.BtnEvtInfo.BtnID == 1) DrawBmpFile(0, 0, "Lock.bmp", &CommonFile);
-                if(Msg.BtnEvtInfo.BtnID == 2) DrawBmpFile(0, 0, "Unlock.bmp", &CommonFile);
+                if(Msg.BtnEvtInfo.BtnID == 2 and Msg.BtnEvtInfo.Type == beLongPress) {
+                    PowerOff();
+                }
 
 #ifdef LOGIC_EN
                 dispatcher.handle_button(Msg.BtnEvtInfo.BtnID, (Msg.BtnEvtInfo.Type == beLongPress));

@@ -347,6 +347,17 @@ namespace BackupSpc {
         RCC->BDCR |=  RCC_BDCR_BDRST;
         RCC->BDCR &= ~RCC_BDCR_BDRST;
     }
+
+    // RegN = 0...19
+    static inline uint32_t ReadRegister(uint32_t RegN) {
+        volatile uint32_t tmp = RTC_BASE + 0x50 + (RegN * 4);
+        return (*(volatile uint32_t *)tmp);
+    }
+
+    static inline void WriteRegister(uint32_t RegN, uint32_t Data) {
+        volatile uint32_t tmp = RTC_BASE + 0x50 + (RegN * 4);
+        *(volatile uint32_t *)tmp = Data;
+    }
 } // namespace
 #endif // STM32F2xx/F4xx
 #endif

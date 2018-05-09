@@ -1006,7 +1006,7 @@ uint8_t TryStrToFloat(char* S, float *POutput) {
 }; // namespace
 #endif
 
-#if 0 // ============================== IWDG ===================================
+#if 1 // ============================== IWDG ===================================
 namespace Iwdg {
 enum Pre_t {
     iwdgPre4 = 0x00,
@@ -1034,15 +1034,15 @@ void SetTimeout(uint32_t ms) {
 }
 
 void InitAndStart(uint32_t ms) {
-    Clk.EnableLSI();        // Start LSI
-    SetTimeout(ms); // Start IWDG
+    Clk.EnableLsi();    // Start LSI
+    SetTimeout(ms);     // Start IWDG
     Enable();
 }
 
 
 void GoSleep(uint32_t Timeout_ms) {
     chSysLock();
-    Clk.EnableLSI();        // Start LSI
+    Clk.EnableLsi();        // Start LSI
     SetTimeout(Timeout_ms); // Start IWDG
     Enable();
     // Enter standby mode

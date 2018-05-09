@@ -18,6 +18,7 @@
 #include "DrawBmp.h"
 
 #define PRINT_FUNC()  Printf("%S\r", __FUNCTION__)
+#define STANDBY_TIMEOUT_MS  1008
 
 #if 1 // General
 extern Vibro_t Vibra;
@@ -35,12 +36,26 @@ void Vibro(uint32_t Duration_ms) {
 }
 
 void PowerOff() {
-    PRINT_FUNC();
+    chSysLock();
+    __disable_irq();
+    // Setup IWDG to reset after a while
+    Iwdg::InitAndStart(STANDBY_TIMEOUT_MS);
+    // Enter standby
+    SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;  // Set DEEPSLEEP bit
+    // Flash stopped in stop mode, Enter Standby mode, power regulator in low-power mode when stopped, clear WakeUp and Standby flags
+    PWR->CR = PWR_CR_FPDS | PWR_CR_PDDS | PWR_CR_LPDS | PWR_CR_CSBF | PWR_CR_CWUF;
+    // Command to clear WUF (wakeup flag) and wait two sys clock cycles to allow it be cleared
+    PWR->CR |= PWR_CR_CWUF;
+    __NOP(); __NOP();
+    __WFI();
+    chSysUnlock();
 }
 
 void SleepEnable() {
+    Lcd.Shutdown();
 }
 void SleepDisable() {
+    Lcd.Init();
 }
 #endif
 
@@ -55,14 +70,14 @@ void PlayerVolumeUp() {
     PRINT_FUNC();
     if(CurrVolLvlIndx < (VOL_LVLS_CNT - 1)) {
         CurrVolLvlIndx++;
-        SlotPlayer::SetVolume(VolumeLvls[CurrVolLvlIndx]);
+        SlotPlayer::SetVolumeForAll(VolumeLvls[CurrVolLvlIndx]);
     }
 }
 void PlayerVolumeDown() {
     PRINT_FUNC();
     if(CurrVolLvlIndx > 0) {
         CurrVolLvlIndx--;
-        SlotPlayer::SetVolume(VolumeLvls[CurrVolLvlIndx]);
+        SlotPlayer::SetVolumeForAll(VolumeLvls[CurrVolLvlIndx]);
     }
 }
 

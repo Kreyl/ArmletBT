@@ -28,15 +28,15 @@ extern void ProcessCharging(PinSnsState_t *PState, uint32_t Len);
 
 const PinSns_t PinSns[] = {
         // Buttons
-        {BTNA_PIN, ProcessButtons},
-        {BTNB_PIN, ProcessButtons},
-        {BTNC_PIN, ProcessButtons},
-        {BTNL_PIN, ProcessButtons},
-        {BTNE_PIN, ProcessButtons},
-        {BTNR_PIN, ProcessButtons},
-        {BTNX_PIN, ProcessButtons},
-        {BTNY_PIN, ProcessButtons},
-        {BTNZ_PIN, ProcessButtons},
+        {BTNA_PIN, pudPullUp, ProcessButtons},
+        {BTNB_PIN, pudPullUp, ProcessButtons},
+        {BTNC_PIN, pudPullUp, ProcessButtons},
+        {BTNL_PIN, pudPullUp, ProcessButtons},
+        {BTNE_PIN, pudPullUp, ProcessButtons},
+        {BTNR_PIN, pudPullUp, ProcessButtons},
+        {BTNX_PIN, pudPullUp, ProcessButtons},
+        {BTNY_PIN, pudPullUp, ProcessButtons},
+        {BTNZ_PIN, pudPullUp, ProcessButtons},
         // USB
         {USB_DETECT_PIN, pudPullDown, ProcessUsbDetect},
         // Charging
