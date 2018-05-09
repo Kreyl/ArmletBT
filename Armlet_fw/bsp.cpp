@@ -13,6 +13,9 @@
 #include "ChunkTypes.h"
 #include "vibro.h"
 #include "radio_lvl1.h"
+#include "lcd2630.h"
+#include "kl_buf.h"
+#include "DrawBmp.h"
 
 #define PRINT_FUNC()  Printf("%S\r", __FUNCTION__)
 
@@ -36,20 +39,33 @@ void PowerOff() {
 }
 
 void SleepEnable() {
-    PRINT_FUNC();
 }
 void SleepDisable() {
-    PRINT_FUNC();
 }
 #endif
 
 #if 1 // Sound
+static const uint16_t VolumeLvls[] = {
+        4, 5, 8, 11, 16, 22, 32, 45, 64, 90, 128, 181, 256, 362, 512, 724, 1024, 1448, 2048, 2896, 4096, 5792, 8192, 11585
+};
+#define VOL_LVLS_CNT    countof(VolumeLvls)
+static uint8_t CurrVolLvlIndx = 4;
+
 void PlayerVolumeUp() {
     PRINT_FUNC();
+    if(CurrVolLvlIndx < (VOL_LVLS_CNT - 1)) {
+        CurrVolLvlIndx++;
+        SlotPlayer::SetVolume(VolumeLvls[CurrVolLvlIndx]);
+    }
 }
 void PlayerVolumeDown() {
     PRINT_FUNC();
+    if(CurrVolLvlIndx > 0) {
+        CurrVolLvlIndx--;
+        SlotPlayer::SetVolume(VolumeLvls[CurrVolLvlIndx]);
+    }
 }
+
 void PlayerStart(uint8_t SlotN, uint16_t Volume, const char* Emo, bool Repeat) {
     PRINT_FUNC();
     SlotPlayer::Start(SlotN, Volume, Emo, Repeat);
@@ -67,23 +83,41 @@ void PlayerStop(uint8_t SlotN) {
 #if 1 // Screen
 void ScreenHighlight(uint32_t Value_percent) {
     PRINT_FUNC();
-}
-void ScreenAddBMPToQueue(const char* AFilename) {
-    PRINT_FUNC();
-}
-void ScreenShowNextBMP() {
-    PRINT_FUNC();
-}
-void ScreenShowActualBMP() {
-    PRINT_FUNC();
-}
-uint32_t GetBMPQueueLength() {
-    PRINT_FUNC();
-    return 0;
+    Lcd.Brightness(Value_percent);
 }
 void ScreenShowPicture(const char* AFilename) {
     PRINT_FUNC();
+    DrawBmpFile(0, 0, AFilename, &CommonFile);
 }
+
+#define BMP_Q_LEN   18
+CircBufNumber_t<const char*, BMP_Q_LEN> IBmpBuf;
+
+void ScreenAddBMPToQueue(const char* AFilename) {
+    PRINT_FUNC();
+    IBmpBuf.Put(AFilename);
+}
+void ScreenShowNextBMP() {
+    PRINT_FUNC();
+    const char* PFilename;
+    if(IBmpBuf.Get(&PFilename) == retvOk) {
+        DrawBmpFile(0, 0, PFilename, &CommonFile);
+    }
+    else Printf("Empty BMP queue\r");
+}
+void ScreenShowActualBMP() {
+    PRINT_FUNC();
+    const char* PFilename;
+    if(IBmpBuf.GetAndDoNotRemove(&PFilename) == retvOk) {
+        DrawBmpFile(0, 0, PFilename, &CommonFile);
+    }
+    else Printf("Empty BMP queue\r");
+}
+uint32_t GetBMPQueueLength() {
+    PRINT_FUNC();
+    return IBmpBuf.GetFullCount();
+}
+
 #endif
 
 #if 1 // Character

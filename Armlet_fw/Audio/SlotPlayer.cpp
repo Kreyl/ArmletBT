@@ -16,6 +16,8 @@
 thread_reference_t ISndThd;
 DirList_t DirList;
 
+#define ALL_SLOTS   0xFF
+
 enum SndCmd_t {sndcmdNone, sndcmdStart, sndCmdVolume, sndcmdStop, sndcmdPrepareNextBuf};
 
 union SndMsg_t {
@@ -131,7 +133,8 @@ static void SoundThread(void *arg) {
 
             case sndCmdVolume:
                 Printf("sndCmdVolume %u\r", Msg.Slot);
-                Slot[Msg.Slot].SetVolume(Msg.Volume);
+                if(Msg.Slot == ALL_SLOTS) mixer.fade(Msg.Volume);
+                else Slot[Msg.Slot].SetVolume(Msg.Volume);
                 break;
 
             case sndcmdStop:
@@ -174,6 +177,10 @@ void Start(uint8_t SlotN, uint16_t Volume, const char* Emo, bool Repeat) {
 void SetVolume(uint8_t SlotN, uint16_t Volume) {
     if(SlotN >= AudioMixer::TRACKS) return;
     MsgQSnd.SendNowOrExit(SndMsg_t(sndCmdVolume, SlotN, Volume));
+}
+
+void SetVolume(uint16_t Volume) {
+    MsgQSnd.SendNowOrExit(SndMsg_t(sndCmdVolume, ALL_SLOTS, Volume));
 }
 
 void Stop(uint8_t SlotN) {

@@ -11,8 +11,8 @@ typedef Counters KaTetCounters;
 // General
 void Vibro(uint32_t Duration_ms);
 void PowerOff();
-void SleepEnable();
-void SleepDisable();
+void SleepEnable();     // ???
+void SleepDisable();    // ???
 
 // Sound
 void PlayerVolumeUp();
