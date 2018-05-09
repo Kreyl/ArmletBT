@@ -23,7 +23,7 @@ public:
 
         bool valid;
         Type type;
-        uint8_t priority;
+        int8_t priority;
         char name[MAX_EMOTION_NAME_LENGTH + 1];
     };
 

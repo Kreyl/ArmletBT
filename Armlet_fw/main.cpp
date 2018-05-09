@@ -23,6 +23,7 @@
 #include "pill_mgr.h"
 #include "dispatcher.h"
 #include "bsp.h"
+#include "battery_consts.h"
 
 //#define LOGIC_EN
 
@@ -242,7 +243,9 @@ void ITask() {
 
             case evtIdAdcRslt:
 //                Printf("Adc: %u; ExtPwr: %u; Charging: %u\r", Msg.Value, Power.ExternalPwrOn(), Power.IsCharging());
-                // TODO: send to statemachine
+#ifdef LOGIC_EN
+                dispatcher.handle_battery_status(mV2PercentLiIon(Msg.Value), Power.IsCharging(), Power.ExternalPwrOn());
+#endif
                 break;
 
             case evtIdNewRPkt:

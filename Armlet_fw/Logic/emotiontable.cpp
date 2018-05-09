@@ -22,7 +22,7 @@ void EmotionTable::init(void *file_context,
         size_t id;
         const char *name;
         Emotion::Type type;
-        uint8_t priority;
+        int8_t priority;
 
         const char *id_field = table->field("eID");
         if (!id_field) {
@@ -70,14 +70,14 @@ void EmotionTable::init(void *file_context,
         }
 
         int priority_value = atoi(priority_field);
-        if (priority_value < 0) {
+        if (priority_value < INT8_MIN) {
             continue;
         }
-        if (priority_value > UINT8_MAX) {
+        if (priority_value > INT8_MAX) {
             continue;
         }
 
-        priority = static_cast<uint8_t>(priority_value);
+        priority = static_cast<int8_t>(priority_value);
 
         emotions_[id].valid = true;
         emotions_[id].type = type;

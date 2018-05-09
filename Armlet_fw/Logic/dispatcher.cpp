@@ -56,6 +56,8 @@ void Dispatcher::init(const InfluenceTable *influence_table,
     QMSM_INIT(&(ka_counter_sm_.super), &init_event);
     QMSM_INIT(&(ka_tet_sm_.super), &init_event);
 
+    player_.init(emotion_table_);
+
     process_queue();
 
     ticks_ = 0;
@@ -150,7 +152,15 @@ void Dispatcher::handle_nfc_packet(uint8_t influence_id)
 
 void Dispatcher::handle_track_end(int track)
 {
-    (void)track;
+    player_.handle_track_end(track);
+}
+
+void Dispatcher::handle_battery_status(uint8_t level,
+                                       bool charging,
+                                       bool connected)
+{
+    ScreenQEvt screen_event = {{BATTERY_INFO_SIG}, level, charging, connected};
+    QMSM_DISPATCH(&(screen_sm_.super), &(screen_event.super));
 }
 
 void Dispatcher::begin_influence(size_t id,
@@ -264,6 +274,20 @@ void Dispatcher::process_queue()
         KaTetQEvt ka_tet_event = {{signal}, character_id};
         QMSM_DISPATCH(&(ka_tet_sm_.super), &(ka_tet_event.super));
 
-        //TODO: music
+        const InfluenceTable::Influence *influence;
+        influence = influence_table_->influence(logical_id);
+        if (influence && influence->valid) {
+            size_t emotion_id = influence->emotion;
+            if (emotion_id != EmotionTable::INVALID_EMOTION) {
+                switch (entry.action) {
+                case QueueEntry::Action::Begin:
+                    player_.begin_emotion(emotion_id);
+                    break;
+                case QueueEntry::Action::End:
+                    player_.end_emotion(emotion_id);
+                    break;
+                }
+            }
+        }
     }
 }

@@ -57,7 +57,7 @@ static uint8_t mV2PercentAlkaline(uint16_t mV) {
 }
 #endif
 
-#if 0 // ============================ Li-Ion ===================================
+#if 1 // ============================ Li-Ion ===================================
 static const mVPercent_t mVPercentTableLiIon[] = {
         {4100, 100, 10},
         {4000, 90,  10},
