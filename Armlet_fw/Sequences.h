@@ -415,13 +415,6 @@ const BeepChunk_t bsqBeepPillBad[] = {
 
 #define VIBRO_SHORT_MS      99
 
-const BaseChunk_t vsqBrr[] = {
-        {csSetup, VIBRO_VOLUME},
-        {csWait, VIBRO_SHORT_MS},
-        {csSetup, 0},
-        {csEnd}
-};
-
 const BaseChunk_t vsqBrrBrr[] = {
         {csSetup, VIBRO_VOLUME},
         {csWait, VIBRO_SHORT_MS},

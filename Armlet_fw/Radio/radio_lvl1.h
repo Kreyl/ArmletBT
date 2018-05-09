@@ -66,7 +66,14 @@ union rPkt_t  {
         uint8_t Cycle: 3;
         uint16_t TimeSrcID;
         uint8_t Influence;
-        uint8_t Param;
+        union {
+            uint8_t Param;
+            struct {
+                int Dogan : 4;
+                bool Dead: 1;
+                bool Corrupted: 1;
+            } __packed;
+        } __packed;
     } __packed;
     rPkt_t& operator = (const rPkt_t &Right) {
         DWord = Right.DWord;

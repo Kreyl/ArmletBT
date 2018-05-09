@@ -4,7 +4,7 @@
  * Created on May 27, 2016, 6:37 PM
  */
 
-#include <usb_msdcdc.h>
+#include "usb_msdcdc.h"
 #include "hal.h"
 #include "MsgQ.h"
 #include "kl_lib.h"
@@ -33,7 +33,6 @@ extern CmdUart_t Uart;
 void OnCmd(Shell_t *PShell);
 void ITask();
 
-uint8_t Status;
 uint16_t ID = 7;
 uint8_t Influence = 16;//ID + 128;
 
@@ -68,7 +67,6 @@ InfluenceTable infTable;
 CharacterTable charTable;
 LocalCharacter localChar;
 char SelfName[36];
-
 #endif
 
 int main() {
@@ -93,7 +91,7 @@ int main() {
     Lcd.Init();
     SD.Init();
 //    Printf("ID = %u\r", ID);
-//    DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
+    DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
 
     SimpleSensors::Init();
     Power.Init();
@@ -103,7 +101,7 @@ int main() {
 
 //    Beeper.Init();
 //    Beeper.StartOrRestart(bsqBeepBeep);
-//    Vibra.Init(VIBRO_TIM_FREQ);
+    Vibra.Init(VIBRO_TIM_FREQ);
 //    Vibra.StartOrRestart(vsqBrrBrr);
 
     SlotPlayer::Init();
@@ -226,6 +224,10 @@ void ITask() {
 
             case evtIdButtons:
                 Printf("Btn: %u %u\r", Msg.BtnEvtInfo.BtnID, Msg.BtnEvtInfo.Type);
+                if(Msg.BtnEvtInfo.BtnID == 0) DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
+                if(Msg.BtnEvtInfo.BtnID == 1) DrawBmpFile(0, 0, "Lock.bmp", &CommonFile);
+                if(Msg.BtnEvtInfo.BtnID == 2) DrawBmpFile(0, 0, "Unlock.bmp", &CommonFile);
+
 #ifdef LOGIC_EN
                 dispatcher.handle_button(Msg.BtnEvtInfo.BtnID, (Msg.BtnEvtInfo.Type == beLongPress));
 #endif

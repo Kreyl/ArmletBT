@@ -9,13 +9,28 @@
 #include "kl_fs_utils.h"
 #include "shell.h"
 #include "localcharacter.h"
+#include "SlotPlayer.h"
+#include "ChunkTypes.h"
+#include "vibro.h"
+#include "radio_lvl1.h"
 
 #define PRINT_FUNC()  Printf("%S\r", __FUNCTION__)
 
-// General
+#if 1 // General
+extern Vibro_t Vibra;
+BaseChunk_t vsqBrr[] = {
+        {csSetup, 100}, // Vibro volume = 100
+        {csWait, 11},   // dummy
+        {csSetup, 0},
+        {csEnd}
+};
+
 void Vibro(uint32_t Duration_ms) {
     PRINT_FUNC();
+    vsqBrr[1].Time_ms = Duration_ms;
+    Vibra.StartOrRestart(vsqBrr);
 }
+
 void PowerOff() {
     PRINT_FUNC();
 }
@@ -26,6 +41,7 @@ void SleepEnable() {
 void SleepDisable() {
     PRINT_FUNC();
 }
+#endif
 
 #if 1 // Sound
 void PlayerVolumeUp() {
@@ -36,19 +52,19 @@ void PlayerVolumeDown() {
 }
 void PlayerStart(uint8_t SlotN, uint16_t Volume, const char* Emo, bool Repeat) {
     PRINT_FUNC();
-
+    SlotPlayer::Start(SlotN, Volume, Emo, Repeat);
 }
 void PlayerSetVolume(uint8_t SlotN, uint16_t Volume) {
     PRINT_FUNC();
-
+    SlotPlayer::SetVolume(SlotN, Volume);
 }
 void PlayerStop(uint8_t SlotN) {
     PRINT_FUNC();
-
+    SlotPlayer::Stop(SlotN);
 }
 #endif
 
-// Screen
+#if 1 // Screen
 void ScreenHighlight(uint32_t Value_percent) {
     PRINT_FUNC();
 }
@@ -68,10 +84,16 @@ uint32_t GetBMPQueueLength() {
 void ScreenShowPicture(const char* AFilename) {
     PRINT_FUNC();
 }
+#endif
 
-// Character
+#if 1 // Character
 void SaveState(int Dogan, bool Dead, bool Corrupted) {
     PRINT_FUNC();
+    // Construct param to transmit
+    Radio.PktTx.Dogan = Dogan;
+    Radio.PktTx.Dead = Dead;
+    Radio.PktTx.Corrupted = Corrupted;
+    // Save state
     if(TryOpenFileRewrite("State.csv", &CommonFile) == retvOk) {
         f_printf(&CommonFile, "Dogan = %d\r\n", Dogan);
         f_printf(&CommonFile, "Dead = %d\r\n", Dead);
@@ -97,6 +119,7 @@ void SaveCounters(const KaTetCounters *counters) {
         CloseFile(&CommonFile);
     }
 }
+#endif
 
 #if 1 // ========================== Callbacks ==================================
 size_t TellCallback(void *file_context) {
