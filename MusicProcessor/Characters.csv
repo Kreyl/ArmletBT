@@ -8,7 +8,7 @@
 #
 # !!! DO NOT EDIT !!!
 #
-# Generated at 2018-05-02 23:55:20
+# Generated at 2018-05-04 15:53:18
 #
 rID,shortName,isManni,dogan,kaTet,isDead,hasMusic
 128,JRight,0,2,,1,0
@@ -35,7 +35,7 @@ rID,shortName,isManni,dogan,kaTet,isDead,hasMusic
 149,BKuroki,0,0,,0,0
 150,AHarmett,0,0,,0,0
 151,ASExupery,0,1,,0,0
-152,RParkinson1,0,0,,0,0
+152,RParkinson1,0,1,,0,0
 153,JMcArthur,0,2,,0,0
 154,CTramunti,0,0,,0,0
 155,LEsposito,0,0,,0,0
@@ -78,3 +78,8 @@ rID,shortName,isManni,dogan,kaTet,isDead,hasMusic
 192,SuManson,0,0,,0,0
 193,SiManson,0,0,,0,0
 194,SaManson,0,0,,0,0
+195,SManson,0,1,,0,0
+196,MAndersen,0,-1,,0,0
+197,RParkinson2,0,0,,0,0
+198,EPeirce,0,0,,0,0
+199,RKuroki,0,0,,0,0
