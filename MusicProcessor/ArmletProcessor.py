@@ -111,7 +111,7 @@ def updateMusic(sourceDir = '.'):
     if unknownCharacters:
         print "\nUnknown character directories found (%d): %s" % (len(unknownCharacters), ', '.join(unknownCharacters))
     if errorCharacters:
-        print "\nErrors detected with music for characters (%d): %s" % (len(errorCharacters), ', '.join(sorted(errorCharacters)))
+        print "\nErrors detected for characters (%d): %s" % (len(errorCharacters), ', '.join(sorted(errorCharacters)))
 
 def main(*args):
     updateMusic(args[0] if args else getenv(MUSIC_LOCATION_VARIABLE, '.'))

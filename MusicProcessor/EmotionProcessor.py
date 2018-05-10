@@ -82,7 +82,7 @@ class GoogleTableEntry(CSVable):
             self.doganAmount = int(self.doganAmount or 0)
         except ValueError:
             assert False, "Dogan amount is not a number for reason %s: %r" % (self.rName, self.doganAmount)
-        assert -3 <= self.doganAmount <= 5, "Bad dogan amount for reason %s: %r" % (self.rName, self.doganAmount)
+        assert -3 <= self.doganAmount <= 10, "Bad dogan amount for reason %s: %r" % (self.rName, self.doganAmount)
         # eName
         try:
             self.eName = self.eName.strip().encode('ascii')
