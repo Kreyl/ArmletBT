@@ -7,7 +7,7 @@
 #
 # !!! DO NOT EDIT !!!
 #
-# Generated at 2018-05-10 17:33:34
+# Generated at 2018-05-11 18:45:30
 #
 rID,rName,level,timeout,doganAmount,eID,eName
 1,DOOR,0,0,0,,
@@ -69,8 +69,8 @@ rID,rName,level,timeout,doganAmount,eID,eName
 57,MASTERKA,2,300,0,,MASTERKA
 58,DEATH,0,0,0,,DEATH
 59,BOOT,0,0,0,,BOOT
-60,REBOOT,0,0,0,,TISHINA
-61,RESET,0,0,0,,TISHINA
+60,REBOOT,0,0,0,,
+61,RESET,0,0,0,,
 62,PERSON_NEAR,1,1,0,,
 63,MASTER_CRIMSON,0,0,0,,
 64,MASTER_WHITE,0,0,0,,
@@ -148,7 +148,7 @@ rID,rName,level,timeout,doganAmount,eID,eName
 193,IGerraro,0,0,0,,
 194,Ruth,0,0,0,,
 195,Seven,0,0,0,,
-196,SKing,0,0,0,,
+196,SQueen,0,0,0,,
 197,MParker,0,0,0,,
 198,Samantha,0,0,0,,
 199,RMcCoy,0,0,0,,

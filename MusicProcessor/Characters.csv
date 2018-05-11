@@ -8,7 +8,7 @@
 #
 # !!! DO NOT EDIT !!!
 #
-# Generated at 2018-05-10 16:46:22
+# Generated at 2018-05-11 18:45:30
 #
 rID,shortName,isManni,dogan,kaTet,isDead,hasMusic
 128,JRight,0,2,,1,0
@@ -70,16 +70,16 @@ rID,shortName,isManni,dogan,kaTet,isDead,hasMusic
 184,DSatton,0,0,,0,0
 185,LSatton,0,0,,0,0
 186,SoManson,0,1,,0,0
-187,RParkinson1,0,1,,0,0
+187,RParkinson1,0,1,,0,1
 188,WBray,0,0,,0,0
 189,HBray,0,0,,0,0
-190,BCassidy,0,0,BCassidy:SKing,0,0
+190,BCassidy,0,0,BCassidy:SQueen,0,0
 191,SWinch,0,1,DWinch:MParker:SWinch:Seven,0,0
 192,DWinch,0,1,DWinch:MParker:SWinch:Seven,0,0
 193,IGerraro,0,0,,0,0
 194,Ruth,1,1,Cordelia:Isaak:Ruth,0,0
 195,Seven,0,1,DWinch:MParker:SWinch:Seven,0,1
-196,SKing,0,1,BCassidy:SKing,0,1
+196,SQueen,0,1,BCassidy:SQueen,0,1
 197,MParker,0,1,DWinch:MParker:SWinch:Seven,0,0
 198,Samantha,0,1,,0,0
 199,RMcCoy,0,1,,0,0
