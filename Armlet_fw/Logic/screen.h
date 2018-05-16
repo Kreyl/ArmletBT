@@ -40,6 +40,7 @@ typedef struct {
     Dispatcher* dispatcher;
     uint8_t timer;
     uint8_t ChargePercent;
+    bool DoganPressed;
 } Screen;
 
 /* protected: */
@@ -47,6 +48,7 @@ QState Screen_initial(Screen * const me, QEvt const * const e);
 QState Screen_global(Screen * const me, QEvt const * const e);
 QState Screen_ScreenButtons(Screen * const me, QEvt const * const e);
 QState Screen_active(Screen * const me, QEvt const * const e);
+QState Screen_disabled(Screen * const me, QEvt const * const e);
 QState Screen_locked(Screen * const me, QEvt const * const e);
 
 #ifdef DESKTOP

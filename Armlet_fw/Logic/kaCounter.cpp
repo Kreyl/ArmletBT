@@ -48,6 +48,7 @@ void KaCounter_ctor(
     QHsm_ctor(&me->super, Q_STATE_CAST(&KaCounter_initial));
 }
 
+
 /*${SMs::KaCounter} ........................................................*/
 /*${SMs::KaCounter::SM} ....................................................*/
 QState KaCounter_initial(KaCounter * const me, QEvt const * const e) {

@@ -25,7 +25,7 @@
 #include "bsp.h"
 #include "battery_consts.h"
 
-//#define LOGIC_EN
+#define LOGIC_EN
 
 #if 1 // =============== Low level ================
 // Forever
@@ -244,7 +244,7 @@ void ITask() {
                 break;
 
             case evtIdButtons:
-                Printf("Btn: %u %u\r", Msg.BtnEvtInfo.BtnID, Msg.BtnEvtInfo.Type);
+//                Printf("Btn: %u %u\r", Msg.BtnEvtInfo.BtnID, Msg.BtnEvtInfo.Type);
                 if(Msg.BtnEvtInfo.BtnID == 2 and Msg.BtnEvtInfo.Type == beLongPress) {
                     PowerOff();
                 }
@@ -269,14 +269,14 @@ void ITask() {
                 break;
 
             case evtIdNewRPkt:
-                Printf("RPkt: Inf=%u; Par=%u; RSSI=%d\r", Msg.b[0], Msg.b[1], (int8_t)Msg.b[2]);
+//                Printf("RPkt: Inf=%u; Par=%u; RSSI=%d\r", Msg.b[0], Msg.b[1], (int8_t)Msg.b[2]);
 #ifdef LOGIC_EN
                 dispatcher.handle_radio_packet(Msg.b[0], Msg.b[1], (int8_t)Msg.b[2]);
 #endif
                 break;
 
             case evtIdSoundFileEnd:
-                Printf("SoundFile end: %u\r", Msg.Value);
+//                Printf("SoundFile end: %u\r", Msg.Value);
 #ifdef LOGIC_EN
                 dispatcher.handle_track_end(Msg.Value);
 #endif

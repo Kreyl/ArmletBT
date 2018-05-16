@@ -75,16 +75,28 @@ bool CsvTable::parse_line()
 
     if (valid) {
         char *handle = line_;
+        char *field = handle;
+        bool end = false;
 
-        while (field_count_ < MAX_FIELD_COUNT) {
-            char *field = strtok(handle, ",");
-            handle = nullptr;
-            if (!field) {
-                break;
+        while (!end) {
+            if (*handle == '\0') {
+                end = true;
             }
 
-            fields_[field_count_] = field;
-            field_count_++;
+            if (*handle == ',') {
+                *handle = '\0';
+            }
+
+            if (*handle == '\0') {
+                if (field_count_ < MAX_FIELD_COUNT) {
+                    fields_[field_count_] = field;
+                    field_count_++;
+                }
+
+                field = handle + 1;
+            }
+
+            handle++;
         }
     }
 

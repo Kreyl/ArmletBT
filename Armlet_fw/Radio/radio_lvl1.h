@@ -72,6 +72,7 @@ union rPkt_t  {
                 int Dogan : 4;
                 bool Dead: 1;
                 bool Corrupted: 1;
+                bool IsInTodash: 1;
             } __packed;
         } __packed;
     } __packed;

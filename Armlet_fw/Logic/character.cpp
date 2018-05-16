@@ -43,6 +43,7 @@ void Character_ctor(
     bool Dead)
 {
     me->Todash = false;
+    SetTodash(false);
     me->DoganScale = 0;
     me->Manni = Manni;
     if (Dead) {
@@ -73,6 +74,7 @@ void Character_ctor(
                     break;
                 }
                 case CRIMSONISH: {
+                    me->DoganScale = CRIMSON_THRESHOLD;
                     me->StartState = (QStateHandler)&Character_crimsonish;
                     break;
                 }
@@ -81,6 +83,7 @@ void Character_ctor(
                     break;
                 }
                 case WHITISH: {
+                    me->DoganScale = WHITE_THRESHOLD;
                     me->StartState = (QStateHandler)&Character_whitish;
                     break;
                 }
@@ -97,7 +100,6 @@ void Character_ctor(
     me->dispatcher = dispatcher;
     QHsm_ctor(&me->super, Q_STATE_CAST(&Character_initial));
 }
-
 
 /*${SMs::Character} ........................................................*/
 /*${SMs::Character::SM} ....................................................*/
@@ -134,8 +136,10 @@ QState Character_character(Character * const me, QEvt const * const e) {
         case BEGIN(DOOR)+BASE_SIG: {
             if (me->Todash == false) {
                     me->Todash = true;
+                    SetTodash(true);
                     DISPATCH_ONESHOT(DOOR_VOICE);
                 } else {
+                    SetTodash(false);
                     me->Todash = false;
                 }
             status_ = Q_HANDLED();
@@ -152,7 +156,7 @@ QState Character_character(Character * const me, QEvt const * const e) {
         /* ${SMs::Character::SM::global::character::BEGIN(DOOR_FAR)+BASE} */
         case BEGIN(DOOR_FAR)+BASE_SIG: {
             if (me->Manni == true) {
-                    DISPATCH_END(DOOR_FAR_MANNI);
+                    DISPATCH_BEGIN(DOOR_FAR_MANNI);
                 }
             status_ = Q_HANDLED();
             break;
@@ -204,6 +208,12 @@ QState Character_character(Character * const me, QEvt const * const e) {
         /* ${SMs::Character::SM::global::character::END(CRIMSON_BROADCAST4)+BASE} */
         case END(CRIMSON_BROADCAST4)+BASE_SIG: {
             DISPATCH_END(CRIMSON_BROADCAST4);
+            status_ = Q_HANDLED();
+            break;
+        }
+        /* ${SMs::Character::SM::global::character::END(ROSE)+BASE} */
+        case END(ROSE)+BASE_SIG: {
+            DISPATCH_END(FEAR);
             status_ = Q_HANDLED();
             break;
         }
@@ -273,6 +283,16 @@ QState Character_neutral(Character * const me, QEvt const * const e) {
         /* ${SMs::Character::SM::global::character::alive::neutral::BEGIN(DEATH)+BASE} */
         case BEGIN(DEATH)+BASE_SIG: {
             status_ = Q_TRAN(&Character_neutral_dead);
+            break;
+        }
+        /* ${SMs::Character::SM::global::character::alive::neutral::BEGIN(BECOME_CRIMSON_SERVANT)+BA~} */
+        case BEGIN(BECOME_CRIMSON_SERVANT)+BASE_SIG: {
+            status_ = Q_TRAN(&Character_crimsonish);
+            break;
+        }
+        /* ${SMs::Character::SM::global::character::alive::neutral::BEGIN(BECOME_WHITE_MESSENGER)+BA~} */
+        case BEGIN(BECOME_WHITE_MESSENGER)+BASE_SIG: {
+            status_ = Q_TRAN(&Character_whitish);
             break;
         }
         default: {
@@ -438,6 +458,12 @@ QState Character_red(Character * const me, QEvt const * const e) {
         /* ${SMs::Character::SM::global::character::alive::red::BEGIN(CRIMSON_BROADCAST4)+BASE} */
         case BEGIN(CRIMSON_BROADCAST4)+BASE_SIG: {
             DISPATCH_BEGIN(CRIMSON_BROADCAST4);
+            status_ = Q_HANDLED();
+            break;
+        }
+        /* ${SMs::Character::SM::global::character::alive::red::BEGIN(ROSE)+BASE} */
+        case BEGIN(ROSE)+BASE_SIG: {
+            DISPATCH_BEGIN(FEAR);
             status_ = Q_HANDLED();
             break;
         }

@@ -72,7 +72,7 @@ public:
 
     void handle_nfc_packet(uint8_t influence_id);
 
-    void handle_track_end(int track);
+    void handle_track_end(size_t track);
 
     void handle_battery_status(uint8_t level,
                                bool charging,

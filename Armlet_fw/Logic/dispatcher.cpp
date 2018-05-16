@@ -78,7 +78,7 @@ void Dispatcher::handle_button(int id, bool long_press)
         }
         break;
     case Buttons::B:
-        screen_event = {{BTN_NEXT_PICTURE_SIG}, 0, false, false};
+        screen_event = {{BTN_HYPNOSIS_LONG_SIG}, 0, false, false};
         QMSM_DISPATCH(&(screen_sm_.super), &(screen_event.super));
         break;
     case Buttons::C:
@@ -109,7 +109,7 @@ void Dispatcher::handle_button(int id, bool long_press)
         break;
     case Buttons::Z:
         if (long_press) {
-            screen_event = {{BTN_HYPNOSIS_LONG_SIG}, 0, false, false};
+            screen_event = {{BTN_NEXT_PICTURE_SIG}, 0, false, false};
             QMSM_DISPATCH(&(screen_sm_.super), &(screen_event.super));
         }
         break;
@@ -150,7 +150,7 @@ void Dispatcher::handle_nfc_packet(uint8_t influence_id)
     process_queue();
 }
 
-void Dispatcher::handle_track_end(int track)
+void Dispatcher::handle_track_end(size_t track)
 {
     player_.handle_track_end(track);
 }

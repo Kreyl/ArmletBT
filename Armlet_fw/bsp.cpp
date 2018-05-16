@@ -136,6 +136,10 @@ uint32_t GetBMPQueueLength() {
 #endif
 
 #if 1 // Character
+void SetTodash(bool Todash) {
+    Radio.PktTx.IsInTodash = Todash;
+}
+
 void SaveState(int Dogan, bool Dead, bool Corrupted) {
     PRINT_FUNC();
     // Construct param to transmit
