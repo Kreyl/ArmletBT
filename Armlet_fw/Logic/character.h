@@ -29,8 +29,8 @@ extern "C" {
 #define CRIMSONISH -1
 #define WHITISH 1
 #define WHITE 2
-#define WHITE_THRESHOLD 600
-#define CRIMSON_THRESHOLD -800
+#define WHITE_THRESHOLD     60 //   600 XXX
+#define CRIMSON_THRESHOLD   -80 //-800  XXX
 #define LONG_VIBRO  300
 #define MEDIUM_VIBRO 200
 #define SHORT_VIBRO 100

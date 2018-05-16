@@ -112,7 +112,7 @@ int main() {
     Lcd.Init();
     SD.Init();
 //    Printf("ID = %u\r", ID);
-    DrawBmpFile(0, 0, "Splash.bmp", &CommonFile);
+    DrawBmpFile(0, 0, "Images/Splash.bmp", &CommonFile);
 
     SimpleSensors::Init();
     Power.Init();
@@ -130,7 +130,6 @@ int main() {
 
     TmrOneSecond.StartOrRestart();
 
-    Radio.Init();
 #endif
 
 #ifdef LOGIC_EN // ==== Logic init ====
@@ -171,6 +170,7 @@ int main() {
 
     // Get ID
     ID = localChar.id;
+    Printf("=== ID: %u ===\r", ID);
     Influence = localChar.id + CharacterTable::FIRST_CHARACTER;
 
     // Load State: Dogan, Dead, Corrupted
@@ -227,6 +227,9 @@ int main() {
     dispatcher.init(&infTable, &emoTable, &charTable, &localChar);
     Printf("Dispatcher initialized\r");
 #endif
+
+    Radio.Init();
+
     // ==== Main cycle ====
     ITask();
 }
@@ -366,6 +369,9 @@ void OnCmd(Shell_t *PShell) {
         for(uint32_t i=0; i<KaTetCounters::SIZE; i++)
             Printf("cnt %u = %u\r", i, localChar.ka_tet_counters[i]);
     }
+
+    else if(PCmd->NameIs("GetID")) PShell->Reply("ID", ID);
+    else if(PCmd->NameIs("GetInf")) PShell->Reply("Inf", Influence);
 
 #if PILL_ENABLED // ==== Pills ====
     else if(PCmd->NameIs("PillRead32")) {

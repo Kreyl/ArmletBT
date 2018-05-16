@@ -132,7 +132,7 @@ static void SoundThread(void *arg) {
                 break;
 
             case sndCmdVolume:
-                Printf("sndCmdVolume %u\r", Msg.Slot);
+                Printf("sndCmdVolume: slot %u, vol %u\r", Msg.Slot, Msg.Volume);
                 if(Msg.Slot == ALL_SLOTS) mixer.fade(Msg.Volume);
                 else Slot[Msg.Slot].SetVolume(Msg.Volume);
                 break;

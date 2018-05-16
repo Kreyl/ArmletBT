@@ -141,7 +141,7 @@ QState Screen_active(Screen * const me, QEvt const * const e) {
         /* ${SMs::Screen::SM::global::ScreenButtons::active::BTN_DOGAN} */
         case BTN_DOGAN_SIG: {
             if (me->DoganPressed == true) {
-                    ScreenShowPicture("Unlocked.jpg");
+                    ScreenShowPicture("Unlocked.bmp");
                 }  else {
                     DISPATCH_ONESHOT(SHOW_DOGAN_STATE);
                 }
@@ -252,7 +252,7 @@ QState Screen_locked(Screen * const me, QEvt const * const e) {
         /* ${SMs::Screen::SM::global::ScreenButtons::locked::BTN_DOGAN} */
         case BTN_DOGAN_SIG: {
             if (me->DoganPressed == true) {
-                    ScreenShowPicture("Locked.jpg");
+                    ScreenShowPicture("Locked.bmp");
                 }  else {
                     DISPATCH_ONESHOT(SHOW_DOGAN_STATE);
                 }

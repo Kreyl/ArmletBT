@@ -24,7 +24,7 @@ extern "C" {
 #include "qhsm.h"    /* include own framework */
 #include "localcharacter.h"
 
-#define KATET_THRESHOLD 600
+#define KATET_THRESHOLD 60 // 600 XXX
 
 
 class Dispatcher;

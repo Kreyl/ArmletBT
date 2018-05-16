@@ -64,7 +64,7 @@ static const uint16_t VolumeLvls[] = {
         4, 5, 8, 11, 16, 22, 32, 45, 64, 90, 128, 181, 256, 362, 512, 724, 1024, 1448, 2048, 2896, 4096, 5792, 8192, 11585
 };
 #define VOL_LVLS_CNT    countof(VolumeLvls)
-static uint8_t CurrVolLvlIndx = 4;
+static uint8_t CurrVolLvlIndx = 20;
 
 void PlayerVolumeUp() {
     PRINT_FUNC();
@@ -96,13 +96,17 @@ void PlayerStop(uint8_t SlotN) {
 #endif
 
 #if 1 // Screen
+static char PicName[MAX_NAME_LEN];
+
 void ScreenHighlight(uint32_t Value_percent) {
     PRINT_FUNC();
     Lcd.Brightness(Value_percent);
 }
 void ScreenShowPicture(const char* AFilename) {
     PRINT_FUNC();
-    DrawBmpFile(0, 0, AFilename, &CommonFile);
+    strcpy(PicName, "Images/");
+    strcat(PicName, AFilename);
+    DrawBmpFile(0, 0, PicName, &CommonFile);
 }
 
 #define BMP_Q_LEN   18
@@ -116,7 +120,9 @@ void ScreenShowNextBMP() {
     PRINT_FUNC();
     const char* PFilename;
     if(IBmpBuf.Get(&PFilename) == retvOk) {
-        DrawBmpFile(0, 0, PFilename, &CommonFile);
+        strcpy(PicName, "Images/");
+        strcat(PicName, PFilename);
+        DrawBmpFile(0, 0, PicName, &CommonFile);
     }
     else Printf("Empty BMP queue\r");
 }
@@ -124,12 +130,15 @@ void ScreenShowActualBMP() {
     PRINT_FUNC();
     const char* PFilename;
     if(IBmpBuf.GetAndDoNotRemove(&PFilename) == retvOk) {
-        DrawBmpFile(0, 0, PFilename, &CommonFile);
+        strcpy(PicName, "Images/");
+        strcat(PicName, PFilename);
+        DrawBmpFile(0, 0, PicName, &CommonFile);
     }
     else Printf("Empty BMP queue\r");
 }
 uint32_t GetBMPQueueLength() {
-    PRINT_FUNC();
+    // PRINT_FUNC();
+    Printf("GetBMPQueueLength: %u\r", IBmpBuf.GetFullCount());
     return IBmpBuf.GetFullCount();
 }
 

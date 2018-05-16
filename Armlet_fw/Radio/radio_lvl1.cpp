@@ -44,7 +44,7 @@ private:
     uint16_t TimeSrcTimeout;
 public:
     volatile uint32_t CycleN = 0, TimeSlot = 0;
-    uint16_t TimeSrcId = ID;
+    uint16_t TimeSrcId;
     void StartTimerI() { chVTSetI(&TmrTimeslot, TIMESLOT_DURATION_ST, TmrTimeslotCallback, nullptr); }
     void IncTimeSlot() {
         TimeSlot++;
@@ -54,7 +54,9 @@ public:
             if(CycleN >= RCYCLE_CNT) {
                 CycleN = 0;
                 // Check TimeSrc timeout
-                if(TimeSrcTimeout >= SCYCLES_TO_KEEP_TIMESRC) TimeSrcId = ID;
+                if(TimeSrcTimeout >= SCYCLES_TO_KEEP_TIMESRC) {
+                    TimeSrcId = ID;
+                }
                 else TimeSrcTimeout++;
             }
         }
@@ -141,7 +143,7 @@ void rLevel1_t::ITask() {
                 CCState = ccstIdle;
                 if(CC.ReadFIFO(&PktRx, &Rssi, RPKT_LEN) == retvOk) {  // if pkt successfully received
 //                    Printf("Rssi %d; ", Rssi);
-//                    PktRx.Print();
+                    PktRx.Print();
                     RadioTime.Adjust();
                     EvtMsg_t Msg(evtIdNewRPkt);
                     Msg.b[0] = PktRx.Influence;
@@ -178,6 +180,7 @@ uint8_t rLevel1_t::Init() {
 //        Printf("Timeslot duration, systime: %u\r", TimeslotDuration);
         chSysLock();
         RadioTime.StartTimerI();
+        RadioTime.TimeSrcId = ID;
         chSysUnlock();
 
         // Thread
