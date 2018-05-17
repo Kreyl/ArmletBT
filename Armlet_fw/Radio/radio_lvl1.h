@@ -92,7 +92,7 @@ union rPkt_t  {
 #if 1 // ======================= Channels & cycles =============================
 #define RCHNL               7
 #define RCYCLE_CNT          4
-#define ARMLET_CNT          80
+#define ARMLET_CNT          82
 #define LUSTRA_CNT          200
 #define RSLOT_CNT           (ARMLET_CNT + LUSTRA_CNT)
 #endif

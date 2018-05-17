@@ -26,12 +26,22 @@ BaseChunk_t vsqBrr[] = {
         {csSetup, 100}, // Vibro volume = 100
         {csWait, 11},   // dummy
         {csSetup, 0},
+        {csWait, 11},   // dummy
+        {csRepeat, 0},
         {csEnd}
 };
 
-void Vibro(uint32_t Duration_ms) {
-    PRINT_FUNC();
+void Vibro(uint32_t Duration_ms, uint32_t Cnt) {
+    Printf("Vibro: dur %u; Cnt %u\r", Duration_ms, Cnt);
     vsqBrr[1].Time_ms = Duration_ms;
+    if(Cnt > 1) { // Repeat several times
+        vsqBrr[3].Time_ms = 108; // Some default value
+        vsqBrr[4].RepeatCnt = Cnt - 1;
+    }
+    else { // Cnt == 1, no repeat
+        vsqBrr[3].Time_ms = 0;
+        vsqBrr[4].RepeatCnt = 0;
+    }
     Vibra.StartOrRestart(vsqBrr);
 }
 
@@ -110,30 +120,23 @@ void ScreenShowPicture(const char* AFilename) {
 }
 
 #define BMP_Q_LEN   18
-CircBufNumber_t<const char*, BMP_Q_LEN> IBmpBuf;
+LifoNumber_t<const char*, BMP_Q_LEN> IBmpBuf;
 
 void ScreenAddBMPToQueue(const char* AFilename) {
     PRINT_FUNC();
     IBmpBuf.Put(AFilename);
+    ScreenShowActualBMP();
 }
 void ScreenShowNextBMP() {
     PRINT_FUNC();
     const char* PFilename;
-    if(IBmpBuf.Get(&PFilename) == retvOk) {
-        strcpy(PicName, "Images/");
-        strcat(PicName, PFilename);
-        DrawBmpFile(0, 0, PicName, &CommonFile);
-    }
+    if(IBmpBuf.Get(&PFilename) == retvOk) ScreenShowPicture(PFilename);
     else Printf("Empty BMP queue\r");
 }
 void ScreenShowActualBMP() {
     PRINT_FUNC();
     const char* PFilename;
-    if(IBmpBuf.GetAndDoNotRemove(&PFilename) == retvOk) {
-        strcpy(PicName, "Images/");
-        strcat(PicName, PFilename);
-        DrawBmpFile(0, 0, PicName, &CommonFile);
-    }
+    if(IBmpBuf.GetAndDoNotRemove(&PFilename) == retvOk) ScreenShowPicture(PFilename);
     else Printf("Empty BMP queue\r");
 }
 uint32_t GetBMPQueueLength() {

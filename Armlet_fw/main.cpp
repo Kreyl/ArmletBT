@@ -111,7 +111,6 @@ int main() {
 
     Lcd.Init();
     SD.Init();
-//    Printf("ID = %u\r", ID);
     DrawBmpFile(0, 0, "Images/Splash.bmp", &CommonFile);
 
     SimpleSensors::Init();
