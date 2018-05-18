@@ -12,6 +12,8 @@
 #include "Sequences.h"
 #include "EvtMsgIDs.h"
 
+#include "lcd2630.h"
+
 cc1101_t CC(CC_Setup0);
 extern uint16_t ID;
 extern uint8_t Influence;
@@ -142,8 +144,7 @@ void rLevel1_t::ITask() {
             case rmsgPktRx:
                 CCState = ccstIdle;
                 if(CC.ReadFIFO(&PktRx, &Rssi, RPKT_LEN) == retvOk) {  // if pkt successfully received
-//                    Printf("Rssi %d; ", Rssi);
-//                    PktRx.Print();
+//                    Printf("Rssi %d; ", Rssi); PktRx.Print();
                     RadioTime.Adjust();
                     EvtMsg_t Msg(evtIdNewRPkt);
                     Msg.b[0] = PktRx.Influence;

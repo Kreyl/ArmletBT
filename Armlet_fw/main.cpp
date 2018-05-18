@@ -149,7 +149,7 @@ int main() {
     }
     else {
         IsLogicInitOk = false;
-        Lcd.LPrintf(0, 0, clGreen, clBlack, "No Radio tresholds");
+        Lcd.Printf(0, 0, clGreen, clBlack, "No Radio tresholds");
     }
 
     // Open Emotions
@@ -159,7 +159,7 @@ int main() {
     }
     else {
         IsLogicInitOk = false;
-        Lcd.LPrintf(0, 0, clGreen, clBlack, "No Emotions");
+        Lcd.Printf(0, 0, clGreen, clBlack, "No Emotions");
     }
 
     // Open Influence
@@ -169,7 +169,7 @@ int main() {
     }
     else {
         IsLogicInitOk = false;
-        Lcd.LPrintf(0, 0, clGreen, clBlack, "No Reasons");
+        Lcd.Printf(0, 0, clGreen, clBlack, "No Reasons");
     }
 
     // Get Self name
@@ -183,7 +183,7 @@ int main() {
     }
     else {
         IsLogicInitOk = false;
-        Lcd.LPrintf(0, 0, clGreen, clBlack, "No Name");
+        Lcd.Printf(0, 0, clGreen, clBlack, "No Name");
     }
 
     // Character table
@@ -193,7 +193,7 @@ int main() {
     }
     else {
         IsLogicInitOk = false;
-        Lcd.LPrintf(0, 0, clGreen, clBlack, "No Characters");
+        Lcd.Printf(0, 0, clGreen, clBlack, "No Characters");
     }
 
     // Get ID
@@ -299,6 +299,7 @@ void ITask() {
 
             case evtIdNewRPkt:
 //                Printf("RPkt: Inf=%u; Par=%u; RSSI=%d\r", Msg.b[0], Msg.b[1], (int8_t)Msg.b[2]);
+                Lcd.Printf(0, 9, clBlue, clWhite, "Rssi %d; Inf: %u  ", (int8_t)Msg.b[2], Msg.b[0]);
 #ifdef LOGIC_EN
                 if(IsLogicInitOk) dispatcher.handle_radio_packet(Msg.b[0], Msg.b[1], (int8_t)Msg.b[2]);
 #endif

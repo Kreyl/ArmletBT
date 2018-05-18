@@ -220,7 +220,7 @@ uint8_t Lcd_t::IPutChar(char c) {
     return Rslt;
 }
 
-void Lcd_t::LPrintf(uint8_t x, uint8_t y, Color_t ForeClr, Color_t BckClr, const char *format, ...) {
+void Lcd_t::Printf(uint8_t x, uint8_t y, Color_t ForeClr, Color_t BckClr, const char *format, ...) {
     Fnt.X = x;
     Fnt.Y = y;
     Fnt.FClr = ForeClr;
