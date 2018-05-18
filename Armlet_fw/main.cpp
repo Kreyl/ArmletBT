@@ -67,7 +67,8 @@ EmotionTable emoTable;
 InfluenceTable infTable;
 CharacterTable charTable;
 LocalCharacter localChar;
-static int8_t RadioTrs[4] = { 127, -45, -72, -81 }; // First is "reach never"
+__unused static int8_t RadioTrs[4] = { 127, -45, -72, -81 }; // First is "reach never"
+static bool IsLogicInitOk = true;
 char SelfName[36];
 #endif
 
@@ -111,8 +112,9 @@ int main() {
     Clk.PrintFreqs();
 
     Lcd.Init();
+    Lcd.Cls(clBlack);
+
     SD.Init();
-    DrawBmpFile(0, 0, "Images/Splash.bmp", &CommonFile);
 
     SimpleSensors::Init();
     Power.Init();
@@ -123,7 +125,6 @@ int main() {
 //    Beeper.Init();
 //    Beeper.StartOrRestart(bsqBeepBeep);
     Vibra.Init(VIBRO_TIM_FREQ);
-    Vibra.StartOrRestart(vsqBrrBrr);
 
     SlotPlayer::Init();
     UsbMsdCdc.Init();
@@ -146,22 +147,30 @@ int main() {
         csv::CloseFile();
         Printf("Radio Tresholds: %d; %d; %d\r", RadioTrs[1], RadioTrs[2], RadioTrs[3]);
     }
+    else {
+        IsLogicInitOk = false;
+        Lcd.LPrintf(0, 0, clGreen, clBlack, "No Radio tresholds");
+    }
 
     // Open Emotions
     if(TryOpenFileRead("Emotions.csv", &CommonFile) == retvOk) {
         emoTable.init(&CommonFile, &csvTable);
         CloseFile(&CommonFile);
-        Printf("Emo loaded\r");
     }
-    else chSysHalt("No Emotions");
+    else {
+        IsLogicInitOk = false;
+        Lcd.LPrintf(0, 0, clGreen, clBlack, "No Emotions");
+    }
 
     // Open Influence
     if(TryOpenFileRead("Reasons.csv", &CommonFile) == retvOk) {
         infTable.init(&CommonFile, &csvTable, &emoTable, RadioTrs);
         CloseFile(&CommonFile);
-        Printf("Reasons loaded\r");
     }
-    else chSysHalt("No Reasons");
+    else {
+        IsLogicInitOk = false;
+        Lcd.LPrintf(0, 0, clGreen, clBlack, "No Reasons");
+    }
 
     // Get Self name
     if(csv::OpenFile("SelfName.csv") == retvOk) {
@@ -172,19 +181,24 @@ int main() {
         Printf("Self name: %S\r", SelfName);
         csv::CloseFile();
     }
-    else chSysHalt("No Name");
+    else {
+        IsLogicInitOk = false;
+        Lcd.LPrintf(0, 0, clGreen, clBlack, "No Name");
+    }
 
     // Character table
     if(TryOpenFileRead("Characters.csv", &CommonFile) == retvOk) {
         charTable.init(&CommonFile, &csvTable, SelfName, &localChar);
         CloseFile(&CommonFile);
-        Printf("Characters loaded\r");
     }
-    else chSysHalt("No Characters");
+    else {
+        IsLogicInitOk = false;
+        Lcd.LPrintf(0, 0, clGreen, clBlack, "No Characters");
+    }
 
     // Get ID
     ID = localChar.id;
-    Printf("=== ID: %u ===\r", ID);
+    Printf("ID: %u\r", ID);
     Influence = localChar.id + CharacterTable::FIRST_CHARACTER;
 
     // Load State: Dogan, Dead, Corrupted
@@ -202,7 +216,6 @@ int main() {
 
     // Load KatetLinks
     if(csv::OpenFile("KatetLinks.csv") == retvOk) {
-        Printf("KatetLinks.csv\r");
         while(csv::ReadNextLine() == retvOk) {
             char *Name, *p;
             bool Value;
@@ -216,12 +229,10 @@ int main() {
             }
         } // while
         csv::CloseFile();
-        Printf("KatetLinks loaded\r");
     }
 
     // Load counters
     if(csv::OpenFile("Counters.csv") == retvOk) {
-        Printf("Counters.csv\r");
         while(csv::ReadNextLine() == retvOk) {
             char *Name, *p;
             uint16_t Value;
@@ -235,14 +246,16 @@ int main() {
             }
         } // while
         csv::CloseFile();
-        Printf("Counters loaded\r");
     }
 
-    dispatcher.init(&infTable, &emoTable, &charTable, &localChar);
-    Printf("Dispatcher initialized\r");
+    if(IsLogicInitOk) {
+        Vibra.StartOrRestart(vsqBrrBrr);
+        DrawBmpFile(0, 0, "Images/Splash.bmp", &CommonFile);
+        chThdSleepMilliseconds(720);
+        dispatcher.init(&infTable, &emoTable, &charTable, &localChar);
+        Radio.Init();
+    }
 #endif
-
-    Radio.Init();
 
     // ==== Main cycle ====
     ITask();
@@ -265,45 +278,45 @@ void ITask() {
                 if(Msg.BtnEvtInfo.BtnID == 2 and Msg.BtnEvtInfo.Type == beLongPress) {
                     PowerOff();
                 }
-
 #ifdef LOGIC_EN
-                dispatcher.handle_button(Msg.BtnEvtInfo.BtnID, (Msg.BtnEvtInfo.Type == beLongPress));
+                if(IsLogicInitOk) dispatcher.handle_button(Msg.BtnEvtInfo.BtnID, (Msg.BtnEvtInfo.Type == beLongPress));
 #endif
                 break;
 
             case evtIdEverySecond:
 //                Printf("Second\r");
 #ifdef LOGIC_EN
-                dispatcher.tick();
+                if(IsLogicInitOk) dispatcher.tick();
 #endif
                 break;
 
             case evtIdAdcRslt:
 //                Printf("Adc: %u; ExtPwr: %u; Charging: %u\r", Msg.Value, Power.ExternalPwrOn(), Power.IsCharging());
 #ifdef LOGIC_EN
-                dispatcher.handle_battery_status(mV2PercentLiIon(Msg.Value), Power.IsCharging(), Power.ExternalPwrOn());
+                if(IsLogicInitOk) dispatcher.handle_battery_status(mV2PercentLiIon(Msg.Value), Power.IsCharging(), Power.ExternalPwrOn());
 #endif
                 break;
 
             case evtIdNewRPkt:
 //                Printf("RPkt: Inf=%u; Par=%u; RSSI=%d\r", Msg.b[0], Msg.b[1], (int8_t)Msg.b[2]);
 #ifdef LOGIC_EN
-                dispatcher.handle_radio_packet(Msg.b[0], Msg.b[1], (int8_t)Msg.b[2]);
+                if(IsLogicInitOk) dispatcher.handle_radio_packet(Msg.b[0], Msg.b[1], (int8_t)Msg.b[2]);
 #endif
                 break;
 
             case evtIdSoundFileEnd:
 //                Printf("SoundFile end: %u\r", Msg.Value);
 #ifdef LOGIC_EN
-                dispatcher.handle_track_end(Msg.Value);
+                if(IsLogicInitOk) dispatcher.handle_track_end(Msg.Value);
 #endif
                 break;
 
 #if 1 // ======= Pill ======
             case evtIdPillConnected:
                 Printf("Pill: %d\r", ((Pill_t*)Msg.Ptr)->TypeInt32);
+                Vibra.StartOrRestart(vsqBrrBrr);
 #ifdef LOGIC_EN
-                dispatcher.handle_nfc_packet((uint8_t)((Pill_t*)Msg.Ptr)->TypeInt32);
+                if(IsLogicInitOk) dispatcher.handle_nfc_packet((uint8_t)((Pill_t*)Msg.Ptr)->TypeInt32);
 #endif
                 break;
             case evtIdPillDisconnected:

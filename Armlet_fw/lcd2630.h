@@ -10,6 +10,7 @@
 #include "kl_lib.h"
 #include "board.h"
 #include "color.h"
+#include "shell.h"
 
 // This LCD embeds SPFD54124B controller
 
@@ -31,11 +32,20 @@
 #define LCD_W               160 // } Pixels count
 #define LCD_TOP_BRIGHTNESS  100 // i.e. 100%
 
-class Lcd_t {
+struct FontParams_t {
+    Color_t FClr, BClr;
+    uint16_t X, Y;
+};
+
+class Lcd_t : public PrintfHelper_t {
 private:
     const PinOutputPWM_t BckLt{LCD_BCKLT_PIN};
     void WriteCmd(uint8_t ACmd);
     void WriteCmd(uint8_t ACmd, uint8_t AData);
+    // Printf
+    FontParams_t Fnt;
+    void IStartTransmissionIfNotYet() {} // dummy
+    uint8_t IPutChar(char c);
 public:
     // General use
     void Init();
@@ -47,15 +57,12 @@ public:
 
     // High-level
     void SetBounds(uint8_t xStart, uint8_t xEnd, uint8_t yStart, uint8_t yEnd);
-//    void Printf(uint8_t x, uint8_t y, Color_t ForeClr, Color_t BckClr, const char *S, ...);
+    void LPrintf(uint8_t x, uint8_t y, Color_t ForeClr, Color_t BckClr, const char *format, ...);
     void Cls(Color_t Color);
     void GetBitmap(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, uint16_t *PBuf);
     void PutBitmap(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, uint16_t *PBuf);
     void PutBitmapBegin(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height);
     void PutBitmapEnd();
-    void PutPixel (uint8_t x0, uint8_t y0, uint16_t Clr);
-//    void DrawImage(const uint8_t x, const uint8_t y, const uint8_t *Img);
-//    void DrawSymbol(const uint8_t x, const uint8_t y, const uint8_t ACode);
 };
 
 extern Lcd_t Lcd;

@@ -373,6 +373,7 @@ QState Character_whitish(Character * const me, QEvt const * const e) {
     switch (e->sig) {
         /* ${SMs::Character::SM::global::character::alive::whiten::whitish} */
         case Q_ENTRY_SIG: {
+            me->DoganScale = WHITE_THRESHOLD;
             Vibro(LONG_VIBRO, 3);
                 DISPATCH_ONESHOT(BECOME_WHITISH);
                 ScreenAddBMPToQueue("Whitish.bmp");
@@ -492,6 +493,7 @@ QState Character_crimsonish(Character * const me, QEvt const * const e) {
     switch (e->sig) {
         /* ${SMs::Character::SM::global::character::alive::red::crimsonish} */
         case Q_ENTRY_SIG: {
+            me->DoganScale = CRIMSON_THRESHOLD;
             Vibro(LONG_VIBRO, 3);
                 DISPATCH_ONESHOT(BECOME_CRIMSONISH);
                 ScreenAddBMPToQueue("Crimsonish.bmp");

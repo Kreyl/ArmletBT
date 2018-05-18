@@ -17,7 +17,7 @@
 #include "kl_buf.h"
 #include "DrawBmp.h"
 
-#define PRINT_FUNC()  Printf("%S\r", __FUNCTION__)
+#define PRINT_FUNC()  // Printf("%S\r", __FUNCTION__)
 #define STANDBY_TIMEOUT_MS  1008
 
 #if 1 // General

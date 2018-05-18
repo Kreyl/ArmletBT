@@ -7,7 +7,6 @@
 
 // Variables
 Lcd_t Lcd;
-//static char CharBuf[198];
 
 // Pin driving functions
 #define LCD_DELAY()        // DelayLoop(36)
@@ -18,7 +17,7 @@ static inline void LCD_XCS_Lo () { PinSetLo(LCD_GPIO, LCD_XCS);  }
 __always_inline static inline void LCD_DC_Hi()  { PinSetHi(LCD_GPIO, LCD_DC);   LCD_DELAY();}
 __always_inline static inline void LCD_DC_Lo()  { PinSetLo(LCD_GPIO, LCD_DC);   LCD_DELAY();}
 static inline void LCD_WR_Hi()   { PinSetHi(LCD_GPIO, LCD_WR);   LCD_DELAY();}
-static inline void LCD_WR_Lo()   { PinSetLo(LCD_GPIO, LCD_WR);   LCD_DELAY();}
+//static inline void LCD_WR_Lo()   { PinSetLo(LCD_GPIO, LCD_WR);   LCD_DELAY();}
 static inline void LCD_RD_Hi()   { PinSetLo(LCD_GPIO, LCD_RD);   LCD_DELAY();}
 //__attribute__ ((always_inline)) static inline void RD_Lo()  { PinClear(LCD_GPIO, LCD_RD);   LCD_DELAY}
 
@@ -180,4 +179,54 @@ void Lcd_t::PutBitmapBegin(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height
 
 void Lcd_t::PutBitmapEnd() {
     LCD_DC_Lo();
+}
+
+// ==== Printf ====
+uint8_t Lcd_t::IPutChar(char c) {
+    uint8_t Rslt = retvOk;
+    char *PFont = (char*)Font8x8;  // Font to use
+    // Read font params
+    uint8_t nCols = PFont[0];
+    uint8_t nRows = PFont[1];
+    uint16_t nBytes = PFont[2];
+    SetBounds(Fnt.X, Fnt.X+nCols, Fnt.Y, Fnt.Y+nRows);
+    // Get pointer to the first byte of the desired character
+    const char *PChar = Font8x8 + (nBytes * (c - 0x1F));
+    // Write RAM
+    WriteByte(0x2C);    // Memory write
+    LCD_DC_Hi();
+    // Iterate rows of the char
+    uint8_t row, col;
+    for(row = 0; row < nRows; row++) {
+        if((Fnt.Y+row) >= LCD_H) {
+            Rslt = retvFail;
+            break;
+        }
+        uint8_t PixelRow = *PChar++;
+        // Loop on each pixel in the row (left to right)
+        for(col=0; col < nCols; col++) {
+            if((Fnt.X+col) >= LCD_W) {
+                Rslt = retvFail;
+                break;
+            }
+            Color_t *PClr = (PixelRow & 0x80)? &Fnt.FClr : &Fnt.BClr;
+            PixelRow <<= 1;
+            WriteByte(PClr->RGBTo565_HiByte());
+            WriteByte(PClr->RGBTo565_LoByte());
+        } // col
+    } // row
+    LCD_DC_Lo();
+    Fnt.X += nCols;
+    return Rslt;
+}
+
+void Lcd_t::LPrintf(uint8_t x, uint8_t y, Color_t ForeClr, Color_t BckClr, const char *format, ...) {
+    Fnt.X = x;
+    Fnt.Y = y;
+    Fnt.FClr = ForeClr;
+    Fnt.BClr = BckClr;
+    va_list args;
+    va_start(args, format);
+    IVsPrintf(format, args);
+    va_end(args);
 }
