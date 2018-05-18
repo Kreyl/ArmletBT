@@ -132,6 +132,21 @@ void Lcd_t::Cls(Color_t Color) {
     LCD_DC_Lo();
 }
 
+void Lcd_t::Fill(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, Color_t Color) {
+    SetBounds(x0, x0+Width, y0, y0+Height);
+    uint32_t Cnt = Width * Height;
+    uint8_t HiByte = Color.RGBTo565_HiByte();
+    uint8_t LoByte = Color.RGBTo565_LoByte();
+    // Write RAM
+    WriteByte(0x2C);    // Memory write
+    LCD_DC_Hi();
+    for(uint32_t i=0; i<Cnt; i++) {
+        WriteByte(HiByte);
+        WriteByte(LoByte);
+    }
+    LCD_DC_Lo();
+}
+
 void Lcd_t::GetBitmap(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, uint16_t *PBuf) {
     SetBounds(x0, x0+Width, y0, y0+Height);
     // Prepare variables

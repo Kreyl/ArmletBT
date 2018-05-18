@@ -318,7 +318,7 @@ void ITask() {
 
             case evtIdNewRPkt:
 //                Printf("RPkt: Inf=%u; Par=%u; RSSI=%d\r", Msg.b[0], Msg.b[1], (int8_t)Msg.b[2]);
-                Lcd.Printf(0, 9, clBlue, clWhite, "Rssi %d; Inf: %u  ", (int8_t)Msg.b[2], Msg.b[0]);
+//                Lcd.Printf(0, 45, clBlue, clWhite, "Rssi %d; Inf: %u  ", (int8_t)Msg.b[2], Msg.b[0]);
 #ifdef LOGIC_EN
                 if(IsLogicInitOk) dispatcher.handle_radio_packet(Msg.b[0], Msg.b[1], (int8_t)Msg.b[2]);
 #endif

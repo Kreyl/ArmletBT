@@ -60,6 +60,7 @@ public:
     void Printf(uint8_t x, uint8_t y, Color_t ForeClr, Color_t BckClr, const char *format, ...);
     void DrawImage(const uint8_t x, const uint8_t y, const uint8_t *Img, Color_t ForeClr, Color_t BckClr);
     void Cls(Color_t Color);
+    void Fill(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, Color_t Color);
     void GetBitmap(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, uint16_t *PBuf);
     void PutBitmap(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height, uint16_t *PBuf);
     void PutBitmapBegin(uint8_t x0, uint8_t y0, uint8_t Width, uint8_t Height);
