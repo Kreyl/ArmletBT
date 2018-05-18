@@ -230,3 +230,26 @@ void Lcd_t::Printf(uint8_t x, uint8_t y, Color_t ForeClr, Color_t BckClr, const 
     IVsPrintf(format, args);
     va_end(args);
 }
+
+void Lcd_t::DrawImage(const uint8_t x, const uint8_t y, const uint8_t *Img, Color_t ForeClr, Color_t BckClr) {
+    uint8_t *p = (uint8_t*)Img;
+    uint8_t Width = *p++, Height = *p++;
+//    PrintfC("DrawImage %u %u; %u %u\r", x, y, Width, Height);
+    SetBounds(x, x+Width, y, y+Height);
+    // Write RAM
+    WriteByte(0x2C);    // Memory write
+    LCD_DC_Hi();
+    // Iterate rows of the icon
+    for(uint8_t ay=0; ay < Height; ay++) {
+        uint8_t PixelRow = 0;//
+        // Loop on each pixel in the row (left to right)
+        for(uint8_t ax=0; ax < Width; ax++) {
+            if(ax % 8 == 0) PixelRow = *p++;
+            Color_t *PClr = (PixelRow & 0x80)? &ForeClr : &BckClr;
+            PixelRow <<= 1;
+            WriteByte(PClr->RGBTo565_HiByte());
+            WriteByte(PClr->RGBTo565_LoByte());
+        } // col
+    } // row
+    LCD_DC_Lo();
+}

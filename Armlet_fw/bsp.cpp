@@ -16,6 +16,7 @@
 #include "lcd2630.h"
 #include "kl_buf.h"
 #include "DrawBmp.h"
+#include "lcd_images.h"
 
 #define PRINT_FUNC()  // Printf("%S\r", __FUNCTION__)
 #define STANDBY_TIMEOUT_MS  1008
@@ -114,6 +115,25 @@ void PlayerStop(uint8_t SlotN) {
 #if 1 // Screen
 static char PicName[MAX_NAME_LEN];
 
+
+uint8_t ChargePercent = 100;
+bool IsCharging = false;
+
+#define BATTERY_X           142
+#define BATTERY_BCK_CLR     clDarkGrey
+#define BATTERY_FRONT_CLR   clGreen
+void DrawBattery() {
+//    Lcd.DrawImage(BATTERY_X, 0, iconBattery80_100, BATTERY_FRONT_CLR, BATTERY_BCK_CLR);
+    if(IsCharging) Lcd.DrawImage(BATTERY_X, 0, iconBatteryCharging, clGreen, BATTERY_BCK_CLR);
+    else {
+        if(ChargePercent > 80) Lcd.DrawImage(BATTERY_X, 0, iconBattery80_100, clGreen, BATTERY_BCK_CLR);
+        else if(ChargePercent > 60) Lcd.DrawImage(BATTERY_X, 0, iconBattery60_80, clGreen, BATTERY_BCK_CLR);
+        else if(ChargePercent > 40) Lcd.DrawImage(BATTERY_X, 0, iconBattery40_60, clGreen, BATTERY_BCK_CLR);
+        else if(ChargePercent > 20) Lcd.DrawImage(BATTERY_X, 0, iconBattery20_40, clGreen, BATTERY_BCK_CLR);
+        else Lcd.DrawImage(BATTERY_X, 0, iconBattery0_20, clRed, BATTERY_BCK_CLR);
+    }
+}
+
 void ScreenHighlight(uint32_t Value_percent) {
     PRINT_FUNC();
     Lcd.Brightness(Value_percent);
@@ -124,6 +144,8 @@ void ScreenShowPicture(const char* AFilename) {
     strcat(PicName, AFilename);
     if(IsSleepingNow) SleepDisable();
     DrawBmpFile(0, 0, PicName, &CommonFile);
+    // Redraw battery
+    DrawBattery();
 }
 
 #define BMP_Q_LEN   18

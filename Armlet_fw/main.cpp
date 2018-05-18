@@ -68,7 +68,15 @@ InfluenceTable infTable;
 CharacterTable charTable;
 LocalCharacter localChar;
 __unused static int8_t RadioTrs[4] = { 127, -45, -72, -81 }; // First is "reach never"
-static bool IsLogicInitOk = true;
+__unused static bool IsLogicInitOk = true;
+extern uint8_t ChargePercent;
+extern bool IsCharging;
+uint8_t PrevChargePercent = 110;
+void DrawBattery();
+
+#define DISCH_BAT_VIBR_PERIOD_S     600
+systime_t WhenDischargedBatteryIndicated = 0;
+
 char SelfName[36];
 #endif
 
@@ -241,7 +249,6 @@ int main() {
             if(*p == '\0') {    // Conversion to number succeded, get value
                 if(csv::GetNextCell<uint16_t>(&Value) == retvOk) {
                     localChar.ka_tet_counters[i] = Value;
-//                    Printf("%u = %u\r", i, Value);
                 }
             }
         } // while
@@ -261,7 +268,6 @@ int main() {
     ITask();
 }
 
-//#undef LOGIC_EN
 __noreturn
 void ITask() {
     while(true) {
@@ -292,8 +298,21 @@ void ITask() {
 
             case evtIdAdcRslt:
 //                Printf("Adc: %u; ExtPwr: %u; Charging: %u\r", Msg.Value, Power.ExternalPwrOn(), Power.IsCharging());
+                ChargePercent = mV2PercentLiIon(Msg.Value);
+                IsCharging = Power.IsCharging();
+                // Force redraw if percent changed
+                if(PrevChargePercent != ChargePercent and !IsSleeping()) {
+                    PrevChargePercent = ChargePercent;
+                    DrawBattery();
+                }
+                // Vibrate if discharged
+                if(ChargePercent < 10 and !IsCharging) {
+                    if(chVTTimeElapsedSinceX(WhenDischargedBatteryIndicated) >= S2ST(DISCH_BAT_VIBR_PERIOD_S)) {
+                        Vibra.StartOrRestart(vsqBrrBrr);
+                    }
+                }
 #ifdef LOGIC_EN
-                if(IsLogicInitOk) dispatcher.handle_battery_status(mV2PercentLiIon(Msg.Value), Power.IsCharging(), Power.ExternalPwrOn());
+//                if(IsLogicInitOk) dispatcher.handle_battery_status(mV2PercentLiIon(Msg.Value), Power.IsCharging(), Power.ExternalPwrOn());
 #endif
                 break;
 
