@@ -67,6 +67,7 @@ EmotionTable emoTable;
 InfluenceTable infTable;
 CharacterTable charTable;
 LocalCharacter localChar;
+static int8_t RadioTrs[4] = { 127, -45, -72, -81 }; // First is "reach never"
 char SelfName[36];
 #endif
 
@@ -132,6 +133,20 @@ int main() {
 #endif
 
 #ifdef LOGIC_EN // ==== Logic init ====
+    // Load Radio tresholds
+    RadioTrs[0] = 127;  // Reach it never
+    if(csv::OpenFile("Tresholds.csv") == retvOk) {
+        while(csv::ReadNextLine() == retvOk) {
+            char *Name;
+            if(csv::GetNextToken(&Name) != retvOk) continue;
+            csv::TryLoadParam<int8_t>(Name, "Near", &RadioTrs[1]);
+            csv::TryLoadParam<int8_t>(Name, "Medium", &RadioTrs[2]);
+            csv::TryLoadParam<int8_t>(Name, "Far", &RadioTrs[3]);
+        }
+        csv::CloseFile();
+        Printf("Radio Tresholds: %d; %d; %d\r", RadioTrs[1], RadioTrs[2], RadioTrs[3]);
+    }
+
     // Open Emotions
     if(TryOpenFileRead("Emotions.csv", &CommonFile) == retvOk) {
         emoTable.init(&CommonFile, &csvTable);
@@ -142,7 +157,7 @@ int main() {
 
     // Open Influence
     if(TryOpenFileRead("Reasons.csv", &CommonFile) == retvOk) {
-        infTable.init(&CommonFile, &csvTable, &emoTable);
+        infTable.init(&CommonFile, &csvTable, &emoTable, RadioTrs);
         CloseFile(&CommonFile);
         Printf("Reasons loaded\r");
     }

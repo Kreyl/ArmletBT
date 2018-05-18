@@ -29,7 +29,9 @@
 #include "character.h"
 
 //Q_DEFINE_THIS_FILE
-
+#define LONG_VIBRO  800
+#define MEDIUM_VIBRO 500
+#define SHORT_VIBRO 300
 
 /* global-scope definitions -----------------------------------------*/
 
@@ -137,10 +139,11 @@ QState Character_character(Character * const me, QEvt const * const e) {
             if (me->Todash == false) {
                     me->Todash = true;
                     SetTodash(true);
-                    DISPATCH_ONESHOT(DOOR_VOICE);
+                    DISPATCH_BEGIN(DOOR_VOICE);
                 } else {
-                    SetTodash(false);
                     me->Todash = false;
+                    SetTodash(false);
+                    DISPATCH_END(DOOR_VOICE);
                 }
             status_ = Q_HANDLED();
             break;
@@ -163,7 +166,7 @@ QState Character_character(Character * const me, QEvt const * const e) {
         }
         /* ${SMs::Character::SM::global::character::END(DOOR_FAR)+BASE} */
         case END(DOOR_FAR)+BASE_SIG: {
-            DISPATCH_BEGIN(DOOR_FAR_MANNI);
+            DISPATCH_END(DOOR_FAR_MANNI);
             status_ = Q_HANDLED();
             break;
         }
@@ -189,25 +192,25 @@ QState Character_character(Character * const me, QEvt const * const e) {
         }
         /* ${SMs::Character::SM::global::character::END(CRIMSON_BROADCAST1)+BASE} */
         case END(CRIMSON_BROADCAST1)+BASE_SIG: {
-            DISPATCH_END(CRIMSON_BROADCAST1);
+            DISPATCH_END(BROADCAST1);
             status_ = Q_HANDLED();
             break;
         }
         /* ${SMs::Character::SM::global::character::END(CRIMSON_BROADCAST2)+BASE} */
         case END(CRIMSON_BROADCAST2)+BASE_SIG: {
-            DISPATCH_END(CRIMSON_BROADCAST2);
+            DISPATCH_END(BROADCAST2);
             status_ = Q_HANDLED();
             break;
         }
         /* ${SMs::Character::SM::global::character::END(CRIMSON_BROADCAST3)+BASE} */
         case END(CRIMSON_BROADCAST3)+BASE_SIG: {
-            DISPATCH_END(CRIMSON_BROADCAST3);
+            DISPATCH_END(BROADCAST3);
             status_ = Q_HANDLED();
             break;
         }
         /* ${SMs::Character::SM::global::character::END(CRIMSON_BROADCAST4)+BASE} */
         case END(CRIMSON_BROADCAST4)+BASE_SIG: {
-            DISPATCH_END(CRIMSON_BROADCAST4);
+            DISPATCH_END(BROADCAST4);
             status_ = Q_HANDLED();
             break;
         }
@@ -241,7 +244,8 @@ QState Character_neutral(Character * const me, QEvt const * const e) {
     switch (e->sig) {
         /* ${SMs::Character::SM::global::character::alive::neutral} */
         case Q_ENTRY_SIG: {
-            Vibro(LONG_VIBRO);
+            me->DoganScale = 0;
+                Vibro(LONG_VIBRO, 3);
                 DISPATCH_ONESHOT(BECOME_NEUTRAL);
                 ScreenAddBMPToQueue("Neutral.bmp");
                 SaveState(NEUTRAL, false, false);
@@ -266,8 +270,8 @@ QState Character_neutral(Character * const me, QEvt const * const e) {
         }
         /* ${SMs::Character::SM::global::character::alive::neutral::INFLUENCE_AT_DOGAN} */
         case INFLUENCE_AT_DOGAN_SIG: {
-            me->DoganScale += ((const CharacterQEvt*)e)->amount;
             /* ${SMs::Character::SM::global::character::alive::neutral::INFLUENCE_AT_DOG~::[me->DoganScale>=WHITE_THRESHOLD~} */
+            me->DoganScale += ((const CharacterQEvt*)e)->amount;
             if (me->DoganScale>=WHITE_THRESHOLD) {
                 status_ = Q_TRAN(&Character_whitish);
             }
@@ -336,7 +340,7 @@ QState Character_white(Character * const me, QEvt const * const e) {
     switch (e->sig) {
         /* ${SMs::Character::SM::global::character::alive::whiten::white} */
         case Q_ENTRY_SIG: {
-            Vibro(LONG_VIBRO); ScreenShowPicture("White.bmp");
+            Vibro(LONG_VIBRO, 3); ScreenShowPicture("White.bmp");
                 DISPATCH_ONESHOT(BECOME_WHITE);
                 ScreenAddBMPToQueue("White.bmp");
                 DISPATCH_ONESHOT(DESTROY_KATET);
@@ -368,9 +372,9 @@ QState Character_whitish(Character * const me, QEvt const * const e) {
     switch (e->sig) {
         /* ${SMs::Character::SM::global::character::alive::whiten::whitish} */
         case Q_ENTRY_SIG: {
-            Vibro(LONG_VIBRO);
+            Vibro(LONG_VIBRO, 3);
                 DISPATCH_ONESHOT(BECOME_WHITISH);
-                ScreenAddBMPToQueue("BecomeWhiter.bmp");
+                ScreenAddBMPToQueue("Whitish.bmp");
                 SaveState(WHITISH, false, false);
             status_ = Q_HANDLED();
             break;
@@ -439,24 +443,24 @@ QState Character_red(Character * const me, QEvt const * const e) {
         }
         /* ${SMs::Character::SM::global::character::alive::red::BEGIN(CRIMSON_BROADCAST1)+BASE} */
         case BEGIN(CRIMSON_BROADCAST1)+BASE_SIG: {
-            DISPATCH_BEGIN(CRIMSON_BROADCAST1);
+            DISPATCH_BEGIN(BROADCAST1);
             status_ = Q_HANDLED();
             break;
         }
         /* ${SMs::Character::SM::global::character::alive::red::BEGIN(CRIMSON_BROADCAST2)+BASE} */
         case BEGIN(CRIMSON_BROADCAST2)+BASE_SIG: {
-            DISPATCH_BEGIN(CRIMSON_BROADCAST2);
+            DISPATCH_BEGIN(BROADCAST2);
             status_ = Q_HANDLED();
             break;
         }
         /* ${SMs::Character::SM::global::character::alive::red::BEGIN(CRIMSON_BROADCAST3)+BASE} */
         case BEGIN(CRIMSON_BROADCAST3)+BASE_SIG: {
-            DISPATCH_BEGIN(CRIMSON_BROADCAST3);
+            DISPATCH_BEGIN(BROADCAST3);
             status_ = Q_HANDLED();
             break;
         }
         /* ${SMs::Character::SM::global::character::alive::red::BEGIN(CRIMSON_BROADCAST4)+BASE} */
-        case BEGIN(CRIMSON_BROADCAST4)+BASE_SIG: {
+        case BEGIN(BROADCAST4)+BASE_SIG: {
             DISPATCH_BEGIN(CRIMSON_BROADCAST4);
             status_ = Q_HANDLED();
             break;
@@ -464,6 +468,8 @@ QState Character_red(Character * const me, QEvt const * const e) {
         /* ${SMs::Character::SM::global::character::alive::red::BEGIN(ROSE)+BASE} */
         case BEGIN(ROSE)+BASE_SIG: {
             DISPATCH_BEGIN(FEAR);
+            ScreenAddBMPToQueue("Fear.bmp");
+            Vibro(SHORT_VIBRO, 5);
             status_ = Q_HANDLED();
             break;
         }
@@ -485,7 +491,7 @@ QState Character_crimsonish(Character * const me, QEvt const * const e) {
     switch (e->sig) {
         /* ${SMs::Character::SM::global::character::alive::red::crimsonish} */
         case Q_ENTRY_SIG: {
-            Vibro(LONG_VIBRO);
+            Vibro(LONG_VIBRO, 3);
                 DISPATCH_ONESHOT(BECOME_CRIMSONISH);
                 ScreenAddBMPToQueue("Crimsonish.bmp");
                 SaveState(CRIMSONISH, false, false);
@@ -549,7 +555,7 @@ QState Character_crimson(Character * const me, QEvt const * const e) {
     switch (e->sig) {
         /* ${SMs::Character::SM::global::character::alive::red::crimson} */
         case Q_ENTRY_SIG: {
-            Vibro(LONG_VIBRO);
+            Vibro(LONG_VIBRO, 3);
                 DISPATCH_ONESHOT(BECOME_CRIMSON);
                 ScreenAddBMPToQueue("Crimson.bmp");
                 DISPATCH_ONESHOT(DESTROY_KATET);
@@ -581,7 +587,7 @@ QState Character_corrupted(Character * const me, QEvt const * const e) {
     switch (e->sig) {
         /* ${SMs::Character::SM::global::character::alive::red::corrupted} */
         case Q_ENTRY_SIG: {
-            Vibro(LONG_VIBRO);
+            Vibro(LONG_VIBRO, 3);
                 DISPATCH_ONESHOT(BECOME_CORRUPTED);
                 ScreenAddBMPToQueue("Corrupted.bmp");
                 SaveState(CRIMSONISH, false, true);
@@ -722,25 +728,25 @@ QState Character_crimson_dead(Character * const me, QEvt const * const e) {
         }
         /* ${SMs::Character::SM::global::character::dead::crimson_dead::BEGIN(CRIMSON_BROADCAST1)+BASE} */
         case BEGIN(CRIMSON_BROADCAST1)+BASE_SIG: {
-            DISPATCH_BEGIN(CRIMSON_BROADCAST1);
+            DISPATCH_BEGIN(BROADCAST1);
             status_ = Q_HANDLED();
             break;
         }
         /* ${SMs::Character::SM::global::character::dead::crimson_dead::BEGIN(CRIMSON_BROADCAST2)+BASE} */
         case BEGIN(CRIMSON_BROADCAST2)+BASE_SIG: {
-            DISPATCH_BEGIN(CRIMSON_BROADCAST2);
+            DISPATCH_BEGIN(BROADCAST2);
             status_ = Q_HANDLED();
             break;
         }
         /* ${SMs::Character::SM::global::character::dead::crimson_dead::BEGIN(CRIMSON_BROADCAST3)+BASE} */
         case BEGIN(CRIMSON_BROADCAST3)+BASE_SIG: {
-            DISPATCH_BEGIN(CRIMSON_BROADCAST3);
+            DISPATCH_BEGIN(BROADCAST3);
             status_ = Q_HANDLED();
             break;
         }
         /* ${SMs::Character::SM::global::character::dead::crimson_dead::BEGIN(CRIMSON_BROADCAST4)+BASE} */
         case BEGIN(CRIMSON_BROADCAST4)+BASE_SIG: {
-            DISPATCH_BEGIN(CRIMSON_BROADCAST4);
+            DISPATCH_BEGIN(BROADCAST4);
             status_ = Q_HANDLED();
             break;
         }

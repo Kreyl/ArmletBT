@@ -31,7 +31,7 @@ BaseChunk_t vsqBrr[] = {
         {csEnd}
 };
 
-void Vibro(uint32_t Duration_ms, uint32_t Cnt) {
+void Vibro(uint32_t Duration_ms, int Cnt) {
     Printf("Vibro: dur %u; Cnt %u\r", Duration_ms, Cnt);
     vsqBrr[1].Time_ms = Duration_ms;
     if(Cnt > 1) { // Repeat several times

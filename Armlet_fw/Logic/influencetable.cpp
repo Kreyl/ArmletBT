@@ -8,22 +8,18 @@ InfluenceTable::InfluenceTable()
 {
 }
 
-enum class Strength
-{
-    None = 0,
-    Near = 1,
-    Medium = 2,
-    Far = 3
-};
-
-static const int8_t STRENGTH_LEVELS[] = {127, 0, -64, -96};
-
 void InfluenceTable::init(void *file_context,
                           CsvTable *table,
-                          const EmotionTable *emotion_table)
+                          const EmotionTable *emotion_table,
+                          const int8_t *strength_levels)
 {
     if (!table->open(file_context)) {
         return;
+    }
+
+    for (size_t i = 0; i < static_cast<size_t>(Strength::Count); i++)
+    {
+        strength_levels_[i] = strength_levels[i];
     }
 
     memset(influences_, 0, sizeof(influences_));
@@ -71,7 +67,7 @@ void InfluenceTable::init(void *file_context,
         case static_cast<int>(Strength::Near):
         case static_cast<int>(Strength::Medium):
         case static_cast<int>(Strength::Far):
-            strength = STRENGTH_LEVELS[strength_value];
+            strength = strength_levels_[strength_value];
             break;
         default:
             continue;

@@ -25,9 +25,10 @@ extern "C" {
 #include "localcharacter.h"
 
 
-#define MEDIUM_VIBRO 200
+
 
 class Dispatcher;
+
 
 /*${SMs::KaTet} ............................................................*/
 typedef struct {

@@ -82,6 +82,8 @@ void VS1011_t::Init() {
     IDmaIsIdle = true;
 
     // ==== Init VS ====
+    Rst_Lo();
+    chThdSleepMicroseconds(45);
     Rst_Hi();
     Clk.EnableMCO1(mco1HSE, mcoDiv1);   // Only after reset, as pins are grounded when Rst is Lo
     chThdSleepMicroseconds(45);

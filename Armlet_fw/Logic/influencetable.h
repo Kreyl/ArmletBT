@@ -24,12 +24,22 @@ public:
         char name[MAX_INFLUENCE_NAME_LENGTH + 1];
     };
 
+    enum class Strength
+    {
+        None = 0,
+        Near = 1,
+        Medium = 2,
+        Far = 3,
+        Count = 4
+    };
+
 public:
     InfluenceTable();
 
     void init(void *file_context,
               CsvTable *table,
-              const EmotionTable *emotion_table);
+              const EmotionTable *emotion_table,
+              const int8_t *strength_levels);
 
     size_t influence_count() const
     {
@@ -59,4 +69,6 @@ public:
 private:
     Influence influences_[MAX_INFLUENCE_COUNT];
     size_t influence_count_;
+
+    int8_t strength_levels_[static_cast<size_t>(Strength::Count)];
 };

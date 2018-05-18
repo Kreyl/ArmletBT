@@ -9,7 +9,7 @@ class Counters;
 typedef Counters KaTetCounters;
 
 // General
-void Vibro(uint32_t Duration_ms, uint32_t Cnt=0);
+void Vibro(uint32_t Duration_ms, int count = 1);
 void PowerOff();
 void SleepEnable();
 void SleepDisable();

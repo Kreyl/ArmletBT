@@ -143,7 +143,7 @@ void rLevel1_t::ITask() {
                 CCState = ccstIdle;
                 if(CC.ReadFIFO(&PktRx, &Rssi, RPKT_LEN) == retvOk) {  // if pkt successfully received
 //                    Printf("Rssi %d; ", Rssi);
-                    PktRx.Print();
+//                    PktRx.Print();
                     RadioTime.Adjust();
                     EvtMsg_t Msg(evtIdNewRPkt);
                     Msg.b[0] = PktRx.Influence;

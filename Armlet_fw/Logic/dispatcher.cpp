@@ -78,8 +78,10 @@ void Dispatcher::handle_button(int id, bool long_press)
         }
         break;
     case Buttons::B:
-        screen_event = {{BTN_HYPNOSIS_LONG_SIG}, 0, false, false};
-        QMSM_DISPATCH(&(screen_sm_.super), &(screen_event.super));
+        if (long_press) {
+            screen_event = {{BTN_HYPNOSIS_LONG_SIG}, 0, false, false};
+            QMSM_DISPATCH(&(screen_sm_.super), &(screen_event.super));
+        }
         break;
     case Buttons::C:
         if (long_press) {
@@ -108,10 +110,8 @@ void Dispatcher::handle_button(int id, bool long_press)
         QMSM_DISPATCH(&(screen_sm_.super), &(screen_event.super));
         break;
     case Buttons::Z:
-        if (long_press) {
-            screen_event = {{BTN_NEXT_PICTURE_SIG}, 0, false, false};
-            QMSM_DISPATCH(&(screen_sm_.super), &(screen_event.super));
-        }
+        screen_event = {{BTN_NEXT_PICTURE_SIG}, 0, false, false};
+        QMSM_DISPATCH(&(screen_sm_.super), &(screen_event.super));
         break;
     }
 

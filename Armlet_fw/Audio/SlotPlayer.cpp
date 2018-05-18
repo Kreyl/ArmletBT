@@ -125,20 +125,20 @@ static void SoundThread(void *arg) {
         SndMsg_t Msg = MsgQSnd.Fetch(TIME_INFINITE);
         switch(Msg.Cmd) {
             case sndcmdStart:
-                Printf("sndcmdStart %u\r", Msg.Slot);
+//                Printf("sndcmdStart %u\r", Msg.Slot);
                 if(EmoToFName(Msg.Emo) == retvOk) {
                     Slot[Msg.Slot].Start(Msg.Volume, Msg.Repeat);
                 }
                 break;
 
             case sndCmdVolume:
-                Printf("sndCmdVolume: slot %u, vol %u\r", Msg.Slot, Msg.Volume);
+//                Printf("sndCmdVolume: slot %u, vol %u\r", Msg.Slot, Msg.Volume);
                 if(Msg.Slot == ALL_SLOTS) mixer.fade(Msg.Volume);
                 else Slot[Msg.Slot].SetVolume(Msg.Volume);
                 break;
 
             case sndcmdStop:
-                Printf("sndcmdStop %u\r", Msg.Slot);
+//                Printf("sndcmdStop %u\r", Msg.Slot);
                 Slot[Msg.Slot].Stop();
                 break;
 

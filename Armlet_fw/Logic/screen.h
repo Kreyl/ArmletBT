@@ -24,12 +24,12 @@ extern "C" {
 #include "qhsm.h"    /* include own framework */
 #include "localcharacter.h"
 
-#define LOCK_LEVEL 10
-#define BOOT_LENGTH 5
-#define SHORT_VIBRO 100
+#define LOCK_LEVEL 30
+
 
 
 class Dispatcher;
+
 
 /*${SMs::Screen} ...........................................................*/
 typedef struct {
@@ -41,6 +41,7 @@ typedef struct {
     uint8_t timer;
     uint8_t ChargePercent;
     bool DoganPressed;
+    bool Background;
 } Screen;
 
 /* protected: */
