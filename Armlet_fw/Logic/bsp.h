@@ -13,6 +13,7 @@ void Vibro(uint32_t Duration_ms, int count = 1);
 void PowerOff();
 void SleepEnable();
 void SleepDisable();
+bool IsSleeping();
 
 // Sound
 void PlayerVolumeUp();

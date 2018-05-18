@@ -61,11 +61,17 @@ void PowerOff() {
     chSysUnlock();
 }
 
+static bool IsSleepingNow = false;
 void SleepEnable() {
     Lcd.Shutdown();
+    IsSleepingNow = true;
 }
 void SleepDisable() {
-    Lcd.Init();
+    if(IsSleepingNow) Lcd.Init();
+    IsSleepingNow = false;
+}
+bool IsSleeping() {
+    return IsSleepingNow;
 }
 #endif
 
@@ -116,6 +122,7 @@ void ScreenShowPicture(const char* AFilename) {
     PRINT_FUNC();
     strcpy(PicName, "Images/");
     strcat(PicName, AFilename);
+    if(IsSleepingNow) SleepDisable();
     DrawBmpFile(0, 0, PicName, &CommonFile);
 }
 
@@ -144,7 +151,6 @@ uint32_t GetBMPQueueLength() {
     Printf("GetBMPQueueLength: %u\r", IBmpBuf.GetFullCount());
     return IBmpBuf.GetFullCount();
 }
-
 #endif
 
 #if 1 // Character

@@ -29,8 +29,8 @@
 #include "screen.h"
 
 //Q_DEFINE_THIS_FILE
+#define SHORT_VIBRO 300
 
-#define SHORT_VIBRO 200
 
 /* global-scope definitions -----------------------------------------*/
 
@@ -161,9 +161,9 @@ QState Screen_active(Screen * const me, QEvt const * const e) {
         /* ${SMs::Screen::SM::global::ScreenButtons::active::BTN_NEXT_PICTURE} */
         case BTN_NEXT_PICTURE_SIG: {
             ScreenShowNextBMP();
-            if (GetBMPQueueLength() == 0) {
-                  ScreenShowPicture("Unlocked.bmp");
-            }
+                if (GetBMPQueueLength() == 0) {
+                    ScreenShowPicture("Unlocked.bmp");
+                }
             status_ = Q_HANDLED();
             break;
         }
@@ -223,34 +223,6 @@ QState Screen_active(Screen * const me, QEvt const * const e) {
     }
     return status_;
 }
-/*${SMs::Screen::SM::global::ScreenButtons::disabled} ......................*/
-QState Screen_disabled(Screen * const me, QEvt const * const e) {
-    QState status_;
-    switch (e->sig) {
-        /* ${SMs::Screen::SM::global::ScreenButtons::disabled} */
-        case Q_ENTRY_SIG: {
-            SleepEnable();
-            status_ = Q_HANDLED();
-            break;
-        }
-        /* ${SMs::Screen::SM::global::ScreenButtons::disabled} */
-        case Q_EXIT_SIG: {
-            SleepDisable();
-            status_ = Q_HANDLED();
-            break;
-        }
-        /* ${SMs::Screen::SM::global::ScreenButtons::disabled::BTN_PRESSED} */
-        case BTN_PRESSED_SIG: {
-            status_ = Q_TRAN(&Screen_locked);
-            break;
-        }
-        default: {
-            status_ = Q_SUPER(&Screen_ScreenButtons);
-            break;
-        }
-    }
-    return status_;
-}
 /*${SMs::Screen::SM::global::ScreenButtons::locked} ........................*/
 QState Screen_locked(Screen * const me, QEvt const * const e) {
     QState status_;
@@ -275,20 +247,20 @@ QState Screen_locked(Screen * const me, QEvt const * const e) {
             break;
         }
         /* ${SMs::Screen::SM::global::ScreenButtons::locked::BTN_PRESSED} */
-
-        case BTN_NEXT_PICTURE_SIG: {
-            ScreenShowNextBMP();
-            if (GetBMPQueueLength() == 0) {
-                ScreenShowPicture("Locked.bmp");
-            }
-            status_ = Q_HANDLED();
-            break;
-        }
         case BTN_PRESSED_SIG: {
             if (me->Background == false) {
                     ScreenShowPicture("Locked.bmp");
                  }
                  me->timer = 0;
+            status_ = Q_HANDLED();
+            break;
+        }
+        /* ${SMs::Screen::SM::global::ScreenButtons::locked::BTN_NEXT_PICTURE} */
+        case BTN_NEXT_PICTURE_SIG: {
+            ScreenShowNextBMP();
+                if (GetBMPQueueLength() == 0) {
+                    ScreenShowPicture("Locked.bmp");
+                }
             status_ = Q_HANDLED();
             break;
         }
@@ -307,6 +279,45 @@ QState Screen_locked(Screen * const me, QEvt const * const e) {
             else {
                 me->timer++;
                 status_ = Q_HANDLED();
+            }
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Screen_ScreenButtons);
+            break;
+        }
+    }
+    return status_;
+}
+/*${SMs::Screen::SM::global::ScreenButtons::disabled} ......................*/
+QState Screen_disabled(Screen * const me, QEvt const * const e) {
+    QState status_;
+    switch (e->sig) {
+        /* ${SMs::Screen::SM::global::ScreenButtons::disabled} */
+        case Q_ENTRY_SIG: {
+            SleepEnable();
+            status_ = Q_HANDLED();
+            break;
+        }
+        /* ${SMs::Screen::SM::global::ScreenButtons::disabled} */
+        case Q_EXIT_SIG: {
+            SleepDisable();
+            status_ = Q_HANDLED();
+            break;
+        }
+        /* ${SMs::Screen::SM::global::ScreenButtons::disabled::BTN_PRESSED} */
+        case BTN_PRESSED_SIG: {
+            status_ = Q_TRAN(&Screen_locked);
+            break;
+        }
+        /* ${SMs::Screen::SM::global::ScreenButtons::disabled::TIME_TICK_1S} */
+        case TIME_TICK_1S_SIG: {
+            /* ${SMs::Screen::SM::global::ScreenButtons::disabled::TIME_TICK_1S::[IsSleeping()==false;]]} */
+            if (IsSleeping() == false) {
+                status_ = Q_TRAN(&Screen_locked);
+            }
+            else {
+                status_ = Q_UNHANDLED();
             }
             break;
         }

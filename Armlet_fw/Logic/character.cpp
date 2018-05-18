@@ -29,6 +29,7 @@
 #include "character.h"
 
 //Q_DEFINE_THIS_FILE
+
 #define LONG_VIBRO  800
 #define MEDIUM_VIBRO 500
 #define SHORT_VIBRO 300

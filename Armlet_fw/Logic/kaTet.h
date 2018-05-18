@@ -24,9 +24,6 @@ extern "C" {
 #include "qhsm.h"    /* include own framework */
 #include "localcharacter.h"
 
-
-
-
 class Dispatcher;
 
 

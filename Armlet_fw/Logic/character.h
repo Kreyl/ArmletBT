@@ -32,8 +32,6 @@ extern "C" {
 #define WHITE_THRESHOLD 3600
 #define CRIMSON_THRESHOLD -4000
 
-
-
 class Dispatcher;
 
 /*${SMs::Character} ........................................................*/
