@@ -128,11 +128,16 @@ void Dispatcher::handle_radio_packet(uint8_t influence_id,
         return;
     }
 
-    if (strength < influence->strength) {
+    const InfluenceTable::Influence *effective_influence = influence;
+    if (influence_id >= CharacterTable::FIRST_CHARACTER) {
+        effective_influence = influence_table_->influence(PERSON_NEAR_ID);
+    }
+
+    if (strength < effective_influence->strength) {
         return;
     }
 
-    begin_influence(influence_id, parameter, influence->timeout);
+    begin_influence(influence_id, parameter, effective_influence->timeout);
 
     process_queue();
 }
@@ -245,22 +250,22 @@ void Dispatcher::process_queue()
         QueueEntry entry;
         queue_.pop(entry);
 
-        uint8_t logical_id = static_cast<uint8_t>(entry.id);
+        uint8_t effective_id = static_cast<uint8_t>(entry.id);
         uint8_t character_id = CharacterTable::INVALID_CHARACTER;
 
-        if (logical_id >= CharacterTable::FIRST_CHARACTER) {
-            character_id = logical_id - CharacterTable::FIRST_CHARACTER;
-            logical_id = PERSON_NEAR_ID;
+        if (effective_id >= CharacterTable::FIRST_CHARACTER) {
+            character_id = effective_id - CharacterTable::FIRST_CHARACTER;
+            effective_id = PERSON_NEAR_ID;
         }
 
         QSignal signal = static_cast<QSignal>(BASE_SIG);
         switch (entry.action) {
         case QueueEntry::Action::Begin:
-            signal += static_cast<QSignal>(BEGIN_BY_ID(logical_id));
+            signal += static_cast<QSignal>(BEGIN_BY_ID(effective_id));
             local_character_->near_characters.set(character_id, true);
             break;
         case QueueEntry::Action::End:
-            signal += static_cast<QSignal>(END_BY_ID(logical_id));
+            signal += static_cast<QSignal>(END_BY_ID(effective_id));
             local_character_->near_characters.set(character_id, false);
             break;
         }
@@ -275,7 +280,7 @@ void Dispatcher::process_queue()
         QMSM_DISPATCH(&(ka_tet_sm_.super), &(ka_tet_event.super));
 
         const InfluenceTable::Influence *influence;
-        influence = influence_table_->influence(logical_id);
+        influence = influence_table_->influence(effective_id);
         if (influence && influence->valid) {
             size_t emotion_id = influence->emotion;
             if (emotion_id != EmotionTable::INVALID_EMOTION) {

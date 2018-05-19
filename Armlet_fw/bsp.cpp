@@ -121,15 +121,15 @@ bool IsCharging = false;
 
 #define BATTERY_X           142
 #define TOP_BCK_CLR         clDarkGrey
-#define BATTERY_FRONT_CLR   clGreen
+#define BATTERY_FRONT_CLR   clGreen //(Color_t){36, 255, 36}
 void DrawBattery() {
 //    Lcd.DrawImage(BATTERY_X, 0, iconBattery80_100, BATTERY_FRONT_CLR, BATTERY_BCK_CLR);
-    if(IsCharging) Lcd.DrawImage(BATTERY_X, 0, iconBatteryCharging, clGreen, TOP_BCK_CLR);
+    if(IsCharging) Lcd.DrawImage(BATTERY_X, 0, iconBatteryCharging, BATTERY_FRONT_CLR, TOP_BCK_CLR);
     else {
-        if(ChargePercent > 80) Lcd.DrawImage(BATTERY_X, 0, iconBattery80_100, clGreen, TOP_BCK_CLR);
-        else if(ChargePercent > 60) Lcd.DrawImage(BATTERY_X, 0, iconBattery60_80, clGreen, TOP_BCK_CLR);
-        else if(ChargePercent > 40) Lcd.DrawImage(BATTERY_X, 0, iconBattery40_60, clGreen, TOP_BCK_CLR);
-        else if(ChargePercent > 20) Lcd.DrawImage(BATTERY_X, 0, iconBattery20_40, clGreen, TOP_BCK_CLR);
+        if(ChargePercent > 80) Lcd.DrawImage(BATTERY_X, 0, iconBattery80_100, BATTERY_FRONT_CLR, TOP_BCK_CLR);
+        else if(ChargePercent > 60) Lcd.DrawImage(BATTERY_X, 0, iconBattery60_80, BATTERY_FRONT_CLR, TOP_BCK_CLR);
+        else if(ChargePercent > 40) Lcd.DrawImage(BATTERY_X, 0, iconBattery40_60, BATTERY_FRONT_CLR, TOP_BCK_CLR);
+        else if(ChargePercent > 20) Lcd.DrawImage(BATTERY_X, 0, iconBattery20_40, BATTERY_FRONT_CLR, TOP_BCK_CLR);
         else Lcd.DrawImage(BATTERY_X, 0, iconBattery0_20, clRed, TOP_BCK_CLR);
     }
 }

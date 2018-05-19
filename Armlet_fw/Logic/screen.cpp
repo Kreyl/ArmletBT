@@ -44,7 +44,6 @@ void Screen_ctor(Screen* me, Dispatcher* dispatcher) {
     QHsm_ctor(&me->super, Q_STATE_CAST(&Screen_initial));
 }
 
-
 /*${SMs::Screen} ...........................................................*/
 /*${SMs::Screen::SM} .......................................................*/
 QState Screen_initial(Screen * const me, QEvt const * const e) {
@@ -78,29 +77,7 @@ QState Screen_ScreenButtons(Screen * const me, QEvt const * const e) {
         /* ${SMs::Screen::SM::global::ScreenButtons} */
         case Q_ENTRY_SIG: {
             me->timer = 0;
-                me->ChargePercent = 100;
                 me->DoganPressed = false;
-                me->Background = true;
-            status_ = Q_HANDLED();
-            break;
-        }
-        /* ${SMs::Screen::SM::global::ScreenButtons::BATTERY_INFO} */
-        case BATTERY_INFO_SIG: {
-            me->ChargePercent = ((const ScreenQEvt*)e)->ChargePercent;
-                if (((const ScreenQEvt*)e)->Connected == true) {
-                    if (((const ScreenQEvt*)e)->Charging == true) {
-                        ScreenShowPicture("Charging.bmp");
-                        me->Background = false;
-                    } else {
-                        if (((const ScreenQEvt*)e)->ChargePercent >= 95) {
-                            ScreenShowPicture("Charged.bmp");
-                            me->Background = false;
-                        } else {
-                            ScreenShowPicture("NotCharging.bmp");
-                            me->Background = false;
-                       }
-                   }
-                }
             status_ = Q_HANDLED();
             break;
         }
@@ -108,10 +85,6 @@ QState Screen_ScreenButtons(Screen * const me, QEvt const * const e) {
         case TIME_TICK_1M_SIG: {
             if (GetBMPQueueLength()>0) {
                     Vibro(SHORT_VIBRO, 1);
-                }
-                if (me->ChargePercent <= 20) {
-                    ScreenShowPicture("BatteryLow.bmp");
-                    me->Background = false;
                 }
             status_ = Q_HANDLED();
             break;
@@ -141,8 +114,11 @@ QState Screen_active(Screen * const me, QEvt const * const e) {
     switch (e->sig) {
         /* ${SMs::Screen::SM::global::ScreenButtons::active} */
         case Q_ENTRY_SIG: {
-            ScreenShowPicture("Unlocked.bmp");
-                me->Background = true;
+            if(GetBMPQueueLength()>0) {
+                    ScreenShowActualBMP();
+                } else{
+                    ScreenShowPicture("Unlocked.bmp");
+                }
             status_ = Q_HANDLED();
             break;
         }
@@ -150,7 +126,6 @@ QState Screen_active(Screen * const me, QEvt const * const e) {
         case BTN_DOGAN_SIG: {
             if (me->DoganPressed == true) {
                     ScreenShowPicture("Unlocked.bmp");
-                    me->Background = true;
                 }  else {
                     DISPATCH_ONESHOT(SHOW_DOGAN_STATE);
                 }
@@ -188,13 +163,6 @@ QState Screen_active(Screen * const me, QEvt const * const e) {
         /* ${SMs::Screen::SM::global::ScreenButtons::active::BTN_PRESSED} */
         case BTN_PRESSED_SIG: {
             me->timer = 0;
-                if(GetBMPQueueLength() > 0) {
-                    ScreenShowActualBMP();
-                } else{
-                    if (me->Background == false) {
-                        ScreenShowPicture("Unlocked.bmp");
-                    }
-                }
             status_ = Q_HANDLED();
             break;
         }
@@ -214,72 +182,6 @@ QState Screen_active(Screen * const me, QEvt const * const e) {
         /* ${SMs::Screen::SM::global::ScreenButtons::active::BTN_ENABLE_LONG} */
         case BTN_ENABLE_LONG_SIG: {
             status_ = Q_TRAN(&Screen_locked);
-            break;
-        }
-        default: {
-            status_ = Q_SUPER(&Screen_ScreenButtons);
-            break;
-        }
-    }
-    return status_;
-}
-/*${SMs::Screen::SM::global::ScreenButtons::locked} ........................*/
-QState Screen_locked(Screen * const me, QEvt const * const e) {
-    QState status_;
-    switch (e->sig) {
-        /* ${SMs::Screen::SM::global::ScreenButtons::locked} */
-        case Q_ENTRY_SIG: {
-            ScreenShowPicture("Locked.bmp");
-                me->timer = 0;
-                me->Background = true;
-            status_ = Q_HANDLED();
-            break;
-        }
-        /* ${SMs::Screen::SM::global::ScreenButtons::locked::BTN_DOGAN} */
-        case BTN_DOGAN_SIG: {
-            if (me->DoganPressed == true) {
-                    ScreenShowPicture("Locked.bmp");
-                }  else {
-                    DISPATCH_ONESHOT(SHOW_DOGAN_STATE);
-                }
-                me->DoganPressed = !(me->DoganPressed);
-            status_ = Q_HANDLED();
-            break;
-        }
-        /* ${SMs::Screen::SM::global::ScreenButtons::locked::BTN_PRESSED} */
-        case BTN_PRESSED_SIG: {
-            if (me->Background == false) {
-                    ScreenShowPicture("Locked.bmp");
-                 }
-                 me->timer = 0;
-            status_ = Q_HANDLED();
-            break;
-        }
-        /* ${SMs::Screen::SM::global::ScreenButtons::locked::BTN_NEXT_PICTURE} */
-        case BTN_NEXT_PICTURE_SIG: {
-            ScreenShowNextBMP();
-                if (GetBMPQueueLength() == 0) {
-                    ScreenShowPicture("Locked.bmp");
-                }
-            status_ = Q_HANDLED();
-            break;
-        }
-        /* ${SMs::Screen::SM::global::ScreenButtons::locked::BTN_ENABLE_LONG} */
-        case BTN_ENABLE_LONG_SIG: {
-            status_ = Q_TRAN(&Screen_active);
-            break;
-        }
-        /* ${SMs::Screen::SM::global::ScreenButtons::locked::TIME_TICK_1S} */
-        case TIME_TICK_1S_SIG: {
-            /* ${SMs::Screen::SM::global::ScreenButtons::locked::TIME_TICK_1S::[me->timer>LOCK_LEVEL]} */
-            if (me->timer>LOCK_LEVEL) {
-                status_ = Q_TRAN(&Screen_disabled);
-            }
-            /* ${SMs::Screen::SM::global::ScreenButtons::locked::TIME_TICK_1S::[else]} */
-            else {
-                me->timer++;
-                status_ = Q_HANDLED();
-            }
             break;
         }
         default: {
@@ -312,12 +214,79 @@ QState Screen_disabled(Screen * const me, QEvt const * const e) {
         }
         /* ${SMs::Screen::SM::global::ScreenButtons::disabled::TIME_TICK_1S} */
         case TIME_TICK_1S_SIG: {
-            /* ${SMs::Screen::SM::global::ScreenButtons::disabled::TIME_TICK_1S::[IsSleeping()==false;]]} */
+            /* ${SMs::Screen::SM::global::ScreenButtons::disabled::TIME_TICK_1S::[IsSleeping()==false]} */
             if (IsSleeping() == false) {
                 status_ = Q_TRAN(&Screen_locked);
             }
             else {
                 status_ = Q_UNHANDLED();
+            }
+            break;
+        }
+        default: {
+            status_ = Q_SUPER(&Screen_ScreenButtons);
+            break;
+        }
+    }
+    return status_;
+}
+
+/*${SMs::Screen::SM::global::ScreenButtons::locked} ........................*/
+QState Screen_locked(Screen * const me, QEvt const * const e) {
+    QState status_;
+    switch (e->sig) {
+        /* ${SMs::Screen::SM::global::ScreenButtons::locked} */
+        case Q_ENTRY_SIG: {
+            if (GetBMPQueueLength() > 0) {
+                    ScreenShowActualBMP();
+                } else {
+                    ScreenShowPicture("Locked.bmp");
+                }
+                me->timer = 0;
+            status_ = Q_HANDLED();
+            break;
+        }
+        /* ${SMs::Screen::SM::global::ScreenButtons::locked::BTN_DOGAN} */
+        case BTN_DOGAN_SIG: {
+            if (me->DoganPressed == true) {
+                    ScreenShowPicture("Locked.bmp");
+                }  else {
+                    DISPATCH_ONESHOT(SHOW_DOGAN_STATE);
+                }
+                me->DoganPressed = !(me->DoganPressed);
+            status_ = Q_HANDLED();
+            break;
+        }
+        /* ${SMs::Screen::SM::global::ScreenButtons::locked::BTN_PRESSED} */
+        case BTN_PRESSED_SIG: {
+            me->timer = 0;
+            status_ = Q_HANDLED();
+            break;
+        }
+        /* ${SMs::Screen::SM::global::ScreenButtons::locked::BTN_NEXT_PICTURE} */
+        case BTN_NEXT_PICTURE_SIG: {
+            ScreenShowNextBMP();
+                if (GetBMPQueueLength() == 0) {
+                    ScreenShowPicture("Locked.bmp");
+                }
+            status_ = Q_HANDLED();
+            break;
+        }
+        /* ${SMs::Screen::SM::global::ScreenButtons::locked::BTN_ENABLE_LONG} */
+        case BTN_ENABLE_LONG_SIG: {
+            status_ = Q_TRAN(&Screen_active);
+            break;
+        }
+        /* ${SMs::Screen::SM::global::ScreenButtons::locked::TIME_TICK_1S} */
+        case TIME_TICK_1S_SIG: {
+            /* ${SMs::Screen::SM::global::ScreenButtons::locked::TIME_TICK_1S::[me->timer>LOCK_LEVEL]} */
+            if (me->timer>LOCK_LEVEL) {
+                status_ = Q_TRAN(&Screen_disabled);
+            }
+            /* ${SMs::Screen::SM::global::ScreenButtons::locked::TIME_TICK_1S::[else]} */
+            else {
+                me->timer++;
+                status_ = Q_HANDLED();
             }
             break;
         }
