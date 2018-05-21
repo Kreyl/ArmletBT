@@ -58,6 +58,7 @@ QState KaTet_final(KaTet * const me, QEvt const * const e);
 typedef struct KaTetQEvt {
     QEvt super;
     size_t id;
+    size_t parameter;
 } KaTetQEvt;
 
 

@@ -29,8 +29,8 @@
 #include "kaTet.h"
 
 //Q_DEFINE_THIS_FILE
+#define MEDIUM_VIBRO 500
 
-#define MEDIUM_VIBRO 200
 
 /* global-scope definitions -----------------------------------------*/
 
@@ -86,7 +86,7 @@ QState KaTet_has_katet(KaTet * const me, QEvt const * const e) {
         /* ${SMs::KaTet::SM::global::has_katet} */
         case Q_ENTRY_SIG: {
             SaveKatet(me->KaTets);
-                me->KaTetNear = 0;
+                me->KaTetNear = 1;
             status_ = Q_HANDLED();
             break;
         }
@@ -98,8 +98,8 @@ QState KaTet_has_katet(KaTet * const me, QEvt const * const e) {
         }
         /* ${SMs::KaTet::SM::global::has_katet::BEGIN(FORM_KATET)+BASE} */
         case BEGIN(FORM_KATET)+BASE_SIG: {
-            (me->KaTets)->set(((const KaTetQEvt*)e)->id, true);
-                ScreenAddBMPToQueue("Katet.bmp");
+            (me->KaTets)->set(((const KaTetQEvt*)e)->parameter, true);
+                ScreenAddBMPToQueue("Ka_tet.bmp");
                 Vibro(MEDIUM_VIBRO, 2);
                 SaveKatet(me->KaTets);
             status_ = Q_HANDLED();
@@ -147,13 +147,15 @@ QState KaTet_near(KaTet * const me, QEvt const * const e) {
         /* ${SMs::KaTet::SM::global::has_katet::near::END(PERSON_NEAR)+BASE} */
         case END(PERSON_NEAR)+BASE_SIG: {
             /* ${SMs::KaTet::SM::global::has_katet::near::END(PERSON_NEAR)~::[me->KaTetNear<=1]} */
-            if (me->KaTetNear <= 1) {
+            if ((me->KaTetNear <= 1) and ((me->KaTets)->get(((const KaTetQEvt*)e)->id) == true)) {
                 me->KaTetNear = 0;
                 status_ = Q_TRAN(&KaTet_faraway);
             }
             /* ${SMs::KaTet::SM::global::has_katet::near::END(PERSON_NEAR)~::[else]} */
             else {
-                me->KaTetNear--;
+                if ((me->KaTets)->get(((const KaTetQEvt*)e)->id) == true) {
+                    me->KaTetNear--;
+                }
                 status_ = Q_HANDLED();
             }
             break;
@@ -199,7 +201,7 @@ QState KaTet_alone(KaTet * const me, QEvt const * const e) {
         /* ${SMs::KaTet::SM::global::alone::BEGIN(FEAR_PLACE)+BASE} */
         case BEGIN(FEAR_PLACE)+BASE_SIG: {
             DISPATCH_BEGIN(FEAR);
-            ScreenAddBMPToQueue("Fear.bmp");
+                ScreenAddBMPToQueue("Fear.bmp");
             status_ = Q_HANDLED();
             break;
         }
@@ -211,7 +213,7 @@ QState KaTet_alone(KaTet * const me, QEvt const * const e) {
         }
         /* ${SMs::KaTet::SM::global::alone::BEGIN(FORM_KATET)+BASE} */
         case BEGIN(FORM_KATET)+BASE_SIG: {
-            (me->KaTets)->set(((const KaTetQEvt*)e)->id, true);
+            (me->KaTets)->set(((const KaTetQEvt*)e)->parameter, true);
                 ScreenAddBMPToQueue("Ka_tet.bmp");
                 Vibro(MEDIUM_VIBRO, 2);
             status_ = Q_TRAN(&KaTet_faraway);

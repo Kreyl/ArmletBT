@@ -287,6 +287,7 @@ QState Character_neutral(Character * const me, QEvt const * const e) {
         }
         /* ${SMs::Character::SM::global::character::alive::neutral::BEGIN(DEATH)+BASE} */
         case BEGIN(DEATH)+BASE_SIG: {
+            DISPATCH_ONESHOT(DESTROY_KATET);
             status_ = Q_TRAN(&Character_neutral_dead);
             break;
         }
@@ -325,6 +326,7 @@ QState Character_whiten(Character * const me, QEvt const * const e) {
         }
         /* ${SMs::Character::SM::global::character::alive::whiten::BEGIN(DEATH)+BASE} */
         case BEGIN(DEATH)+BASE_SIG: {
+            DISPATCH_ONESHOT(DESTROY_KATET);
             status_ = Q_TRAN(&Character_white_dead);
             break;
         }
@@ -477,6 +479,7 @@ QState Character_red(Character * const me, QEvt const * const e) {
         }
         /* ${SMs::Character::SM::global::character::alive::red::BEGIN(DEATH)+BASE} */
         case BEGIN(DEATH)+BASE_SIG: {
+            DISPATCH_ONESHOT(DESTROY_KATET);
             status_ = Q_TRAN(&Character_crimson_dead);
             break;
         }
@@ -626,8 +629,6 @@ QState Character_dead(Character * const me, QEvt const * const e) {
     switch (e->sig) {
         /* ${SMs::Character::SM::global::character::dead} */
         case Q_ENTRY_SIG: {
-            DISPATCH_ONESHOT(DEATH);
-                DISPATCH_ONESHOT(DESTROY_KATET);
             status_ = Q_HANDLED();
             break;
         }

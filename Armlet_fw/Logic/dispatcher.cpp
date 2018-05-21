@@ -276,7 +276,7 @@ void Dispatcher::process_queue()
         KaCounterQEvt ka_counter_event = {{signal}, character_id};
         QMSM_DISPATCH(&(ka_counter_sm_.super), &(ka_counter_event.super));
 
-        KaTetQEvt ka_tet_event = {{signal}, character_id};
+        KaTetQEvt ka_tet_event = {{signal}, character_id, entry.parameter};
         QMSM_DISPATCH(&(ka_tet_sm_.super), &(ka_tet_event.super));
 
         const InfluenceTable::Influence *influence;

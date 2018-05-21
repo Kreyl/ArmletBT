@@ -111,7 +111,7 @@ QState KaCounter_idle(KaCounter * const me, QEvt const * const e) {
         /* ${SMs::KaCounter::SM::global::ka_tet_counter::idle::END(PERSON_NEAR)+BASE} */
         case END(PERSON_NEAR)+BASE_SIG: {
             /* ${SMs::KaCounter::SM::global::ka_tet_counter::idle::END(PERSON_NEAR)~::[(me->Characters->count_ones()==~} */
-            if ((me->Characters->count_ones() == 1)) {
+            if (((me->Characters->count_ones() == 1) && (me->KaTets)->get(me->Characters->find_first_one()) == false)) {
                 me->CurrentId = me->Characters->find_first_one();
                 status_ = Q_TRAN(&KaCounter_ka_tet_forming);
             }
