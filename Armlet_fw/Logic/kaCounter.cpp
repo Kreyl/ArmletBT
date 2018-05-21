@@ -157,6 +157,7 @@ QState KaCounter_ka_tet_forming(KaCounter * const me, QEvt const * const e) {
         case TIME_TICK_1S_SIG: {
             /* ${SMs::KaCounter::SM::global::ka_tet_counter::ka_tet_forming::TIME_TICK_1S::[((*(me->KaTetTimers))[me->Curre~} */
             if (((*(me->KaTetTimers))[me->CurrentId] >= KATET_THRESHOLD)) {
+                (*(me->KaTetTimers))[me->CurrentId] = 0;
                 DISPATCH_ONESHOT_WITH_PARAM(FORM_KATET,  me->CurrentId);
                 status_ = Q_TRAN(&KaCounter_idle);
             }

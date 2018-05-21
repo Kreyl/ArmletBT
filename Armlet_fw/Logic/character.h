@@ -29,8 +29,8 @@ extern "C" {
 #define CRIMSONISH -1
 #define WHITISH 1
 #define WHITE 2
-#define WHITE_THRESHOLD 120
-#define CRIMSON_THRESHOLD -150
+#define WHITE_THRESHOLD 3600
+#define CRIMSON_THRESHOLD -7200
 
 class Dispatcher;
 

@@ -93,7 +93,7 @@ void CharacterTable::init(void *file_context,
         characters_[id].valid = true;
         memset(characters_[id].name, 0, MAX_CHARACTER_NAME_LENGTH + 1);
         strncpy(characters_[id].name, name, MAX_CHARACTER_NAME_LENGTH);
-        if (id > character_count_) {
+        if (id >= character_count_) {
             character_count_ = id + 1;
         }
     }

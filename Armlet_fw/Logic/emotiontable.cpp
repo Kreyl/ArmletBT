@@ -84,7 +84,7 @@ void EmotionTable::init(void *file_context,
         emotions_[id].priority = priority;
         memset(emotions_[id].name, 0, MAX_EMOTION_NAME_LENGTH + 1);
         strncpy(emotions_[id].name, name, MAX_EMOTION_NAME_LENGTH);
-        if (id > emotion_count_) {
+        if (id >= emotion_count_) {
             emotion_count_ = id + 1;
         }
     }

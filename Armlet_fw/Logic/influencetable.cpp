@@ -117,7 +117,7 @@ void InfluenceTable::init(void *file_context,
         influences_[id].emotion = emotion;
         memset(influences_[id].name, 0, MAX_INFLUENCE_NAME_LENGTH + 1);
         strncpy(influences_[id].name, name, MAX_INFLUENCE_NAME_LENGTH);
-        if (id > influence_count_) {
+        if (id >= influence_count_) {
             influence_count_ = id + 1;
         }
     }
