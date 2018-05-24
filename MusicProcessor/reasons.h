@@ -8,7 +8,7 @@
  *
  * !!! DO NOT EDIT !!!
  *
- * Generated at 2018-05-11 18:45:30
+ * Generated at 2018-05-24 22:26:09
  */
 #ifndef REASONS_H
 #define REASONS_H
@@ -71,7 +71,6 @@ enum
     MANNI_ID = 54,
     GERRARO_ID = 55,
     MORANO_ID = 56,
-    MASTERKA_ID = 57,
     DEATH_ID = 58,
     BOOT_ID = 59,
     REBOOT_ID = 60,
@@ -85,6 +84,12 @@ enum
     BECOME_CRIMSON_SERVANT_ID = 68,
     NEUTRALIZE_ID = 69,
     BECOME_WHITE_MESSENGER_ID = 70,
+    KATET_DESTROYED_ID = 71,
+    ROBOT_ID = 72,
+    BROADCAST1_ID = 73,
+    BROADCAST2_ID = 74,
+    BROADCAST3_ID = 75,
+    BROADCAST4_ID = 76,
     JRight_ID = 128,
     CRandall_ID = 129,
     RDias_ID = 130,
@@ -164,6 +169,10 @@ enum
     SaManson_ID = 204,
     RGato_ID = 205,
     HYork_ID = 206,
+    EFlores_ID = 207,
+    AGato_ID = 208,
+    JSallivan_ID = 209,
+    CBray_ID = 210,
 };
 
 #endif // ifdef REASONS_H
